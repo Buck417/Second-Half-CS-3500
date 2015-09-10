@@ -21,6 +21,7 @@ namespace FormulaEvaluator
         {
             //Make sure there's no whitespace in our expression
             expression = expression.Replace(" ", string.Empty);
+            expression = expression.Replace("\t", string.Empty);
 
             Stack<string> opStack = new Stack<string>();
             Stack<int> valStack = new Stack<int>();
@@ -38,10 +39,59 @@ namespace FormulaEvaluator
                 }
 
                 //If token is + or -
+                if(token == "+" || token == "-")
+                {
+                    valStack.ProcessPlusOrMinus(token, ref opStack);
+                }
 
+                //If token is *, /, or left parentheses "("
+                if (token == "*" || token == "/" || token == "(")
+                {
+                    opStack.Push(token);
+                }
+
+                //If token is a right parentheses
+                if(token == ")")
+                {
+                    processRightParentheses(ref valStack, ref opStack);
+                }
+
+                //If we got this far, we know it's probably either a variable or invalid character
+                valStack.ProcessVariable(token, variableFinder, ref opStack);
             }
 
-            return 0;
+            if(opStack.Count == 0)
+            {
+                if(valStack.Count == 1)
+                {
+                    return valStack.Pop();
+                }
+                else
+                {
+                    throw new ArgumentException();
+                }
+            }
+            else
+            {
+                if(opStack.Count == 1)
+                {
+                    if (valStack.Count != 2) throw new ArgumentException();
+                    switch (opStack.Pop())
+                    {
+                        case "+":
+                            return valStack.Pop() + valStack.Pop();
+                        case "-":
+                            return valStack.Pop() - valStack.Pop();
+                        default:
+                            throw new ArgumentException();
+                    }
+
+                }
+                else
+                {
+                    throw new ArgumentException();
+                }
+            }
         }
 
 
@@ -124,6 +174,37 @@ namespace FormulaEvaluator
                     opStack.Pop();
                     valueStack.Push(result);
                     opStack.Push(token);
+                    break;
+            }
+        }
+
+        public static void processRightParentheses(ref Stack<int> valStack, ref Stack<string> opStack)
+        {
+            if (valStack.Count < 2) throw new ArgumentException();
+            int result;
+            switch (opStack.Peek())
+            {
+                case "+":
+                    result = valStack.Pop() + valStack.Pop();
+                    opStack.Pop();
+                    valStack.Push(result);
+                    if (opStack.Peek() != "(") throw new ArgumentException(); //Should have had a parentheses here
+                    break;
+                case "-":
+                    result = valStack.Pop() - valStack.Pop();
+                    opStack.Pop();
+                    valStack.Push(result);
+                    if (opStack.Peek() != "(") throw new ArgumentException(); //Should have had a parentheses here
+                    break;
+                case "*":
+                    result = valStack.Pop() * valStack.Pop();
+                    opStack.Pop();
+                    valStack.Push(result);
+                    break;
+                case "/":
+                    result = valStack.Pop() / valStack.Pop();
+                    opStack.Pop();
+                    valStack.Push(result);
                     break;
             }
         }

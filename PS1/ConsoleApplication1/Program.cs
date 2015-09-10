@@ -8,16 +8,25 @@ namespace PS1Test
 {
     class Program
     {
-        static void Main(string[] args)
+
+        void Main(string[] args)
         {
             FormulaEvaluator.Evaluator.Lookup lookup = testLookup;
             
             //Regular use case
             string expression = "(2 + 2) * 6"; //Should be 24
-            int result = FormulaEvaluator.Evaluator.Evaluate<string>(expression, testLookup);
+            int expected = 24;
+            int actual = FormulaEvaluator.Evaluator.Evaluate(expression, testLookup);
+            if (expected != actual)
+            {
+                printFailedExpression(expression, expected, actual);
+            }
 
             //No close parentheses
             expression = "(2 + 2 * 6"; //Should throw an ArgumentException
+
+            //Multiple operations in parentheses
+            expression = "(2 + 3 + 4)";
 
             //Order of operations
             expression = "2 + 2 * 2"; //Should be 6
@@ -30,6 +39,11 @@ namespace PS1Test
         {
 
             return 0;
+        }
+
+        public static void printFailedExpression(string expression, int expected, int actual)
+        {
+            Console.WriteLine(expression + " failed, " + expected + " but got " + actual + " instead.");
         }
         
     }
