@@ -14,8 +14,8 @@ namespace PS1Test
             FormulaEvaluator.Evaluator.Lookup lookup = testLookup;
             
             //Regular use case
-            string expression = "(2 + 3) * 5 + 2"; //Should be 27
-            int expected = 27;
+            string expression = "(2 *2 + 3) * 5 + 2"; //Should be 27
+            int expected = 37;
             int actual = FormulaEvaluator.Evaluator.Evaluate(expression, testLookup);
             if (expected != actual)
             {
@@ -23,8 +23,15 @@ namespace PS1Test
             }
 
             //No close parentheses
-            expression = "(2 + 2 * 6"; //Should throw an ArgumentException
-
+            try {
+                expression = "(2 + 2 * 6"; //Should throw an ArgumentException
+                FormulaEvaluator.Evaluator.Evaluate(expression, testLookup);
+                Console.WriteLine("Unclosed parentheses check failed");
+            }
+            catch( Exception e)
+            {
+                //Do nothing, we wanted to catch it here
+            }
             //Multiple operations in parentheses
             expression = "(2 + 3 + 4)";
 

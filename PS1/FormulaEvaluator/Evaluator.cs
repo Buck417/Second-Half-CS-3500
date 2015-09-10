@@ -170,20 +170,16 @@ namespace FormulaEvaluator
                         result = valueStack.Pop() + valueStack.Pop();
                         opStack.Pop();
                         valueStack.Push(result);
-                        opStack.Push(token);
                         break;
                     case "-":
                         result = valueStack.Pop() - valueStack.Pop();
                         opStack.Pop();
                         valueStack.Push(result);
-                        opStack.Push(token);
                         break;
                 }
             }
-            else
-            {
-                opStack.Push(token);
-            }
+
+            opStack.Push(token);
         }
 
         public static void processRightParentheses(ref Stack<int> valStack, ref Stack<string> opStack)
