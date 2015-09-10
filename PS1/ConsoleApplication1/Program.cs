@@ -9,13 +9,13 @@ namespace PS1Test
     class Program
     {
 
-        void Main(string[] args)
+        static void Main(string[] args)
         {
             FormulaEvaluator.Evaluator.Lookup lookup = testLookup;
             
             //Regular use case
-            string expression = "(2 + 2) * 6"; //Should be 24
-            int expected = 24;
+            string expression = "(2 + 3) * 5 + 2"; //Should be 27
+            int expected = 27;
             int actual = FormulaEvaluator.Evaluator.Evaluate(expression, testLookup);
             if (expected != actual)
             {

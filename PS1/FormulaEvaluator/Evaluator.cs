@@ -20,8 +20,8 @@ namespace FormulaEvaluator
         public static int Evaluate(String expression, Lookup variableFinder)
         {
             //Make sure there's no whitespace in our expression
-            expression = expression.Replace(" ", string.Empty);
-            expression = expression.Replace("\t", string.Empty);
+            expression = expression.Replace(" ", "");
+            expression = expression.Replace("\t", "");
 
             Stack<string> opStack = new Stack<string>();
             Stack<int> valStack = new Stack<int>();
@@ -31,29 +31,36 @@ namespace FormulaEvaluator
 
             foreach(string token in substrings)
             {
+                //Skip over the nonsense empty tokens
+                if (token == "") continue;
+
                 //If token is an integer
                 int value;
                 if(Int32.TryParse(token, out value))
                 {
                     valStack.ProcessInteger(value, ref opStack);
+                    continue;
                 }
 
                 //If token is + or -
                 if(token == "+" || token == "-")
                 {
                     valStack.ProcessPlusOrMinus(token, ref opStack);
+                    continue;
                 }
 
                 //If token is *, /, or left parentheses "("
                 if (token == "*" || token == "/" || token == "(")
                 {
                     opStack.Push(token);
+                    continue;
                 }
 
                 //If token is a right parentheses
                 if(token == ")")
                 {
                     processRightParentheses(ref valStack, ref opStack);
+                    continue;
                 }
 
                 //If we got this far, we know it's probably either a variable or invalid character
@@ -112,17 +119,15 @@ namespace FormulaEvaluator
         /// it's updated as needed</param>
         public static void ProcessInteger(this Stack<int> valueStack, int intValue, ref Stack<string> opStack)
         {
-            if(valueStack.Count == 0)
-            {
-                throw new ArgumentException();
-            }
-
             //If the top of the operations stack is * or /, and assuming there's something in the value stack already
-            if(opStack.Peek() == "*" || opStack.Peek() == "/")
+            if(opStack.Count > 0 && opStack.Peek() == "*" || opStack.Peek() == "/")
             {
+                if (valueStack.Count == 0)
+                {
+                    throw new ArgumentException();
+                }
                 int value = valueStack.Pop();
-                string op = opStack.Pop();
-                switch (op)
+                switch (opStack.Pop())
                 {
                     case "*":
                         valueStack.Push(intValue * value);
@@ -157,54 +162,57 @@ namespace FormulaEvaluator
         public static void ProcessPlusOrMinus(this Stack<int> valueStack, string token, ref Stack<string> opStack)
         {
             int result;
-            if(valueStack.Count < 2)
+            if (opStack.Count > 0)
             {
-                throw new ArgumentException();
+                switch (opStack.Peek())
+                {
+                    case "+":
+                        result = valueStack.Pop() + valueStack.Pop();
+                        opStack.Pop();
+                        valueStack.Push(result);
+                        opStack.Push(token);
+                        break;
+                    case "-":
+                        result = valueStack.Pop() - valueStack.Pop();
+                        opStack.Pop();
+                        valueStack.Push(result);
+                        opStack.Push(token);
+                        break;
+                }
             }
-            switch (opStack.Peek())
+            else
             {
-                case "+":
-                    result = valueStack.Pop() + valueStack.Pop();
-                    opStack.Pop();
-                    valueStack.Push(result);
-                    opStack.Push(token);
-                    break;
-                case "-":
-                    result = valueStack.Pop() - valueStack.Pop();
-                    opStack.Pop();
-                    valueStack.Push(result);
-                    opStack.Push(token);
-                    break;
+                opStack.Push(token);
             }
         }
 
         public static void processRightParentheses(ref Stack<int> valStack, ref Stack<string> opStack)
         {
-            if (valStack.Count < 2) throw new ArgumentException();
             int result;
-            switch (opStack.Peek())
+            switch (opStack.Pop())
             {
                 case "+":
                     result = valStack.Pop() + valStack.Pop();
-                    opStack.Pop();
                     valStack.Push(result);
-                    if (opStack.Peek() != "(") throw new ArgumentException(); //Should have had a parentheses here
+                    if(opStack.Pop() != "(") throw new ArgumentException(); //Should have had a parentheses here;
                     break;
                 case "-":
                     result = valStack.Pop() - valStack.Pop();
-                    opStack.Pop();
                     valStack.Push(result);
-                    if (opStack.Peek() != "(") throw new ArgumentException(); //Should have had a parentheses here
+                    if (opStack.Pop() != "(") throw new ArgumentException(); //Should have had a parentheses here;
                     break;
                 case "*":
                     result = valStack.Pop() * valStack.Pop();
-                    opStack.Pop();
                     valStack.Push(result);
                     break;
                 case "/":
                     result = valStack.Pop() / valStack.Pop();
-                    opStack.Pop();
                     valStack.Push(result);
+                    break;
+                case ")":
+                    throw new ArgumentException();
+                default:
+                    //Do nothing, the operator that was popped should've been a left paren
                     break;
             }
         }
