@@ -43,6 +43,8 @@ namespace PS1Test
             fails.Add("A5 + 3 * 2", true);
             fails.Add("+ 3 * 2", true);
             fails.Add("3 * 0", false);
+            fails.Add("", true);
+            fails.Add("}} 2 + 2", true);
 
             foreach(KeyValuePair<string, bool> fail in fails)
             {

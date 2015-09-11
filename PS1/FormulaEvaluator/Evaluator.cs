@@ -93,7 +93,7 @@ namespace FormulaEvaluator
                 }
                 else
                 {
-                    throw new ArgumentException("No values left in the value stack!");
+                    throw new ArgumentException("Only one value should be left in the value stack when operator stack is empty, " + valStack.Count + " values are left on the value stack.");
                 }
             }
             else
