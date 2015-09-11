@@ -17,7 +17,7 @@ namespace FormulaEvaluator
 
         public delegate int Lookup(string variableName);
 
-        public static int Evaluate(String expression, Lookup variableFinder)
+        public static int Evaluate(String expression, Lookup lookupVariableValue)
         {
             //Make sure there's no whitespace in our expression
             expression = expression.Replace(" ", "");
@@ -64,7 +64,14 @@ namespace FormulaEvaluator
                 }
 
                 //If we got this far, we know it's probably either a variable or invalid character
-                valStack.ProcessVariable(token, variableFinder, ref opStack);
+                Match match = Regex.Match(token, @"([a-zA-Z]*[0-9]*)");
+                if (match.Success)
+                {
+                    //Make sure that the matched value is the same as the token it was given
+                    if (!match.Value.Equals(token)) throw new ArgumentException("Invalid variable name: " + token);
+
+                    valStack.ProcessVariable(token, lookupVariableValue, ref opStack);
+                }
             }
 
             if(opStack.Count == 0)
@@ -82,13 +89,16 @@ namespace FormulaEvaluator
             {
                 if(opStack.Count == 1)
                 {
-                    if (valStack.Count != 2) throw new ArgumentException();
+                    if (valStack.Count != 2)
+                        throw new ArgumentException("Need two values in the value stack if there's only one item in the operation stack.");
                     switch (opStack.Pop())
                     {
                         case "+":
                             return valStack.Pop() + valStack.Pop();
                         case "-":
-                            return valStack.Pop() - valStack.Pop();
+                            int first = valStack.Pop();
+                            int second = valStack.Pop();
+                            return second - first;
                         default:
                             throw new ArgumentException();
                     }
@@ -120,11 +130,11 @@ namespace FormulaEvaluator
         public static void ProcessInteger(this Stack<int> valueStack, int intValue, ref Stack<string> opStack)
         {
             //If the top of the operations stack is * or /, and assuming there's something in the value stack already
-            if(opStack.Count > 0 && opStack.Peek() == "*" || opStack.Peek() == "/")
+            if(opStack.onTop("*", "/"))
             {
                 if (valueStack.Count == 0)
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException("Value stack empty, need at least one number to multiply");
                 }
                 int value = valueStack.Pop();
                 switch (opStack.Pop())
@@ -133,7 +143,7 @@ namespace FormulaEvaluator
                         valueStack.Push(intValue * value);
                         break;
                     case "/":
-                        valueStack.Push(intValue / value);
+                        valueStack.Push(value / intValue);
                         break;
                 }
             }
@@ -155,7 +165,14 @@ namespace FormulaEvaluator
         /// <param name="opStack">The operator stack</param>
         public static void ProcessVariable(this Stack<int> valueStack, string varName, Lookup lookup, ref Stack<string> opStack)
         {
-            int intValue = lookup(varName);
+            int intValue;
+            try {
+                intValue = lookup(varName);
+            }
+            catch(ArgumentException e)
+            {
+                throw new ArgumentException("Variable " + varName + " not found.");
+            }
             valueStack.ProcessInteger(intValue, ref opStack);
         }
 
@@ -172,7 +189,9 @@ namespace FormulaEvaluator
                         valueStack.Push(result);
                         break;
                     case "-":
-                        result = valueStack.Pop() - valueStack.Pop();
+                        int first = valueStack.Pop();
+                        int second = valueStack.Pop();
+                        result = second - first;
                         opStack.Pop();
                         valueStack.Push(result);
                         break;
@@ -193,7 +212,9 @@ namespace FormulaEvaluator
                     if(opStack.Pop() != "(") throw new ArgumentException(); //Should have had a parentheses here;
                     break;
                 case "-":
-                    result = valStack.Pop() - valStack.Pop();
+                    int first = valStack.Pop();
+                    int second = valStack.Pop();
+                    result = second - first;
                     valStack.Push(result);
                     if (opStack.Pop() != "(") throw new ArgumentException(); //Should have had a parentheses here;
                     break;
@@ -210,6 +231,18 @@ namespace FormulaEvaluator
                 default:
                     //Do nothing, the operator that was popped should've been a left paren
                     break;
+            }
+        }
+
+        public static Boolean onTop(this Stack<string> opStack, string first, string second)
+        {
+            if(opStack.Count == 0)
+            {
+                return false;
+            }
+            else
+            {
+                return opStack.Peek() == first || opStack.Peek() == second;
             }
         }
         
