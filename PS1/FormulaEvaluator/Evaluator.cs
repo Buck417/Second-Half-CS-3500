@@ -203,7 +203,7 @@ namespace FormulaEvaluator
 
         public static void processRightParentheses(ref Stack<int> valStack, ref Stack<string> opStack)
         {
-            int result;
+            int result, first, second;
             switch (opStack.Pop())
             {
                 case "+":
@@ -212,8 +212,8 @@ namespace FormulaEvaluator
                     if(opStack.Pop() != "(") throw new ArgumentException(); //Should have had a parentheses here;
                     break;
                 case "-":
-                    int first = valStack.Pop();
-                    int second = valStack.Pop();
+                    first = valStack.Pop();
+                    second = valStack.Pop();
                     result = second - first;
                     valStack.Push(result);
                     if (opStack.Pop() != "(") throw new ArgumentException(); //Should have had a parentheses here;
@@ -223,7 +223,9 @@ namespace FormulaEvaluator
                     valStack.Push(result);
                     break;
                 case "/":
-                    result = valStack.Pop() / valStack.Pop();
+                    first = valStack.Pop();
+                    second = valStack.Pop();
+                    result = second / first;
                     valStack.Push(result);
                     break;
                 case ")":
