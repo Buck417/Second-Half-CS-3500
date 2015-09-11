@@ -13,10 +13,21 @@ namespace FormulaEvaluator
     /// </summary>
     public static class Evaluator
     {
-        
-
+        /// <summary>
+        /// Serves as the delegate for looking up variable values
+        /// </summary>
+        /// <param name="variableName"></param>
+        /// <returns></returns>
         public delegate int Lookup(string variableName);
 
+        /// <summary>
+        /// Performs the actual evaluation of expressions. This function
+        /// will parse an expression in a string, iterate over each of
+        /// the tokens, and process them like an infix calculator.
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="lookupVariableValue"></param>
+        /// <returns></returns>
         public static int Evaluate(String expression, Lookup lookupVariableValue)
         {
             //Make sure there's no whitespace in our expression
@@ -82,7 +93,7 @@ namespace FormulaEvaluator
                 }
                 else
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException("No values left in the value stack!");
                 }
             }
             else
@@ -96,17 +107,17 @@ namespace FormulaEvaluator
                         case "+":
                             return valStack.Pop() + valStack.Pop();
                         case "-":
+                            //Make sure to reverse the order for subtraction, since stacks pop things off in reverse order
                             int first = valStack.Pop();
                             int second = valStack.Pop();
                             return second - first;
                         default:
-                            throw new ArgumentException();
+                            throw new ArgumentException("Operator must be a + or - when there are only two values left on the value stack and all tokens have been processed.");
                     }
-
                 }
                 else
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException("Operator stack can't have more than one operator left after all tokens have been processed.");
                 }
             }
         }
@@ -176,6 +187,17 @@ namespace FormulaEvaluator
             ProcessInteger(ref valueStack, intValue, ref opStack);
         }
 
+        /// <summary>
+        /// Processes a plus or minus token. 
+        /// If + or - is at the top of the operator stack, 
+        /// pop the value stack twice and the operator stack 
+        /// once. Apply the popped operator to the popped 
+        /// numbers. Push the result onto the value stack. 
+        /// Next, push the token onto the operator stack.
+        /// </summary>
+        /// <param name="valueStack"></param>
+        /// <param name="token"></param>
+        /// <param name="opStack"></param>
         public static void ProcessPlusOrMinus(ref Stack<int> valueStack, string token, ref Stack<string> opStack)
         {
             int result;
@@ -201,6 +223,21 @@ namespace FormulaEvaluator
             opStack.Push(token);
         }
 
+        /// <summary>
+        /// Processes the right parentheses token.
+        /// If + or - is at the top of the operator stack,
+        /// pop the value stack twice and the operator 
+        /// stack once. Apply the popped operator to the 
+        /// popped numbers. Push the result onto the value 
+        /// stack. Next, the top of the operator stack 
+        /// should be a(. Pop it. Finally, if * or / is 
+        /// at the top of the operator stack, pop the 
+        /// value stack twice and the operator stack once. 
+        /// Apply the popped operator to the popped numbers. 
+        /// Push the result onto the value stack.
+        /// </summary>
+        /// <param name="valStack"></param>
+        /// <param name="opStack"></param>
         public static void processRightParentheses(ref Stack<int> valStack, ref Stack<string> opStack)
         {
             int result, first, second;
@@ -212,6 +249,7 @@ namespace FormulaEvaluator
                     if(opStack.Pop() != "(") throw new ArgumentException(); //Should have had a parentheses here;
                     break;
                 case "-":
+                    //Make sure this is done in reverse, since stacks pop things in reverse of how they were inserted
                     first = valStack.Pop();
                     second = valStack.Pop();
                     result = second - first;
@@ -223,6 +261,7 @@ namespace FormulaEvaluator
                     valStack.Push(result);
                     break;
                 case "/":
+                    //Make sure this is done in reverse, since stacks pop things in reverse of how they were inserted
                     first = valStack.Pop();
                     second = valStack.Pop();
                     result = second / first;
@@ -236,6 +275,14 @@ namespace FormulaEvaluator
             }
         }
 
+        /// <summary>
+        /// This serves as a convenience method for testing
+        /// which operators are on top of the operator stack.
+        /// </summary>
+        /// <param name="opStack"></param>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
         public static Boolean OnTop(this Stack<string> opStack, string first, string second)
         {
             if(opStack.Count == 0)
