@@ -38,14 +38,14 @@ namespace FormulaEvaluator
                 int value;
                 if(Int32.TryParse(token, out value))
                 {
-                    valStack.ProcessInteger(value, ref opStack);
+                    ProcessInteger(ref valStack, value, ref opStack);
                     continue;
                 }
 
                 //If token is + or -
                 if(token == "+" || token == "-")
                 {
-                    valStack.ProcessPlusOrMinus(token, ref opStack);
+                    ProcessPlusOrMinus(ref valStack, token, ref opStack);
                     continue;
                 }
 
@@ -70,7 +70,7 @@ namespace FormulaEvaluator
                     //Make sure that the matched value is the same as the token it was given
                     if (!match.Value.Equals(token)) throw new ArgumentException("Invalid variable name: " + token);
 
-                    valStack.ProcessVariable(token, lookupVariableValue, ref opStack);
+                    ProcessVariable(ref valStack, token, lookupVariableValue, ref opStack);
                 }
             }
 
@@ -127,10 +127,10 @@ namespace FormulaEvaluator
         /// passing in to be calculated</param>
         /// <param name="opStack">Passed by reference so we make sure
         /// it's updated as needed</param>
-        public static void ProcessInteger(this Stack<int> valueStack, int intValue, ref Stack<string> opStack)
+        public static void ProcessInteger(ref Stack<int> valueStack, int intValue, ref Stack<string> opStack)
         {
             //If the top of the operations stack is * or /, and assuming there's something in the value stack already
-            if(opStack.onTop("*", "/"))
+            if(opStack.OnTop("*", "/"))
             {
                 if (valueStack.Count == 0)
                 {
@@ -163,7 +163,7 @@ namespace FormulaEvaluator
         /// <param name="lookup">The lookup function to find the value
         /// of our variable</param>
         /// <param name="opStack">The operator stack</param>
-        public static void ProcessVariable(this Stack<int> valueStack, string varName, Lookup lookup, ref Stack<string> opStack)
+        public static void ProcessVariable(ref Stack<int> valueStack, string varName, Lookup lookup, ref Stack<string> opStack)
         {
             int intValue;
             try {
@@ -173,10 +173,10 @@ namespace FormulaEvaluator
             {
                 throw new ArgumentException("Variable " + varName + " not found.");
             }
-            valueStack.ProcessInteger(intValue, ref opStack);
+            ProcessInteger(ref valueStack, intValue, ref opStack);
         }
 
-        public static void ProcessPlusOrMinus(this Stack<int> valueStack, string token, ref Stack<string> opStack)
+        public static void ProcessPlusOrMinus(ref Stack<int> valueStack, string token, ref Stack<string> opStack)
         {
             int result;
             if (opStack.Count > 0)
@@ -236,7 +236,7 @@ namespace FormulaEvaluator
             }
         }
 
-        public static Boolean onTop(this Stack<string> opStack, string first, string second)
+        public static Boolean OnTop(this Stack<string> opStack, string first, string second)
         {
             if(opStack.Count == 0)
             {
