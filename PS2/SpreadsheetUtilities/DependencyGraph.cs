@@ -36,11 +36,17 @@ namespace SpreadsheetUtilities
     /// </summary>
     public class DependencyGraph
     {
+
+        private Dictionary<string, string> dependents;
+        private Dictionary<string, string> dependees;
+
         /// <summary>
         /// Creates an empty DependencyGraph.
         /// </summary>
         public DependencyGraph()
         {
+            this.dependees = new Dictionary<string, string>();
+            this.dependents = new Dictionary<string, string>();
         }
 
 
@@ -71,7 +77,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependents(string s)
         {
-            return false;
+            return dependents[s] != null;
         }
 
 
@@ -80,7 +86,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependees(string s)
         {
-            return false;
+            return dependees[s] != null;
         }
 
 
@@ -113,6 +119,7 @@ namespace SpreadsheetUtilities
         /// <param name="t"> t must be evaluated first.  S depends on T</param>
         public void AddDependency(string s, string t)
         {
+            //s depends on t, so 
         }
 
 
