@@ -173,7 +173,20 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
-            
+            if (dependents.ContainsKey(s))
+            {
+                //Remove all the existing dependent and dependee records for this dependent first
+                HashSet<string> oldDependents = new HashSet<string>(dependents[s]);
+                foreach(string oldDependent in oldDependents)
+                {
+                    RemoveDependency(s, oldDependent);
+                }
+            }
+
+            foreach(string newDependent in newDependents)
+            {
+                AddDependency(s, newDependent);
+            }
         }
 
 
@@ -183,7 +196,19 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependees(string s, IEnumerable<string> newDependees)
         {
-            
+            if (dependees.ContainsKey(s))
+            {
+                HashSet<string> oldDependees = new HashSet<string>(dependees[s]);
+                foreach(string oldDependee in oldDependees)
+                {
+                    RemoveDependency(oldDependee, s);
+                }
+            }
+
+            foreach(string newDependee in newDependees)
+            {
+                AddDependency(newDependee, s);
+            }
         }
 
     }
