@@ -100,6 +100,7 @@ namespace PS2GradingTests
         {
             DependencyGraph t = new DependencyGraph();
             t.AddDependency("a", "b");
+            Assert.AreNotEqual(0, t.Size);
         }
 
         /// <summary>
@@ -394,6 +395,10 @@ namespace PS2GradingTests
             // Make sure everything is right
             for (int i = 0; i < SIZE; i++)
             {
+                if (!dees[i].SetEquals(new HashSet<string>(t.GetDependees(letters[i]))))
+                {
+                    Console.WriteLine("Dependees at letters " + i + " are unequal.");
+                }
                 Assert.IsTrue(dents[i].SetEquals(new HashSet<string>(t.GetDependents(letters[i]))));
                 Assert.IsTrue(dees[i].SetEquals(new HashSet<string>(t.GetDependees(letters[i]))));
             }
@@ -474,6 +479,10 @@ namespace PS2GradingTests
             // Make sure everything is right
             for (int i = 0; i < SIZE; i++)
             {
+                if (!dents[i].SetEquals(new HashSet<string>(t.GetDependents(letters[i]))))
+                {
+                    Console.WriteLine("Dependents at letters " + i + " are unequal.");
+                }
                 Assert.IsTrue(dents[i].SetEquals(new HashSet<string>(t.GetDependents(letters[i]))));
                 Assert.IsTrue(dees[i].SetEquals(new HashSet<string>(t.GetDependees(letters[i]))));
             }

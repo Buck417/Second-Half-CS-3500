@@ -37,16 +37,16 @@ namespace SpreadsheetUtilities
     public class DependencyGraph
     {
 
-        private Dictionary<string, string> dependents;
-        private Dictionary<string, string> dependees;
-
+        Dictionary<string, HashSet<string>> dependents;
+        Dictionary<string, HashSet<string>> dependees;
+           
         /// <summary>
         /// Creates an empty DependencyGraph.
         /// </summary>
         public DependencyGraph()
         {
-            this.dependees = new Dictionary<string, string>();
-            this.dependents = new Dictionary<string, string>();
+            dependents = new Dictionary<string, HashSet<string>>();
+            dependees = new Dictionary<string, HashSet<string>>();
         }
 
 
@@ -55,7 +55,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public int Size
         {
-            get { return 0; }
+            get { return dependees.Count; }
         }
 
 
@@ -68,7 +68,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public int this[string s]
         {
-            get { return 0; }
+            get { return dependees.ContainsKey(s) ? dependees[s].Count : 0; }
         }
 
 
@@ -77,7 +77,8 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependents(string s)
         {
-            return dependents[s] != null;
+            if (dependents.ContainsKey(s)) return dependents[s].Count > 0;
+            return false;
         }
 
 
@@ -86,7 +87,8 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependees(string s)
         {
-            return dependees[s] != null;
+            if (dependees.ContainsKey(s)) return dependees[s].Count > 0;
+            return false;
         }
 
 
@@ -95,7 +97,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
-            return null;
+            return dependents.ContainsKey(s) ? dependents[s] : new HashSet<string>();
         }
 
         /// <summary>
@@ -103,7 +105,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
-            return null;
+            return dependees.ContainsKey(s) ? dependees[s] : new HashSet<string>();
         }
 
 
@@ -119,7 +121,30 @@ namespace SpreadsheetUtilities
         /// <param name="t"> t must be evaluated first.  S depends on T</param>
         public void AddDependency(string s, string t)
         {
-            //s depends on t, so 
+            //If there's already a list of dependents, then we can add another one
+            if (dependents.ContainsKey(s))
+            {
+                dependents[s].Add(t);
+            }
+            //Add a dependent to an existing list of dependents for this key
+            else
+            {
+                HashSet<string> set = new HashSet<string>();
+                set.Add(t);
+                dependents.Add(s, set);
+            }
+
+            //If there's already a list of dependees, then we can add another one
+            if (dependees.ContainsKey(t))
+            {
+                dependees[t].Add(s);
+            }
+            else
+            {
+                HashSet<string> set = new HashSet<string>();
+                set.Add(s);
+                dependees.Add(t, set);
+            }
         }
 
 
@@ -130,6 +155,15 @@ namespace SpreadsheetUtilities
         /// <param name="t"></param>
         public void RemoveDependency(string s, string t)
         {
+            //Only try to remove the dependents if they exist
+            if (dependents.ContainsKey(s))
+            {
+                dependents[s].Remove(t);
+            }
+            if (dependees.ContainsKey(t))
+            {
+                dependees[t].Remove(s);
+            }
         }
 
 
@@ -139,6 +173,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
+            
         }
 
 
@@ -148,6 +183,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependees(string s, IEnumerable<string> newDependees)
         {
+            
         }
 
     }
