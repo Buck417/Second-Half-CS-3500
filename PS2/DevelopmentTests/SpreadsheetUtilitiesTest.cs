@@ -19,6 +19,122 @@ namespace PS2GradingTests
     [TestClass()]
     public class DependencyGraphTest
     {
+        // ************************** WEIRD/EDGE CASES *************************** //
+
+        /// <summary>
+        /// This test adds, then removes, then adds.
+        /// We want to make sure the size is right and
+        /// that the right items are in there.
+        /// </summary>
+        [TestMethod()]
+        public void AddTest1Test()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("A1", "A2");
+            t.AddDependency("A1", "A3");
+            t.RemoveDependency("A1", "A2");
+            Assert.AreEqual(1, t.Size);
+            t.AddDependency("A1", "A4");
+            Assert.AreEqual(2, t.Size);
+            HashSet<string> test = new HashSet<string>();
+            test.Add("A3");
+            test.Add("A4");
+            Assert.AreEqual(true, test.SetEquals(t.GetDependents("A1")));
+        }
+
+        /// <summary>
+        /// This test checks to see if two dependees
+        /// being added will still change the size
+        /// of the dependency graph (it should).
+        /// </summary>
+        [TestMethod()]
+        public void AddTest2Test()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("A3", "A2");
+            t.AddDependency("A1", "A2");
+            Assert.AreEqual(2, t.Size);
+        }
+
+        /// <summary>
+        /// Test created by Matthew Turner to see if our private
+        /// variable data is safe.
+        /// </summary>
+        [TestMethod()]
+        public void PrivateDataTest()
+        {
+            try
+            {
+                DependencyGraph dg = new DependencyGraph();
+                dg.AddDependency("a", "b");
+                dg.AddDependency("a", "c");
+                ICollection<string> temp = (ICollection<string>)dg.GetDependents("a");
+                temp.Add("d");
+                Assert.IsTrue(new HashSet<string> { "b", "c", "d" }.SetEquals(temp));
+                Assert.IsTrue(new HashSet<string> { "b", "c" }.SetEquals(dg.GetDependents("a")));
+            }
+            catch (Exception e)
+            {
+                if (!(e is NotSupportedException || e is InvalidCastException))
+                    Assert.Fail();
+            }
+        }
+
+        /// <summary>
+        /// Adds a "cycle" of one item depending on
+        /// itself. We want to make sure the size
+        /// only increments once.
+        /// </summary>
+        [TestMethod()]
+        public void AddTest4Test()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "a");
+            Assert.AreEqual(1, t.Size);
+        }
+
+        /// <summary>
+        /// Make sure if we remove a few times on an empty graph,
+        /// our size is still 0.
+        /// </summary>
+        [TestMethod()]
+        public void RemoveTest1Test()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.RemoveDependency("a", "b");
+            t.RemoveDependency("b", "c");
+            t.RemoveDependency("d", "e");
+            Assert.AreEqual(0, t.Size);
+        }
+
+        /// <summary>
+        /// Basically just tries to add a few items, then removes them.
+        /// Also removes the same thing twice in a row to make sure we handle that case.
+        /// </summary>
+        [TestMethod()]
+        public void RemoveTest2Test()
+        {
+            DependencyGraph t = new DependencyGraph();
+            Assert.AreEqual(0, t.Size);
+            t.AddDependency("a", "b");
+            Assert.AreEqual(1, t.Size);
+            t.AddDependency("a", "c");
+            Assert.AreEqual(2, t.Size);
+            t.AddDependency("c", "a");
+            Assert.AreEqual(3, t.Size);
+            t.RemoveDependency("a", "b");
+            Assert.AreEqual(2, t.Size);
+            t.RemoveDependency("a", "b");
+            Assert.AreEqual(2, t.Size);
+            t.RemoveDependency("b", "a");
+            Assert.AreEqual(2, t.Size);
+            t.RemoveDependency("a", "c");
+            Assert.AreEqual(1, t.Size);
+            t.RemoveDependency("c", "a");
+            Assert.AreEqual(0, t.Size);
+        }
+
+
         // ************************** TESTS ON EMPTY DGs ************************* //
 
         /// <summary>

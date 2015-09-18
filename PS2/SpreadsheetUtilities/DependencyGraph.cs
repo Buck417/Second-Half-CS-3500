@@ -37,9 +37,10 @@ namespace SpreadsheetUtilities
     public class DependencyGraph
     {
 
-        Dictionary<string, HashSet<string>> dependents;
-        Dictionary<string, HashSet<string>> dependees;
-           
+        private Dictionary<string, HashSet<string>> dependents;
+        private Dictionary<string, HashSet<string>> dependees;
+        private int size;
+          
         /// <summary>
         /// Creates an empty DependencyGraph.
         /// </summary>
@@ -55,7 +56,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public int Size
         {
-            get { return dependees.Count; }
+            get { return size; }
         }
 
 
@@ -97,7 +98,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
-            return dependents.ContainsKey(s) ? dependents[s] : new HashSet<string>();
+            return dependents.ContainsKey(s) ? new HashSet<string>(dependents[s]) : new HashSet<string>();
         }
 
         /// <summary>
@@ -105,7 +106,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
-            return dependees.ContainsKey(s) ? dependees[s] : new HashSet<string>();
+            return dependees.ContainsKey(s) ? new HashSet<string>(dependees[s]) : new HashSet<string>();
         }
 
 
@@ -121,10 +122,13 @@ namespace SpreadsheetUtilities
         /// <param name="t"> t must be evaluated first.  S depends on T</param>
         public void AddDependency(string s, string t)
         {
+            //Make sure size actually changed before we increment size
+            bool sizeChanged = false;
+
             //If there's already a list of dependents, then we can add another one
             if (dependents.ContainsKey(s))
             {
-                dependents[s].Add(t);
+                if (dependents[s].Add(t)) sizeChanged = true;
             }
             //Add a dependent to an existing list of dependents for this key
             else
@@ -132,18 +136,26 @@ namespace SpreadsheetUtilities
                 HashSet<string> set = new HashSet<string>();
                 set.Add(t);
                 dependents.Add(s, set);
+                sizeChanged = true;
             }
 
             //If there's already a list of dependees, then we can add another one
             if (dependees.ContainsKey(t))
             {
-                dependees[t].Add(s);
+                if (dependees[t].Add(s)) sizeChanged = true;
             }
             else
             {
                 HashSet<string> set = new HashSet<string>();
                 set.Add(s);
                 dependees.Add(t, set);
+                sizeChanged = true;
+            }
+
+            //If anything was added, increment size
+            if(sizeChanged)
+            {
+                size++;
             }
         }
 
@@ -155,14 +167,23 @@ namespace SpreadsheetUtilities
         /// <param name="t"></param>
         public void RemoveDependency(string s, string t)
         {
+            int initialSize = size;
+            bool anythingRemoved = false;
+
             //Only try to remove the dependents if they exist
             if (dependents.ContainsKey(s))
             {
-                dependents[s].Remove(t);
+                if(dependents[s].Remove(t)) anythingRemoved = true;
             }
             if (dependees.ContainsKey(t))
             {
-                dependees[t].Remove(s);
+                if(dependees[t].Remove(s)) anythingRemoved = true;
+            }
+
+            //If anything was actually removed, decrement size.
+            if (anythingRemoved)
+            {
+                size--;
             }
         }
 
@@ -210,10 +231,8 @@ namespace SpreadsheetUtilities
                 AddDependency(newDependee, s);
             }
         }
-
+        
     }
 
-
-
-
+    
 }
