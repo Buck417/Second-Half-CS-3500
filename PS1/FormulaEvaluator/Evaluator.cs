@@ -95,9 +95,9 @@ namespace FormulaEvaluator
                 throw new ArgumentException("Cannot divide by 0.");
             }
 
-            if(opStack.Count == 0)
+            if (opStack.Count == 0)
             {
-                if(valStack.Count == 1)
+                if (valStack.Count == 1)
                 {
                     return valStack.Pop();
                 }
@@ -108,27 +108,41 @@ namespace FormulaEvaluator
             }
             else
             {
-                if(opStack.Count == 1)
+                while (opStack.Count >= 1)
                 {
-                    if (valStack.Count != 2)
+                    if (valStack.Count < 2)
                         throw new ArgumentException("Need two values in the value stack if there's only one item in the operation stack.");
-                    switch (opStack.Pop())
+                    int first = 0, second = 0;
+                    switch (opStack.Peek())
                     {
                         case "+":
-                            return valStack.Pop() + valStack.Pop();
+                            ProcessPlusOrMinus(ref valStack, "+", ref opStack);
+                            opStack.Pop();
+                            break;
                         case "-":
                             //Make sure to reverse the order for subtraction, since stacks pop things off in reverse order
-                            int first = valStack.Pop();
-                            int second = valStack.Pop();
-                            return second - first;
+                            ProcessPlusOrMinus(ref valStack, "-", ref opStack);
+                            opStack.Pop();
+                            break;
+                        case "*":
+                            valStack.Push(valStack.Pop() * valStack.Pop());
+                            opStack.Pop();
+                            break;
+                        case "/":
+                            first = valStack.Pop();
+                            second = valStack.Pop();
+                            valStack.Push(second / first);
+                            opStack.Pop();
+                            break;
                         default:
-                            throw new ArgumentException("Operator must be a + or - when there are only two values left on the value stack and all tokens have been processed.");
+                            throw new ArgumentException("Invalid operator.");
                     }
                 }
-                else
+                return valStack.Pop(); 
+                /*else
                 {
                     throw new ArgumentException("Operator stack can't have more than one operator left after all tokens have been processed.");
-                }
+                }*/
             }
         }
 
@@ -256,7 +270,8 @@ namespace FormulaEvaluator
                 case "+":
                     result = valStack.Pop() + valStack.Pop();
                     valStack.Push(result);
-                    if(opStack.Pop() != "(") throw new ArgumentException(); //Should have had a parentheses here;
+                    if (!opStack.OnTop("(", "(")) throw new ArgumentException("Missing open parentheses");
+                    else opStack.Pop();
                     break;
                 case "-":
                     //Make sure this is done in reverse, since stacks pop things in reverse of how they were inserted
@@ -264,7 +279,8 @@ namespace FormulaEvaluator
                     second = valStack.Pop();
                     result = second - first;
                     valStack.Push(result);
-                    if (opStack.Pop() != "(") throw new ArgumentException(); //Should have had a parentheses here;
+                    if (!opStack.OnTop("(", "(")) throw new ArgumentException("Missing open parentheses");
+                    else opStack.Pop();
                     break;
                 case "*":
                     result = valStack.Pop() * valStack.Pop();
@@ -278,7 +294,8 @@ namespace FormulaEvaluator
                     valStack.Push(result);
                     break;
                 case ")":
-                    throw new ArgumentException();
+                case "(":
+                    throw new ArgumentException("Need an operator and not a parentheses here.");
                 default:
                     //Do nothing, the operator that was popped should've been a left paren
                     break;
