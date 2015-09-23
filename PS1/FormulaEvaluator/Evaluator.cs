@@ -39,50 +39,60 @@ namespace FormulaEvaluator
 
             //Tokenize our expression
             string[] substrings = Regex.Split(expression, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
-
-            foreach(string token in substrings)
+            try
             {
-                //Skip over the nonsense empty tokens
-                if (token == "") continue;
-
-                //If token is an integer
-                int value;
-                if(Int32.TryParse(token, out value))
+                foreach (string token in substrings)
                 {
-                    ProcessInteger(ref valStack, value, ref opStack);
-                    continue;
-                }
+                    //Skip over the nonsense empty tokens
+                    if (token == "") continue;
 
-                //If token is + or -
-                if(token == "+" || token == "-")
-                {
-                    ProcessPlusOrMinus(ref valStack, token, ref opStack);
-                    continue;
-                }
+                    //If token is an integer
+                    int value;
+                    if (Int32.TryParse(token, out value))
+                    {
+                        ProcessInteger(ref valStack, value, ref opStack);
+                        continue;
+                    }
 
-                //If token is *, /, or left parentheses "("
-                if (token == "*" || token == "/" || token == "(")
-                {
-                    opStack.Push(token);
-                    continue;
-                }
+                    //If token is + or -
+                    if (token == "+" || token == "-")
+                    {
+                        ProcessPlusOrMinus(ref valStack, token, ref opStack);
+                        continue;
+                    }
 
-                //If token is a right parentheses
-                if(token == ")")
-                {
-                    processRightParentheses(ref valStack, ref opStack);
-                    continue;
-                }
+                    //If token is *, /, or left parentheses "("
+                    if (token == "*" || token == "/" || token == "(")
+                    {
+                        opStack.Push(token);
+                        continue;
+                    }
 
-                //If we got this far, we know it's probably either a variable or invalid character
-                Match match = Regex.Match(token, @"([a-zA-Z]*[0-9]*)");
-                if (match.Success)
-                {
-                    //Make sure that the matched value is the same as the token it was given
-                    if (!match.Value.Equals(token)) throw new ArgumentException("Invalid variable name: " + token);
+                    //If token is a right parentheses
+                    if (token == ")")
+                    {
+                        processRightParentheses(ref valStack, ref opStack);
+                        continue;
+                    }
 
-                    ProcessVariable(ref valStack, token, lookupVariableValue, ref opStack);
+                    //If we got this far, we know it's probably either a variable or invalid character
+                    Match match = Regex.Match(token, @"([a-zA-Z]+[0-9]+)");
+                    if (match.Success)
+                    {
+                        //Make sure that the matched value is the same as the token it was given
+                        if (!match.Value.Equals(token)) throw new ArgumentException("Invalid variable name: " + token);
+
+                        ProcessVariable(ref valStack, token, lookupVariableValue, ref opStack);
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Invalid variable " + token);
+                    }
                 }
+            }
+            catch(DivideByZeroException e)
+            {
+                throw new ArgumentException("Cannot divide by 0.");
             }
 
             if(opStack.Count == 0)
