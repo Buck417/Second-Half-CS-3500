@@ -28,15 +28,15 @@ namespace SpreadsheetUtilities
     /// a single variable, "x y" consists of two variables "x" and y; "x23" is a single variable; 
     /// and "x 23" consists of a variable "x" and a number "23".
     /// 
-    /// Associated with every formula are two delegates:  a normalizer and a validator.  The
-    /// normalizer is used to convert variables into a canonical form, and the validator is used
+    /// Associated with every formula are two delegates:  a normalize and a validator.  The
+    /// normalize is used to convert variables into a canonical form, and the validator is used
     /// to add extra restrictions on the validity of a variable (beyond the standard requirement 
     /// that it consist of a letter or underscore followed by zero or more letters, underscores,
     /// or digits.)  Their use is described in detail in the constructor and method comments.
     /// </summary>
     public class Formula
     {
-        private Func<string, string> normalizer;
+        private Func<string, string> normalize;
         private Func<string, bool> validator;
         private string formulaString;
         public delegate double VarLookup(string varName);
@@ -46,7 +46,7 @@ namespace SpreadsheetUtilities
         /// described in the class comment.  If the expression is syntactically invalid,
         /// throws a FormulaFormatException with an explanatory Message.
         /// 
-        /// The associated normalizer is the identity function, and the associated validator
+        /// The associated normalize is the identity function, and the associated validator
         /// maps every string to true.  
         /// </summary>
         public Formula(String formula) :
@@ -60,7 +60,7 @@ namespace SpreadsheetUtilities
         /// described in the class comment.  If the expression is syntactically incorrect,
         /// throws a FormulaFormatException with an explanatory Message.
         /// 
-        /// The associated normalizer and validator are the second and third parameters,
+        /// The associated normalize and validator are the second and third parameters,
         /// respectively.  
         /// 
         /// If the formula contains a variable v such that normalize(v) is not a legal variable, 
@@ -80,14 +80,14 @@ namespace SpreadsheetUtilities
         public Formula(String formula, Func<string, string> normalize, Func<string, bool> isValid)
         {
             formulaString = formula;
-            normalizer = normalize;
+            this.normalize = normalize;
             validator = isValid;
         }
 
         /// <summary>
         /// Evaluates this Formula, using the lookup delegate to determine the values of
         /// variables.  When a variable symbol v needs to be determined, it should be looked up
-        /// via lookup(normalize(v)). (Here, normalize is the normalizer that was passed to 
+        /// via lookup(normalize(v)). (Here, normalize is the normalize that was passed to 
         /// the constructor.)
         /// 
         /// For example, if L("x") is 2, L("X") is 4, and N is a method that converts all the letters 
@@ -107,6 +107,14 @@ namespace SpreadsheetUtilities
         /// </summary>
         public object Evaluate(Func<string, double> lookup)
         {
+            foreach(string token in GetTokens(formulaString))
+            {
+                //Go through each token and decide what to do with it
+                switch (token)
+                {
+
+                }
+            }
             return null;
         }
 
@@ -123,7 +131,12 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<String> GetVariables()
         {
-            return null;
+            List<string> vars = new List<string>();
+            foreach(string token in GetTokens(formulaString))
+            {
+
+            }
+            return vars;
         }
 
         /// <summary>
@@ -138,7 +151,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override string ToString()
         {
-            return null;
+            return this.normalize(formulaString.Replace(" ", "")); ;
         }
 
         /// <summary>
@@ -169,6 +182,8 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator ==(Formula f1, Formula f2)
         {
+            if (f1 == null && f2 == null) return true;
+            else if (f1 == null && f2 != null || f1 != null && f2 == null) return false;
             return false;
         }
 
@@ -179,6 +194,8 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator !=(Formula f1, Formula f2)
         {
+            if (f1 == null && f2 == null) return false;
+            else if (f1 == null && f2 != null || f1 != null && f2 == null) return true;
             return false;
         }
 
@@ -189,7 +206,9 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override int GetHashCode()
         {
-            return 0;
+            string theFormula = formulaString.Replace(" ", "");
+            int hash = theFormula.GetHashCode();
+            return hash;
         }
 
         /// <summary>
@@ -221,6 +240,181 @@ namespace SpreadsheetUtilities
                 }
             }
 
+        }
+
+        /// <summary>
+        /// This encapsulates the behavior to expect when
+        /// the intValue being processed is an integer.
+        /// If * or / is at the top of the operator stack, 
+        /// pop the value stack, pop the operator stack, 
+        /// and apply the popped operator to t and the 
+        /// popped number. Push the result onto the value stack.
+        /// Otherwise, push t onto the value stack.
+        /// </summary>
+        /// <param name="valueStack"></param>
+        /// <param name="intValue">The integer value we're 
+        /// passing in to be calculated</param>
+        /// <param name="opStack">Passed by reference so we make sure
+        /// it's updated as needed</param>
+        public static void ProcessInteger(ref Stack<int> valueStack, int intValue, ref Stack<string> opStack)
+        {
+            //If the top of the operations stack is * or /, and assuming there's something in the value stack already
+            if (opStack.OnTop("*", "/"))
+            {
+                if (valueStack.Count == 0)
+                {
+                    throw new ArgumentException("Value stack empty, need at least one number to multiply");
+                }
+                int value = valueStack.Pop();
+                switch (opStack.Pop())
+                {
+                    case "*":
+                        valueStack.Push(intValue * value);
+                        break;
+                    case "/":
+                        valueStack.Push(value / intValue);
+                        break;
+                }
+            }
+            else
+            {
+                valueStack.Push(intValue);
+            }
+        }
+
+        /// <summary>
+        /// This function is basically a wrapper for the 
+        /// ProcessInteger function, except we need to look
+        /// up the value of the intValue we're passing in first.
+        /// </summary>
+        /// <param name="valueStack"></param>
+        /// <param name="varName">The name of the variable we're looking for</param>
+        /// <param name="lookup">The lookup function to find the value
+        /// of our variable</param>
+        /// <param name="opStack">The operator stack</param>
+        public static void ProcessVariable(ref Stack<int> valueStack, string varName, Lookup lookup, ref Stack<string> opStack)
+        {
+            int intValue;
+            try
+            {
+                intValue = lookup(varName);
+            }
+            catch (ArgumentException e)
+            {
+                throw new ArgumentException("Variable " + varName + " not found.");
+            }
+            ProcessInteger(ref valueStack, intValue, ref opStack);
+        }
+
+        /// <summary>
+        /// Processes a plus or minus token. 
+        /// If + or - is at the top of the operator stack, 
+        /// pop the value stack twice and the operator stack 
+        /// once. Apply the popped operator to the popped 
+        /// numbers. Push the result onto the value stack. 
+        /// Next, push the token onto the operator stack.
+        /// </summary>
+        /// <param name="valueStack"></param>
+        /// <param name="token"></param>
+        /// <param name="opStack"></param>
+        public static void ProcessPlusOrMinus(ref Stack<int> valueStack, string token, ref Stack<string> opStack)
+        {
+            int result;
+            if (opStack.Count > 0)
+            {
+                switch (opStack.Peek())
+                {
+                    case "+":
+                        result = valueStack.Pop() + valueStack.Pop();
+                        opStack.Pop();
+                        valueStack.Push(result);
+                        break;
+                    case "-":
+                        int first = valueStack.Pop();
+                        int second = valueStack.Pop();
+                        result = second - first;
+                        opStack.Pop();
+                        valueStack.Push(result);
+                        break;
+                }
+            }
+
+            opStack.Push(token);
+        }
+
+        /// <summary>
+        /// Processes the right parentheses token.
+        /// If + or - is at the top of the operator stack,
+        /// pop the value stack twice and the operator 
+        /// stack once. Apply the popped operator to the 
+        /// popped numbers. Push the result onto the value 
+        /// stack. Next, the top of the operator stack 
+        /// should be a(. Pop it. Finally, if * or / is 
+        /// at the top of the operator stack, pop the 
+        /// value stack twice and the operator stack once. 
+        /// Apply the popped operator to the popped numbers. 
+        /// Push the result onto the value stack.
+        /// </summary>
+        /// <param name="valStack"></param>
+        /// <param name="opStack"></param>
+        public static void processRightParentheses(ref Stack<int> valStack, ref Stack<string> opStack)
+        {
+            int result, first, second;
+            switch (opStack.Pop())
+            {
+                case "+":
+                    result = valStack.Pop() + valStack.Pop();
+                    valStack.Push(result);
+                    if (!opStack.OnTop("(", "(")) throw new ArgumentException("Missing open parentheses");
+                    else opStack.Pop();
+                    break;
+                case "-":
+                    //Make sure this is done in reverse, since stacks pop things in reverse of how they were inserted
+                    first = valStack.Pop();
+                    second = valStack.Pop();
+                    result = second - first;
+                    valStack.Push(result);
+                    if (!opStack.OnTop("(", "(")) throw new ArgumentException("Missing open parentheses");
+                    else opStack.Pop();
+                    break;
+                case "*":
+                    result = valStack.Pop() * valStack.Pop();
+                    valStack.Push(result);
+                    break;
+                case "/":
+                    //Make sure this is done in reverse, since stacks pop things in reverse of how they were inserted
+                    first = valStack.Pop();
+                    second = valStack.Pop();
+                    result = second / first;
+                    valStack.Push(result);
+                    break;
+                case ")":
+                case "(":
+                    throw new ArgumentException("Need an operator and not a parentheses here.");
+                default:
+                    //Do nothing, the operator that was popped should've been a left paren
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// This serves as a convenience method for testing
+        /// which operators are on top of the operator stack.
+        /// </summary>
+        /// <param name="opStack"></param>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
+        public static Boolean OnTop(this Stack<string> opStack, string first, string second)
+        {
+            if (opStack.Count == 0)
+            {
+                return false;
+            }
+            else
+            {
+                return opStack.Peek() == first || opStack.Peek() == second;
+            }
         }
     }
 

@@ -33,6 +33,41 @@ namespace FormulaTests
         }
 
         [TestMethod()]
+        public void TestNotEqualsBothNull()
+        {
+            Formula a = new Formula(null);
+            Formula b = new Formula(null);
+            Assert.AreEqual(false, a != b);
+            Assert.AreEqual(false, b != a);
+        }
+
+        [TestMethod()]
+        public void TestEqualsIdentity()
+        {
+            Formula a = new Formula("a");
+            Assert.AreEqual(true, a == a);
+        }
+
+        [TestMethod()]
+        public void TestEqualsFromToString()
+        {
+            string expression = "x + 2";
+            Formula a = new Formula(expression);
+            Formula b = new Formula(a.ToString());
+            Assert.AreEqual(true, a.Equals(b));
+            Assert.AreEqual(true, b.Equals(a));
+        }
+
+        [TestMethod()]
+        public void TestEqualsBothNull()
+        {
+            Formula a = new Formula(null);
+            Formula b = new Formula(null);
+            Assert.AreEqual(true, a == b);
+            Assert.AreEqual(true, b == a);
+        }
+
+        [TestMethod()]
         public void TestEqualsWithNormalizer()
         {
             Formula a = new Formula("x1 + x2", VarToUpper, IsValid);
@@ -83,6 +118,22 @@ namespace FormulaTests
             expected.Add("Y");
             expected.Add("Z");
             Assert.AreEqual(expected, variables);
+        }
+
+        [TestMethod()]
+        public void TestGetVariablesLongerFormula()
+        {
+            //Make sure we strip out numbers and expressions too
+            Formula f = new Formula("3*a1 + b2+ c3 + x + y + _a + _2 + 6 + 7");
+            List<string> vars = new List<string>();
+            vars.Add("a1");
+            vars.Add("b2");
+            vars.Add("c3");
+            vars.Add("x");
+            vars.Add("y");
+            vars.Add("_a");
+            vars.Add("_2");
+            Assert.AreEqual(vars, f.GetVariables());
         }
 
         [TestMethod()]
