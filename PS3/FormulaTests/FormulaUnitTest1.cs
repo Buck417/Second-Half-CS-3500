@@ -20,7 +20,7 @@ namespace FormulaTests
         public void TestNormalSubtraction()
         {
             Formula f = new Formula("3.33 - 1.33");
-            Assert.AreEqual(2, f.Evaluate(s => s));
+            Assert.AreEqual(2, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
@@ -57,12 +57,7 @@ namespace FormulaTests
             Formula f = new Formula("_2");
             Assert.Equals(20, f.Evaluate(s => 20));
         }
-
-        [TestMethod()]
-        public void TestInvalidVariable()
-        {
-
-        }
+        
 
 
 
@@ -75,7 +70,12 @@ namespace FormulaTests
             Formula f = new Formula("2x", VarToUpper, IsValid);
         }
 
-
+        [TestMethod()]
+        public void TestValidVariableWithValidator()
+        {
+            Formula f = new Formula("x2", VarToUpper, IsValid);
+            Assert.Equals(2, f.Evaluate(s => 2));
+        }
 
 
         /********************************* HELPER METHODS **********************************/
