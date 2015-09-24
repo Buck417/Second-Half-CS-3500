@@ -36,6 +36,11 @@ namespace SpreadsheetUtilities
     /// </summary>
     public class Formula
     {
+        private Func<string, string> normalizer;
+        private Func<string, bool> validator;
+        private string formulaString;
+        public delegate double VarLookup(string varName);
+
         /// <summary>
         /// Creates a Formula from a string that consists of an infix expression written as
         /// described in the class comment.  If the expression is syntactically invalid,
@@ -47,6 +52,7 @@ namespace SpreadsheetUtilities
         public Formula(String formula) :
             this(formula, s => s, s => true)
         {
+            formulaString = formula;
         }
 
         /// <summary>
@@ -73,6 +79,9 @@ namespace SpreadsheetUtilities
         /// </summary>
         public Formula(String formula, Func<string, string> normalize, Func<string, bool> isValid)
         {
+            formulaString = formula;
+            normalizer = normalize;
+            validator = isValid;
         }
 
         /// <summary>
