@@ -58,6 +58,14 @@ namespace FormulaTests
             Assert.Equals(20, f.Evaluate(s => 20));
         }
         
+        [TestMethod()]
+        public void TestEquals()
+        {
+            Formula a = new Formula("x + y2");
+            Formula b = new Formula("x+y2");
+            Assert.AreEqual(true, a.Equals(b));
+            Assert.AreEqual(true, b.Equals(a));
+        }
 
 
 
@@ -76,6 +84,7 @@ namespace FormulaTests
             Formula f = new Formula("x2", VarToUpper, IsValid);
             Assert.Equals(2, f.Evaluate(s => 2));
         }
+
 
 
         /********************************* HELPER METHODS **********************************/
