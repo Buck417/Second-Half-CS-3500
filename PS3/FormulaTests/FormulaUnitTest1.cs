@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpreadsheetUtilities;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace FormulaTests
 {
@@ -9,6 +10,113 @@ namespace FormulaTests
     public class FormulaUnitTest1
     {
         /********************************* TEST METHODS FOR FIRST CONSTRUCTOR **********************************/
+        [TestMethod()]
+        public void TestToString()
+        {
+            Formula a = new Formula("A2 + a3");
+            Assert.AreEqual("A2+a3", a.ToString());
+        }
+
+        [TestMethod()]
+        public void TestToStringWithNormalizer()
+        {
+            Formula f = new Formula("a2*A4 + A5 / B2", VarToUpper, IsValid);
+            Assert.AreEqual("A2*A4+A5/B2", f.ToString());
+        }
+
+        [TestMethod()]
+        public void TestEqualsNotAnObject()
+        {
+            Formula f = new Formula("2 + 3");
+            Assert.AreEqual(false, f.Equals(new Object()));
+            Assert.AreEqual(false, f.Equals("Hi there"));
+        }
+
+        [TestMethod()]
+        public void TestEqualsWithNormalizer()
+        {
+            Formula a = new Formula("x1 + x2", VarToUpper, IsValid);
+            Formula b = new Formula("X1 + X2");
+            Assert.AreEqual(true, a.Equals(b));
+            Assert.AreEqual(true, b.Equals(a));
+        }
+
+        [TestMethod()]
+        public void TestHashCodeTrue()
+        {
+            Formula a = new Formula("2 + X3");
+            int hashCodeA = a.GetHashCode();
+            Formula b = new Formula("2+X3");
+            int hashCodeB = b.GetHashCode();
+            Assert.AreEqual(hashCodeA, hashCodeB);
+        }
+
+        [TestMethod()]
+        public void TestHashCodeFalse()
+        {
+            Formula a = new Formula("2 + 3");
+            int hashCodeA = a.GetHashCode();
+            Formula b = new Formula("3 + 2");
+            int hashCodeB = b.GetHashCode();
+            Assert.AreNotEqual(hashCodeA, hashCodeB);
+        }
+
+        [TestMethod()]
+        public void TestGetVariables()
+        {
+            Formula f = new Formula("x+y+z");
+            IEnumerable<string> variables = f.GetVariables();
+            List<string> expected = new List<string>();
+            expected.Add("x");
+            expected.Add("y");
+            expected.Add("z");
+            Assert.AreEqual(expected, variables);
+        }
+
+        [TestMethod()]
+        public void TestGetVariablesWithNormalizer()
+        {
+            Formula f = new Formula("x+y+z", VarToUpper, IsValid);
+            IEnumerable<string> variables = f.GetVariables();
+            List<string> expected = new List<string>();
+            expected.Add("X");
+            expected.Add("Y");
+            expected.Add("Z");
+            Assert.AreEqual(expected, variables);
+        }
+
+        [TestMethod()]
+        public void TestBoolOperatorTrue()
+        {
+            Formula a = new Formula("a");
+            Formula b = new Formula("a");
+            Assert.AreEqual(true, a == b);
+        }
+
+        [TestMethod()]
+        public void TestBoolOperatorTrueFail()
+        {
+            Formula a = new Formula("a");
+            Formula b = new Formula("b");
+            Assert.AreEqual(false, a == b);
+        }
+
+        [TestMethod()]
+        public void TestBoolOperatorFalse()
+        {
+            Formula a = new Formula("a");
+            Formula b = new Formula("b");
+            Assert.AreEqual(true, a != b);
+        }
+
+        [TestMethod()]
+        public void TestBoolOperatorFalseFail()
+        {
+            Formula a = new Formula("a");
+            Formula b = new Formula("a");
+            Assert.AreEqual(false, a != b);
+        }
+
         [TestMethod()]
         public void TestNormalAddition()
         {
@@ -72,6 +180,24 @@ namespace FormulaTests
             Formula b = new Formula("2.0000");
             Assert.AreEqual(true, a.Equals(b));
             Assert.AreEqual(true, b.Equals(a));
+        }
+
+        [TestMethod()]
+        public void TestNotEqualsReversedExpressions()
+        {
+            Formula a = new Formula("a + b");
+            Formula b = new Formula("b + a");
+            Assert.AreEqual(false, a.Equals(b));
+            Assert.AreEqual(false, b.Equals(a));
+        }
+
+        [TestMethod()]
+        public void TestNotEqualsSameResult()
+        {
+            Formula a = new Formula("2 + 3 + 1");
+            Formula b = new Formula("5 + 1");
+            Assert.AreEqual(false, a.Equals(b));
+            Assert.AreEqual(false, b.Equals(a));
         }
 
 
