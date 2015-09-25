@@ -80,6 +80,7 @@ namespace SpreadsheetUtilities
         public Formula(String formula, Func<string, string> normalize, Func<string, bool> isValid)
         {
             formulaString = normalize(formula);
+            if (!isValid(formulaString)) throw new FormulaFormatException("Invalid formula format");
             this.normalize = normalize;
             validator = isValid;
         }
@@ -141,7 +142,7 @@ namespace SpreadsheetUtilities
                     //If token is a right parentheses
                     if (token == ")")
                     {
-                        processRightParentheses(ref valStack, ref opStack);
+                        ProcessRightParentheses(ref valStack, ref opStack);
                         continue;
                     }
 
@@ -482,7 +483,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         /// <param name="valStack"></param>
         /// <param name="opStack"></param>
-        private void processRightParentheses(ref Stack<double> valStack, ref Stack<string> opStack)
+        private void ProcessRightParentheses(ref Stack<double> valStack, ref Stack<string> opStack)
         {
             double result, first, second;
             switch (opStack.Pop())

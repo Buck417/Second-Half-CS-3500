@@ -288,6 +288,7 @@ namespace FormulaTests
 
         /********************************* TEST METHODS FOR SECOND CONSTRUCTOR **********************************/
         [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
         public void TestInvalidVariableWithValidator()
         {
             Formula f = new Formula("2x", VarToUpper, IsValid);
@@ -489,6 +490,13 @@ namespace FormulaTests
         }
 
 
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void TestInvalidExpression()
+        {
+            Formula f = new Formula("a2", s => s, s => false);
+        }
+
 
 
         /********************************* HELPER METHODS **********************************/
@@ -497,16 +505,57 @@ namespace FormulaTests
             return variable.ToUpper();
         }
 
-        private static bool IsValid(string variable)
+        private static bool IsValid(string formula)
         {
-            Match match = Regex.Match(variable, @"([a-zA-Z]+[0-9]+)");
-            if (match.Success)
+            foreach(string variable in GetTokens(formula))
             {
-                return true;
+                if (variable == "+" || variable == "*" || variable == "/" || variable == "-") continue;
+                Match match = Regex.Match(variable, @"(([a-zA-Z]|[_])+[0-9]*)");
+                
+                //If the variable isn't valid, return false
+                if (!match.Success)
+                {
+                    return false;
+                }
+                else
+                {
+                    //Make sure the variable returned from the match was the same as the original variable
+                    if (!variable.Equals(match.Value)) return false;
+                }
             }
-            return false;
+            
+            return true;
         }
 
-        
+        /// <summary>
+        /// Given an expression, enumerates the tokens that compose it.  Tokens are left paren;
+        /// right paren; one of the four operator symbols; a string consisting of a letter or underscore
+        /// followed by zero or more letters, digits, or underscores; a double literal; and anything that doesn't
+        /// match one of those patterns.  There are no empty tokens, and no token contains white space.
+        /// </summary>
+        private static IEnumerable<string> GetTokens(String formula)
+        {
+            // Patterns for individual tokens
+            String lpPattern = @"\(";
+            String rpPattern = @"\)";
+            String opPattern = @"[\+\-*/]";
+            String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";
+            String doublePattern = @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?";
+            String spacePattern = @"\s+";
+
+            // Overall pattern
+            String pattern = String.Format("({0}) | ({1}) | ({2}) | ({3}) | ({4}) | ({5})",
+                                            lpPattern, rpPattern, opPattern, varPattern, doublePattern, spacePattern);
+
+            // Enumerate matching tokens that don't consist solely of white space.
+            foreach (String s in Regex.Split(formula, pattern, RegexOptions.IgnorePatternWhitespace))
+            {
+                if (!Regex.IsMatch(s, @"^\s*$", RegexOptions.Singleline))
+                {
+                    yield return s;
+                }
+            }
+
+        }
     }
 }
