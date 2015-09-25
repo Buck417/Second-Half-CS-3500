@@ -100,38 +100,29 @@ namespace FormulaTests
         public void TestGetVariables()
         {
             Formula f = new Formula("x+y+z");
-            IEnumerable<string> variables = f.GetVariables();
-            List<string> expected = new List<string>();
-            expected.Add("x");
-            expected.Add("y");
-            expected.Add("z");
-            Assert.AreEqual(expected, variables);
+            List<string> variables = (List<string>)f.GetVariables();
+            Assert.AreEqual(true, variables.Contains("x"));
+            Assert.AreEqual(true, variables.Contains("y"));
+            Assert.AreEqual(true, variables.Contains("z"));
         }
 
         [TestMethod()]
         public void TestGetVariablesSeparatedBySpace()
         {
             Formula f = new Formula("x y");
-            IEnumerable<string> variables = f.GetVariables();
-            int count = 0;
-            foreach(string variable in variables)
-            {
-                if (variable.Equals("x") || variable.Equals("y")) count++;
-            }
-
-            Assert.AreEqual(2, count);
+            List<string> variables = (List<string>)f.GetVariables();
+            Assert.AreEqual(true, variables.Contains("x"));
+            Assert.AreEqual(true, variables.Contains("y"));
         }
 
         [TestMethod()]
         public void TestGetVariablesWithNormalizer()
         {
             Formula f = new Formula("x+y+z", VarToUpper, IsValid);
-            IEnumerable<string> variables = f.GetVariables();
-            List<string> expected = new List<string>();
-            expected.Add("X");
-            expected.Add("Y");
-            expected.Add("Z");
-            Assert.AreEqual(expected, variables);
+            List<string> variables = (List<string>)f.GetVariables();
+            Assert.AreEqual(true, variables.Contains("X"));
+            Assert.AreEqual(true, variables.Contains("Y"));
+            Assert.AreEqual(true, variables.Contains("Z"));
         }
 
         [TestMethod()]
@@ -139,15 +130,15 @@ namespace FormulaTests
         {
             //Make sure we strip out numbers and expressions too
             Formula f = new Formula("3*a1 + b2+ c3 + x + y + _a + _2 + 6 + 7");
-            List<string> vars = new List<string>();
-            vars.Add("a1");
-            vars.Add("b2");
-            vars.Add("c3");
-            vars.Add("x");
-            vars.Add("y");
-            vars.Add("_a");
-            vars.Add("_2");
-            Assert.AreEqual(vars, f.GetVariables());
+            List<string> vars = (List<string>)f.GetVariables();
+            Assert.AreEqual(true, vars.Contains("a1"));
+            Assert.AreEqual(true, vars.Contains("b2"));
+            Assert.AreEqual(true, vars.Contains("c3"));
+            Assert.AreEqual(true, vars.Contains("x"));
+            Assert.AreEqual(true, vars.Contains("y"));
+            Assert.AreEqual(true, vars.Contains("_a"));
+            Assert.AreEqual(true, vars.Contains("_2"));
+            Assert.AreEqual(7, vars.Count);
         }
 
         [TestMethod()]
@@ -228,7 +219,7 @@ namespace FormulaTests
         public void TestDoubleUnderScoresNoNumber()
         {
             Formula f = new Formula("__");
-            Assert.IsInstanceOfType(f.Evaluate(s => 0), typeof(FormulaError));
+            Assert.AreEqual(2.0, f.Evaluate(s => 2));
         }
 
         [TestMethod()]

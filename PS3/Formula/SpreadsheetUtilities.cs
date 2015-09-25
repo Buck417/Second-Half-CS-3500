@@ -52,7 +52,7 @@ namespace SpreadsheetUtilities
         public Formula(String formula) :
             this(formula, s => s, s => true)
         {
-            formulaString = formula;
+            formulaString = normalize(formula);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public Formula(String formula, Func<string, string> normalize, Func<string, bool> isValid)
         {
-            formulaString = formula;
+            formulaString = normalize(formula);
             this.normalize = normalize;
             validator = isValid;
         }
