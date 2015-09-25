@@ -107,15 +107,114 @@ namespace SpreadsheetUtilities
         /// </summary>
         public object Evaluate(Func<string, double> lookup)
         {
-            foreach(string token in GetTokens(formulaString))
+            Stack<double> valStack = new Stack<double>();
+            Stack<string> opStack = new Stack<string>();
+            try
             {
-                //Go through each token and decide what to do with it
-                switch (token)
+                foreach (string token in GetTokens(formulaString))
                 {
+                    //Skip over the nonsense empty tokens
+                    if (token == "") continue;
 
+                    //If token is an integer
+                    double value;
+                    if (Double.TryParse(token, out value))
+                    {
+                        ProcessDouble(ref valStack, value, ref opStack);
+                        continue;
+                    }
+
+                    //If token is + or -
+                    if (token == "+" || token == "-")
+                    {
+                        ProcessPlusOrMinus(ref valStack, token, ref opStack);
+                        continue;
+                    }
+
+                    //If token is *, /, or left parentheses "("
+                    if (token == "*" || token == "/" || token == "(")
+                    {
+                        opStack.Push(token);
+                        continue;
+                    }
+
+                    //If token is a right parentheses
+                    if (token == ")")
+                    {
+                        processRightParentheses(ref valStack, ref opStack);
+                        continue;
+                    }
+
+                    //If we got this far, we know it's probably either a variable or invalid character
+                    Match match = Regex.Match(token, @"(([a-zA-Z]|[_])+[0-9]*)");
+                    if (match.Success)
+                    {
+                        //Make sure that the matched value is the same as the token it was given
+                        if (!match.Value.Equals(token)) throw new ArgumentException("Invalid variable name: " + token);
+
+                        ProcessVariable(ref valStack, token, lookup, ref opStack);
+                    }
+                    else
+                    {
+                        return new FormulaError("Invalid variable " + token);
+                    }
                 }
             }
-            return null;
+            catch (DivideByZeroException e)
+            {
+                return new FormulaError("Cannot divide by 0.");
+            }
+            catch(ArgumentException e)
+            {
+                return new FormulaError(e.Message);
+            }
+
+            if (opStack.Count == 0)
+            {
+                if (valStack.Count == 1)
+                {
+                    return valStack.Pop();
+                }
+                else
+                {
+                    return new FormulaError("Only one value should be left in the value stack when operator stack is empty, " + valStack.Count + " values are left on the value stack.");
+                }
+            }
+            else
+            {
+                while (opStack.Count >= 1)
+                {
+                    if (valStack.Count < 2)
+                        return new FormulaError("Need two values in the value stack if there's only one item in the operation stack.");
+                    double first = 0, second = 0;
+                    switch (opStack.Peek())
+                    {
+                        case "+":
+                            ProcessPlusOrMinus(ref valStack, "+", ref opStack);
+                            opStack.Pop();
+                            break;
+                        case "-":
+                            //Make sure to reverse the order for subtraction, since stacks pop things off in reverse order
+                            ProcessPlusOrMinus(ref valStack, "-", ref opStack);
+                            opStack.Pop();
+                            break;
+                        case "*":
+                            valStack.Push(valStack.Pop() * valStack.Pop());
+                            opStack.Pop();
+                            break;
+                        case "/":
+                            first = valStack.Pop();
+                            if (first == 0) throw new DivideByZeroException();
+                            second = valStack.Pop();
+                            valStack.Push(second / first);
+                            opStack.Pop();
+                            break;
+                        default:
+                            return new FormulaError("Invalid operator.");
+                    }
+                }
+                return valStack.Pop();
+            }
         }
 
         /// <summary>
@@ -134,7 +233,11 @@ namespace SpreadsheetUtilities
             List<string> vars = new List<string>();
             foreach(string token in GetTokens(formulaString))
             {
-
+                Regex reg = new Regex(@"(([a-zA-Z]|[_])+[0-9]*)");
+                if (reg.IsMatch(token))
+                {
+                    vars.Add(token);
+                }
             }
             return vars;
         }
@@ -172,7 +275,12 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override bool Equals(object obj)
         {
-            return false;
+            if ((object)obj == null) return false;
+            //TODO: Make this return false for strings/objects that are not formulaic expressions
+
+            var thisString = normalize(formulaString.Replace(" ", ""));
+            var thatString = normalize(obj.ToString().Replace(" ", ""));
+            return thisString.Equals(thatString);
         }
 
         /// <summary>
@@ -182,8 +290,21 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator ==(Formula f1, Formula f2)
         {
-            if (f1 == null && f2 == null) return true;
-            else if (f1 == null && f2 != null || f1 != null && f2 == null) return false;
+            //If they're the same object, return true
+            if(Object.ReferenceEquals(f1, f2))
+            {
+                return true;
+            }
+            //If both formula strings are null, return true
+            if (f1.formulaString == null && f2.formulaString == null) return true;
+
+            //If one of the formula strings is null, return false
+            else if (f1.formulaString == null && f2.formulaString != null || f1.formulaString != null && f2.formulaString == null) return false;
+            
+            //Use the .Equals method on this class to tell whether the formulas are equal
+            if (f1.Equals(f2) && f2.Equals(f1)) return true;
+
+            //For everything else, return false
             return false;
         }
 
@@ -194,9 +315,12 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator !=(Formula f1, Formula f2)
         {
-            if (f1 == null && f2 == null) return false;
-            else if (f1 == null && f2 != null || f1 != null && f2 == null) return true;
-            return false;
+            //If the formula strings in both formulas is null, return false (they should be considered equal)
+            if (f1.formulaString == null && f2.formulaString == null) return false;
+
+            //If one of the formula strings is null but the other isn't, return true
+            else if (f1.formulaString == null && f2.formulaString != null || f1.formulaString != null && f2.formulaString == null) return true;
+            return !f1.Equals(f2);
         }
 
         /// <summary>
@@ -244,7 +368,7 @@ namespace SpreadsheetUtilities
 
         /// <summary>
         /// This encapsulates the behavior to expect when
-        /// the intValue being processed is an integer.
+        /// the doubleValue being processed is an integer.
         /// If * or / is at the top of the operator stack, 
         /// pop the value stack, pop the operator stack, 
         /// and apply the popped operator to t and the 
@@ -256,7 +380,7 @@ namespace SpreadsheetUtilities
         /// passing in to be calculated</param>
         /// <param name="opStack">Passed by reference so we make sure
         /// it's updated as needed</param>
-        public static void ProcessInteger(ref Stack<int> valueStack, int intValue, ref Stack<string> opStack)
+        private void ProcessDouble(ref Stack<double> valueStack, double doubleValue, ref Stack<string> opStack)
         {
             //If the top of the operations stack is * or /, and assuming there's something in the value stack already
             if (opStack.OnTop("*", "/"))
@@ -265,45 +389,46 @@ namespace SpreadsheetUtilities
                 {
                     throw new ArgumentException("Value stack empty, need at least one number to multiply");
                 }
-                int value = valueStack.Pop();
+                double value = valueStack.Pop();
                 switch (opStack.Pop())
                 {
                     case "*":
-                        valueStack.Push(intValue * value);
+                        valueStack.Push(doubleValue * value);
                         break;
                     case "/":
-                        valueStack.Push(value / intValue);
+                        if (doubleValue == 0) throw new DivideByZeroException();
+                        valueStack.Push(value / doubleValue);
                         break;
                 }
             }
             else
             {
-                valueStack.Push(intValue);
+                valueStack.Push(doubleValue);
             }
         }
 
         /// <summary>
         /// This function is basically a wrapper for the 
-        /// ProcessInteger function, except we need to look
-        /// up the value of the intValue we're passing in first.
+        /// ProcessDouble function, except we need to look
+        /// up the value of the doubleValue we're passing in first.
         /// </summary>
         /// <param name="valueStack"></param>
         /// <param name="varName">The name of the variable we're looking for</param>
         /// <param name="lookup">The lookup function to find the value
         /// of our variable</param>
         /// <param name="opStack">The operator stack</param>
-        public static void ProcessVariable(ref Stack<int> valueStack, string varName, Lookup lookup, ref Stack<string> opStack)
+        private void ProcessVariable(ref Stack<double> valueStack, string varName, Func<string, double> lookup, ref Stack<string> opStack)
         {
-            int intValue;
+            double doubleValue;
             try
             {
-                intValue = lookup(varName);
+                doubleValue = lookup(varName);
             }
             catch (ArgumentException e)
             {
                 throw new ArgumentException("Variable " + varName + " not found.");
             }
-            ProcessInteger(ref valueStack, intValue, ref opStack);
+            ProcessDouble(ref valueStack, doubleValue, ref opStack);
         }
 
         /// <summary>
@@ -317,9 +442,9 @@ namespace SpreadsheetUtilities
         /// <param name="valueStack"></param>
         /// <param name="token"></param>
         /// <param name="opStack"></param>
-        public static void ProcessPlusOrMinus(ref Stack<int> valueStack, string token, ref Stack<string> opStack)
+        private void ProcessPlusOrMinus(ref Stack<double> valueStack, string token, ref Stack<string> opStack)
         {
-            int result;
+            double result;
             if (opStack.Count > 0)
             {
                 switch (opStack.Peek())
@@ -330,8 +455,8 @@ namespace SpreadsheetUtilities
                         valueStack.Push(result);
                         break;
                     case "-":
-                        int first = valueStack.Pop();
-                        int second = valueStack.Pop();
+                        double first = valueStack.Pop();
+                        double second = valueStack.Pop();
                         result = second - first;
                         opStack.Pop();
                         valueStack.Push(result);
@@ -357,9 +482,9 @@ namespace SpreadsheetUtilities
         /// </summary>
         /// <param name="valStack"></param>
         /// <param name="opStack"></param>
-        public static void processRightParentheses(ref Stack<int> valStack, ref Stack<string> opStack)
+        private void processRightParentheses(ref Stack<double> valStack, ref Stack<string> opStack)
         {
-            int result, first, second;
+            double result, first, second;
             switch (opStack.Pop())
             {
                 case "+":
@@ -384,6 +509,7 @@ namespace SpreadsheetUtilities
                 case "/":
                     //Make sure this is done in reverse, since stacks pop things in reverse of how they were inserted
                     first = valStack.Pop();
+                    if (first == 0) throw new DivideByZeroException();
                     second = valStack.Pop();
                     result = second / first;
                     valStack.Push(result);
@@ -397,6 +523,11 @@ namespace SpreadsheetUtilities
             }
         }
 
+       
+    }
+
+    public static class Extensions
+    {
         /// <summary>
         /// This serves as a convenience method for testing
         /// which operators are on top of the operator stack.
@@ -405,7 +536,7 @@ namespace SpreadsheetUtilities
         /// <param name="first"></param>
         /// <param name="second"></param>
         /// <returns></returns>
-        public static Boolean OnTop(this Stack<string> opStack, string first, string second)
+        public static bool OnTop(this Stack<string> opStack, string first, string second)
         {
             if (opStack.Count == 0)
             {

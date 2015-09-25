@@ -109,6 +109,20 @@ namespace FormulaTests
         }
 
         [TestMethod()]
+        public void TestGetVariablesSeparatedBySpace()
+        {
+            Formula f = new Formula("x y");
+            IEnumerable<string> variables = f.GetVariables();
+            int count = 0;
+            foreach(string variable in variables)
+            {
+                if (variable.Equals("x") || variable.Equals("y")) count++;
+            }
+
+            Assert.AreEqual(2, count);
+        }
+
+        [TestMethod()]
         public void TestGetVariablesWithNormalizer()
         {
             Formula f = new Formula("x+y+z", VarToUpper, IsValid);
@@ -179,7 +193,7 @@ namespace FormulaTests
         public void TestNormalSubtraction()
         {
             Formula f = new Formula("3.33 - 1.33");
-            Assert.AreEqual(2, f.Evaluate(s => 0));
+            Assert.AreEqual(2.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
@@ -200,21 +214,35 @@ namespace FormulaTests
         public void TestSingleCharVariable()
         {
             Formula f = new Formula("x");
-            Assert.Equals(15, f.Evaluate(s => 15));
+            Assert.AreEqual(15.0, f.Evaluate(s => 15));
+        }
+
+        [TestMethod()]
+        public void TestDoubleUnderScores()
+        {
+            Formula f = new Formula("__9");
+            Assert.AreEqual(10.0, f.Evaluate(s => 10));
+        }
+
+        [TestMethod()]
+        public void TestDoubleUnderScoresNoNumber()
+        {
+            Formula f = new Formula("__");
+            Assert.IsInstanceOfType(f.Evaluate(s => 0), typeof(FormulaError));
         }
 
         [TestMethod()]
         public void TestOneCharOneNumber()
         {
             Formula f = new Formula("a1");
-            Assert.Equals(10, f.Evaluate(s => 10));
+            Assert.AreEqual(10.0, f.Evaluate(s => 10));
         }
 
         [TestMethod()]
         public void TestUnderscoreNumber()
         {
             Formula f = new Formula("_2");
-            Assert.Equals(20, f.Evaluate(s => 20));
+            Assert.AreEqual(20.0, f.Evaluate(s => 20));
         }
         
         [TestMethod()]
@@ -257,7 +285,7 @@ namespace FormulaTests
         {
             //Positive e
             Formula f = new Formula("2e3");
-            Assert.AreEqual(2000, f.Evaluate(s => 0));
+            Assert.AreEqual(2000.0, f.Evaluate(s => 0));
 
             //Negative e
             f = new Formula("2e-3");
@@ -269,17 +297,17 @@ namespace FormulaTests
 
         /********************************* TEST METHODS FOR SECOND CONSTRUCTOR **********************************/
         [TestMethod()]
-        [ExpectedException(typeof(FormulaFormatException))]
         public void TestInvalidVariableWithValidator()
         {
             Formula f = new Formula("2x", VarToUpper, IsValid);
+            Assert.IsInstanceOfType(f.Evaluate(s => 0), typeof(FormulaError));
         }
 
         [TestMethod()]
         public void TestValidVariableWithValidator()
         {
             Formula f = new Formula("x2", VarToUpper, IsValid);
-            Assert.Equals(2, f.Evaluate(s => 2));
+            Assert.AreEqual(2.0, f.Evaluate(s => 2));
         }
 
 
@@ -290,189 +318,183 @@ namespace FormulaTests
         public void Test1()
         {
             Formula f = new Formula("5");
-            Assert.AreEqual(5, f.Evaluate(s => 0));
+            Assert.AreEqual(5.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test2()
         {
             Formula f = new Formula("X5");
-            Assert.AreEqual(13, f.Evaluate(s => 13));
+            Assert.AreEqual(13.0, f.Evaluate(s => 13.0));
         }
 
         [TestMethod()]
         public void Test3()
         {
             Formula f = new Formula("5+3");
-            Assert.AreEqual(8, f.Evaluate(s => 0));
+            Assert.AreEqual(8.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test4()
         {
             Formula f = new Formula("18-10");
-            Assert.AreEqual(8, f.Evaluate(s => 0));
+            Assert.AreEqual(8.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test5()
         {
             Formula f = new Formula("2 * 4");
-            Assert.AreEqual(8, f.Evaluate(s => 0));
+            Assert.AreEqual(8.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test6()
         {
             Formula f = new Formula("16/2");
-            Assert.AreEqual(8, f.Evaluate(s => 0));
+            Assert.AreEqual(8.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test7()
         {
             Formula f = new Formula("2+X1");
-            Assert.AreEqual(6, f.Evaluate(s => 4));
+            Assert.AreEqual(6.0, f.Evaluate(s => 4));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void Test8()
         {
             Formula f = new Formula("x + X1");
-            f.Evaluate(s => { throw new ArgumentException("Unknown variable"); });
+            Assert.IsInstanceOfType(f.Evaluate(s => { throw new ArgumentException("Unknown variable"); }), typeof(FormulaError));
         }
 
         [TestMethod()]
         public void Test9()
         {
             Formula f = new Formula("2*6+3");
-            Assert.AreEqual(15, f.Evaluate(s => 0));
+            Assert.AreEqual(15.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test10()
         {
             Formula f = new Formula("2+6*3");
-            Assert.AreEqual(20, f.Evaluate(s => 0));
+            Assert.AreEqual(20.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test11()
         {
             Formula f = new Formula("(2+6)*3");
-            Assert.AreEqual(24, f.Evaluate(s => 0));
+            Assert.AreEqual(24.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test12()
         {
             Formula f = new Formula("2*(3+5)");
-            Assert.AreEqual(16, f.Evaluate(s => 0));
+            Assert.AreEqual(16.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test13()
         {
             Formula f = new Formula("2+(3+5)");
-            Assert.AreEqual(10, f.Evaluate(s => 0));
+            Assert.AreEqual(10.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test14()
         {
             Formula f = new Formula("2+(3+5*9)");
-            Assert.AreEqual(50, f.Evaluate(s => 0));
+            Assert.AreEqual(50.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test15()
         {
             Formula f = new Formula("2+3*(3+5)");
-            Assert.AreEqual(26, f.Evaluate(s => 0));
+            Assert.AreEqual(26.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
         public void Test16()
         {
             Formula f = new Formula("2+3*5+(3+4*8)*5+2");
-            Assert.AreEqual(194, f.Evaluate(s => 0));
+            Assert.AreEqual(194.0, f.Evaluate(s => 0));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void Test17()
         {
             Formula f = new Formula("5/0");
-            f.Evaluate(s => 0);
+            Object result = f.Evaluate(s => 0);
+            Assert.IsInstanceOfType(result, typeof(FormulaError));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void Test18()
         {
             Formula f = new Formula("+");
-            f.Evaluate(s => 0);
+            Assert.IsInstanceOfType(f.Evaluate(s => 0), typeof(FormulaError));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void Test19()
         {
             Formula f = new Formula("2+5+");
-            f.Evaluate(s => 0);
+            Assert.IsInstanceOfType(f.Evaluate(s => 0), typeof(FormulaError));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void Test20()
         {
             Formula f = new Formula("2+5*7)");
-            f.Evaluate(s => 0);
+            Assert.IsInstanceOfType(f.Evaluate(s => 0), typeof(FormulaError));
         }
         
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void Test23()
         {
             Formula f = new Formula("5+7+(5)8");
-            f.Evaluate(s => 0);
+            Assert.IsInstanceOfType(f.Evaluate(s => 0), typeof(FormulaError));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void Test24()
         {
             Formula f = new Formula("");
-            f.Evaluate(s => 0);
+            Assert.IsInstanceOfType(f.Evaluate(s => 0), typeof(FormulaError));
         }
 
         [TestMethod()]
         public void Test25()
         {
             Formula f = new Formula("y1 * 3 - 8 / 2 + 4 * (8 - 9 * 2) / 2 * x7");
-            Assert.AreEqual(-12, f.Evaluate(s => (s == "x7") ? 1 : 4));
+            Assert.AreEqual(-12.0, f.Evaluate(s => (s == "x7") ? 1 : 4));
         }
 
         [TestMethod()]
         public void Test26()
         {
             Formula f = new Formula("x1 + (x2 + (x3 + (x4 + (x5 + x6))))");
-            Assert.AreEqual(6, f.Evaluate(s => 1));
+            Assert.AreEqual(6.0, f.Evaluate(s => 1));
         }
 
         [TestMethod()]
         public void Test27()
         {
             Formula f = new Formula("((((x1+x2)+x3)+x4)+x5)+x6");
-            Assert.AreEqual(12, f.Evaluate(s => 2));
+            Assert.AreEqual(12.0, f.Evaluate(s => 2));
         }
 
         [TestMethod()]
         public void Test28()
         {
             Formula f = new Formula("a4-a4*a4/a4");
-            Assert.AreEqual(0, f.Evaluate(s => 3));
+            Assert.AreEqual(0.0, f.Evaluate(s => 3));
         }
 
 
