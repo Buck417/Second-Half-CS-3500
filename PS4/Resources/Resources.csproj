@@ -37,7 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Libraries\Formula.dll" />
+    <Content Include="Libraries\Formula.XML" />
     <Content Include="Libraries\SpreadsheetUtilities.dll" />
+    <Content Include="Libraries\SpreadsheetUtilities.XML" />
     <Content Include="README.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

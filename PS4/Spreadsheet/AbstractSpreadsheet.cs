@@ -201,6 +201,14 @@ namespace SS
         /// A helper for the GetCellsToRecalculate method.
         /// 
         ///   -- You should fully comment what is going on below --
+        /// In this method, we are going through each cell in a certain 'start'
+        /// cell's list of dependents. The first step is to add the 'name' cell to visit
+        /// in the list of 'visited' cells. Then, we go through a list of dependent cells
+        /// to see which cells have changed. The list of dependents is coming from the 'name'
+        /// cell that we are comparing against. If the next cell in the list of dependents
+        /// hasn't been visited, recursively visit the dependents of that cell until all dependents
+        /// have been visited. If one of the cells in the list of dependents is the same as the 'start'
+        /// cell, we konw there is a circular reference, and throw a CircularException.
         /// </summary>
         private void Visit(String start, String name, ISet<String> visited, LinkedList<String> changed)
         {
