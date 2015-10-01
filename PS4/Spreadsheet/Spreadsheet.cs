@@ -54,17 +54,14 @@ namespace SS
     /// </summary>
     public class Spreadsheet : AbstractSpreadsheet
     {
-        private DependencyGraph dg;
-        private Dictionary<string, Cell> nonEmptyCells;
-
+        
         /// <summary>
         /// (Copied from AbstractSpreadsheet for easier development)
         /// Our zero-argument constructor; creates an empty spreadsheet.
         /// </summary>
         public Spreadsheet()
         {
-            dg = new DependencyGraph();
-            nonEmptyCells = new Dictionary<string, Cell>();
+            
         }
 
         /// <summary>
@@ -76,14 +73,7 @@ namespace SS
         /// </summary>
         public override object GetCellContents(string name)
         {
-            if (name == null) throw new InvalidNameException();
-            Cell c;
-            if (nonEmptyCells.ContainsKey(name))
-            {
-                c = nonEmptyCells[name];
-                return c.Contents;
-            }
-            else return "";
+            return null;
 
         }
 
@@ -93,7 +83,7 @@ namespace SS
         /// </summary>
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
-            return (IEnumerable<string>) nonEmptyCells;
+            return null;
         }
 
         /// <summary>
@@ -114,15 +104,8 @@ namespace SS
         /// </summary>
         public override ISet<string> SetCellContents(string name, Formula formula)
         {
-            //See if the cell is already in the non-empty list
-            if (nonEmptyCells.ContainsKey(name))
-            {
-                nonEmptyCells[name].Contents = formula;
-            }
-            else
-            {
-                nonEmptyCells.Add(name, new Cell(name, formula));
-            }
+            if (formula == null) throw new ArgumentNullException();
+            if (name == null) throw new InvalidNameException();
             return null;
         }
 
@@ -141,7 +124,10 @@ namespace SS
         /// </summary>
         public override ISet<string> SetCellContents(string name, string text)
         {
-            throw new NotImplementedException();
+            if (text == null) throw new ArgumentNullException();
+            else if (name == null) throw new InvalidNameException();
+            return null;
+
         }
 
         /// <summary>
@@ -159,7 +145,7 @@ namespace SS
         {
             throw new NotImplementedException();
         }
-
+        
         /// <summary>
         /// (Copied from AbstractSpreadsheet for easier development)
         /// If name is null, throws an ArgumentNullException.
