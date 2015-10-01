@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace SS
 {
     public class Spreadsheet : AbstractSpreadsheet
@@ -45,5 +46,11 @@ namespace SS
         {
             throw new NotImplementedException();
         }
+    }
+
+    public class Cell
+    {
+        private string Name, Contents;
+        
     }
 }
