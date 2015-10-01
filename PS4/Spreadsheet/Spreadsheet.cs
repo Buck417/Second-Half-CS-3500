@@ -54,8 +54,8 @@ namespace SS
     /// </summary>
     public class Spreadsheet : AbstractSpreadsheet
     {
-
-        private Regex rx;
+        private DependencyGraph dg;
+        private Dictionary<string, Cell> nonEmptyCells;
 
         /// <summary>
         /// (Copied from AbstractSpreadsheet for easier development)
@@ -63,7 +63,8 @@ namespace SS
         /// </summary>
         public Spreadsheet()
         {
-            rx = new Regex(@"(([a-zA-Z]|[_])+[0-9]*)");
+            dg = new DependencyGraph();
+            nonEmptyCells = new Dictionary<string, Cell>();
         }
 
         /// <summary>
@@ -75,7 +76,15 @@ namespace SS
         /// </summary>
         public override object GetCellContents(string name)
         {
-            throw new NotImplementedException();
+            if (name == null) throw new InvalidNameException();
+            Cell c;
+            if (nonEmptyCells.ContainsKey(name))
+            {
+                c = nonEmptyCells[name];
+                return c.Contents;
+            }
+            else return "";
+
         }
 
         /// <summary>
@@ -84,7 +93,7 @@ namespace SS
         /// </summary>
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
-            throw new NotImplementedException();
+            return (IEnumerable<string>) nonEmptyCells;
         }
 
         /// <summary>
@@ -105,7 +114,16 @@ namespace SS
         /// </summary>
         public override ISet<string> SetCellContents(string name, Formula formula)
         {
-            throw new NotImplementedException();
+            //See if the cell is already in the non-empty list
+            if (nonEmptyCells.ContainsKey(name))
+            {
+                nonEmptyCells[name].Contents = formula;
+            }
+            else
+            {
+                nonEmptyCells.Add(name, new Cell(name, formula));
+            }
+            return null;
         }
 
         /// <summary>
@@ -162,6 +180,8 @@ namespace SS
         /// </summary>
         protected override IEnumerable<string> GetDirectDependents(string name)
         {
+            if (name == null) throw new ArgumentNullException("Cell name cannot be null when searching for direct dependents.");
+            
             throw new NotImplementedException();
         }
     }
@@ -171,6 +191,65 @@ namespace SS
     /// </summary>
     public class Cell
     {
-        private string Name, Contents;
+        public static Regex rx
+        {
+            //Read-only property
+            get
+            {
+                return new Regex(@"(([a-zA-Z]|[_])+[0-9]*)");
+            }
+        }
+            
+        public Cell(string name, object contents)
+        {
+            Name = name;
+            Contents = contents;
+        }
+
+        private string name;
+        public string Name
+        {
+            set
+            {
+                
+                //Make sure it's a valid cell name
+                if (rx.IsMatch(value))
+                {
+                    //If we got a match from the Regex, make sure it's the same as the initial input
+                    if (rx.Match(value).Value.Equals(value))
+                    {
+                        name = value;
+                    }
+                    //If the regexed value isn't the same as the original value, it's not a valid variable
+                    else
+                    {
+                        throw new InvalidNameException();
+                    }
+                }
+                //If there's no regex match at all, it's an invalid variable
+                else
+                {
+                    throw new InvalidNameException();
+                }
+            }
+            get
+            {
+                return name;
+            }
+        }
+        private object contents;
+        public object Contents
+        {
+            set
+            {
+                //TODO: sanitize the contents setter
+                contents = value;
+            }
+            get
+            {
+                return contents;
+            }
+        }
+
     }
 }
