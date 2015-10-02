@@ -113,8 +113,26 @@ namespace SS
         {
             if ((object)formula == null) throw new ArgumentNullException();
             else if (!Cell.ValidName(name)) throw new InvalidNameException();
-            nonEmptyCells.Add(name, new Cell(name, formula));
-            return null;
+
+            nonEmptyCells.AddIfNotExists(name, new Cell(name, formula));
+
+            HashSet<string> dependees = new HashSet<string>();
+            //Add the dependency for each of the variables in this formula
+            foreach (string dependee in formula.GetVariables())
+            {
+                dg.AddDependency(name, dependee);
+                dependees.Add(dependee);
+            }
+            HashSet<string> result = new HashSet<string>();
+            //Add the cell-in-question's name
+            result.Add(name);
+            //Get all the cells that need to be recalculated, based on the dependees in this formula
+            foreach(string cellName in GetCellsToRecalculate(dependees))
+            {
+                result.Add(cellName);
+            }
+            
+            return result;
         }
 
         /// <summary>
@@ -134,8 +152,16 @@ namespace SS
         {
             if (text == null) throw new ArgumentNullException();
             else if (name == null) throw new InvalidNameException();
-            nonEmptyCells.Add(name, new Cell(name, text));
-            return null;
+
+            nonEmptyCells.AddIfNotExists(name, new Cell(name, text));
+            HashSet<string> result = new HashSet<string>();
+            result.Add(name);
+
+            foreach (string cellName in GetCellsToRecalculate(name))
+            {
+                result.Add(cellName);
+            }
+            return result;
         }
 
         /// <summary>
@@ -152,8 +178,15 @@ namespace SS
         public override ISet<string> SetCellContents(string name, double number)
         {
             if (!Cell.ValidName(name)) throw new InvalidNameException();
-            nonEmptyCells.Add(name, new Cell(name, number));
-            return null;
+            
+            nonEmptyCells.AddIfNotExists(name, new Cell(name, number));
+            HashSet<string> result = new HashSet<string>();
+            result.Add(name);
+            foreach(string cellName in GetCellsToRecalculate(name))
+            {
+                result.Add(cellName);
+            }
+            return result;
         }
         
         /// <summary>
@@ -178,7 +211,31 @@ namespace SS
         {
             if (name == null) throw new ArgumentNullException("Cell name cannot be null when searching for direct dependents.");
             else if (!Cell.ValidName(name)) throw new InvalidNameException();
-            throw new NotImplementedException();
+            //It's a bit counter-intuitive to return the dependees, but we basically want to return all the cells that depend on 'name' to be calculated
+            return dg.GetDependees(name);
+        }
+
+        
+    }
+
+    public static class Extensions
+    {
+        /// <summary>
+        /// If no cell by this name already exists, add it. Otherwise, update the existing value.
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <param name="name"></param>
+        /// <param name="cell"></param>
+        public static void AddIfNotExists(this Dictionary<string, Cell> dict, string name, Cell cell)
+        {
+            if (dict.ContainsKey(name))
+            {
+                dict[name] = cell;
+            }
+            else
+            {
+                dict.Add(name, cell);
+            }
         }
     }
 
@@ -252,6 +309,5 @@ namespace SS
                 return contents;
             }
         }
-
     }
 }

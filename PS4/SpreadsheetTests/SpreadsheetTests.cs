@@ -40,11 +40,29 @@ namespace SS.Tests
         }
 
         [TestMethod()]
+        public void GetCellContentsDoubleCellExistsTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            Assert.AreEqual(true, s.SetCellContents("a1", 2.0).Contains("a1"));
+            Assert.AreEqual(true, s.SetCellContents("a1", 5.3).Contains("a1"));
+            Assert.AreEqual(5.3, s.GetCellContents("a1"));
+        }
+
+        [TestMethod()]
         public void GetCellContentsStringTest()
         {
             Spreadsheet s = new Spreadsheet();
             s.SetCellContents("a1", "Hey there");
             Assert.AreEqual("Hey there", s.GetCellContents("a1"));
+        }
+
+        [TestMethod()]
+        public void GetCellContentsStringCellExistsTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            Assert.AreEqual(true, s.SetCellContents("a1", "Hey there").Contains("a1"));
+            Assert.AreEqual(true, s.SetCellContents("a1", "What's up?").Contains("a1"));
+            Assert.AreEqual("What's up?", s.GetCellContents("a1"));
         }
 
         [TestMethod()]
@@ -92,6 +110,8 @@ namespace SS.Tests
             IEnumerable<string> result = s.SetCellContents("C1", new Formula("A1 * 4 / 3"));
             Assert.AreEqual(true, result.Contains("A1"));
             Assert.AreEqual(true, result.Contains("C1"));
+            Assert.AreEqual(false, result.Contains("B1"));
+            Assert.AreEqual(2, result.Count());
         }
         
         [TestMethod()]
@@ -99,7 +119,7 @@ namespace SS.Tests
         {
             Spreadsheet s = new Spreadsheet();
             //Make sure it actually added something
-            Assert.AreEqual(true, s.SetCellContents("a1", 2.0).Count > 0);
+            Assert.AreEqual(true, s.SetCellContents("a1", 2.0).Contains("a1"));
             //Make sure a1 has the right data
             Assert.AreEqual(2.0, s.GetCellContents("a1"));
             //Make sure a1 is in the nonempty set
@@ -130,7 +150,7 @@ namespace SS.Tests
             Spreadsheet s = new Spreadsheet();
             Assert.AreEqual(true, s.SetCellContents("A1", "Hey there").Contains("A1"));
         }
-
+        
         [TestMethod()]
         [ExpectedException(typeof(InvalidNameException))]
         public void SetCellContentsStringNullNameTest()
@@ -150,12 +170,6 @@ namespace SS.Tests
         [TestMethod()]
         public void SetCellContentsFormulaTest()
         {
-            /// For example, suppose that
-            /// A1 contains 3
-            /// B1 contains the formula A1 * A1
-            /// C1 contains the formula B1 + A1
-            /// D1 contains the formula B1 - C1
-            /// The direct dependents of A1 are B1 and C1
             Spreadsheet s = new Spreadsheet();
             
             Assert.AreEqual(true, s.SetCellContents("B1", new Formula("A1 * A1")).Contains("A1"));
@@ -165,7 +179,8 @@ namespace SS.Tests
             Assert.AreEqual(true, result.Contains("A1"));
             Assert.AreEqual(true, result.Contains("B1"));
             Assert.AreEqual(true, result.Contains("C1"));
-            Assert.AreEqual(false, result.Contains("D1"));
+            Assert.AreEqual(true, result.Contains("D1"));
+            
         }
 
         [TestMethod()]
