@@ -117,7 +117,8 @@ namespace SS.Tests
         [TestMethod()]
         public void SetCellContentsStringTest()
         {
-            Assert.Fail();
+            Spreadsheet s = new Spreadsheet();
+            Assert.AreEqual(true, s.SetCellContents("A1", "Hey there").Contains("A1"));
         }
 
         [TestMethod()]
@@ -139,16 +140,33 @@ namespace SS.Tests
         [TestMethod()]
         public void SetCellContentsFormulaTest()
         {
-            Assert.Fail();
+            /// For example, suppose that
+            /// A1 contains 3
+            /// B1 contains the formula A1 * A1
+            /// C1 contains the formula B1 + A1
+            /// D1 contains the formula B1 - C1
+            /// The direct dependents of A1 are B1 and C1
+            Spreadsheet s = new Spreadsheet();
+            
+            Assert.AreEqual(true, s.SetCellContents("B1", new Formula("A1 * A1")).Contains("A1"));
+            s.SetCellContents("C1", new Formula("B1 + A1"));
+            s.SetCellContents("D1", new Formula("B1 - C1"));
+            IEnumerable<string> result = s.SetCellContents("A1", 3);
+            Assert.AreEqual(true, result.Contains("A1"));
+            Assert.AreEqual(true, result.Contains("B1"));
+            Assert.AreEqual(true, result.Contains("C1"));
+            Assert.AreEqual(false, result.Contains("D1"));
         }
 
         [TestMethod()]
-        public void SetCellContentsFormulaReferencesOtherCellsTest()
+        public void SetCellContentsFormulaCircularReferenceTest()
         {
-            //TODO: Write a test where a formula references other cells
-            Assert.Fail();
-        }
+            Spreadsheet s = new Spreadsheet();
+            s.SetCellContents("A1", new Formula("B1"));
+            s.SetCellContents("B1", new Formula("A1"));
 
+        }
+        
         [TestMethod()]
         [ExpectedException(typeof(InvalidNameException))]
         public void SetCellContentsFormulaNullNameTest()
