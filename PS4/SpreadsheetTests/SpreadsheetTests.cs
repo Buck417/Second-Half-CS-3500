@@ -69,8 +69,7 @@ namespace SS.Tests
         public void GetNamesOfAllNonemptyCellsNoCellsTest()
         {
             Spreadsheet s = new Spreadsheet();
-            List<string> names = new List<string>();
-            Assert.AreEqual(names, (List<string>)s.GetNamesOfAllNonemptyCells());
+            Assert.AreEqual(0, s.GetNamesOfAllNonemptyCells().Count());
         }
 
         [TestMethod()]
@@ -82,6 +81,17 @@ namespace SS.Tests
             IEnumerable<string> names = s.GetNamesOfAllNonemptyCells();
             Assert.AreEqual(true, names.Contains("a1"));
             Assert.AreEqual(true, names.Contains("a2"));
+        }
+
+        [TestMethod()]
+        public void SetCellContentsMixedTypeTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetCellContents("A1", 2.0);
+            s.SetCellContents("B1", "Title of this cell");
+            IEnumerable<string> result = s.SetCellContents("C1", new Formula("A1 * 4 / 3"));
+            Assert.AreEqual(true, result.Contains("A1"));
+            Assert.AreEqual(true, result.Contains("C1"));
         }
         
         [TestMethod()]
@@ -159,12 +169,21 @@ namespace SS.Tests
         }
 
         [TestMethod()]
+        public void SetCellContentsFormulaCellExists()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetCellContents("A1", new Formula("2 + 3"));
+            Assert.AreEqual(true, s.SetCellContents("A1", new Formula("5 * 6")).Contains("A1"));
+            Assert.AreEqual(new Formula("5 * 6"), s.GetCellContents("A1"));
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(CircularException))]
         public void SetCellContentsFormulaCircularReferenceTest()
         {
             Spreadsheet s = new Spreadsheet();
             s.SetCellContents("A1", new Formula("B1"));
             s.SetCellContents("B1", new Formula("A1"));
-
         }
         
         [TestMethod()]
@@ -181,6 +200,24 @@ namespace SS.Tests
         {
             Spreadsheet s = new Spreadsheet();
             s.SetCellContents("2x", new Formula("x + 2"));
+        }
+
+        [TestMethod()]
+        public void CellValidNameTest()
+        {
+            Assert.AreEqual(true, Cell.ValidName("A1"));
+            Assert.AreEqual(true, Cell.ValidName("A"));
+            Assert.AreEqual(false, Cell.ValidName("1"));
+            Assert.AreEqual(true, Cell.ValidName("_"));
+            Assert.AreEqual(true, Cell.ValidName("_A"));
+            Assert.AreEqual(false, Cell.ValidName(""));
+            Assert.AreEqual(false, Cell.ValidName(null));
+            Assert.AreEqual(true, Cell.ValidName("_1"));
+            Assert.AreEqual(true, Cell.ValidName("A_2"));
+            Assert.AreEqual(true, Cell.ValidName("A_A"));
+            Assert.AreEqual(false, Cell.ValidName("2A"));
+            Assert.AreEqual(true, Cell.ValidName("x1"));
+            Assert.AreEqual(true, Cell.ValidName("x"));
         }
     }
 }

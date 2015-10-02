@@ -54,14 +54,16 @@ namespace SS
     /// </summary>
     public class Spreadsheet : AbstractSpreadsheet
     {
-        
+        private DependencyGraph dg;
+        private Dictionary<string, Cell> nonEmptyCells;
         /// <summary>
         /// (Copied from AbstractSpreadsheet for easier development)
         /// Our zero-argument constructor; creates an empty spreadsheet.
         /// </summary>
         public Spreadsheet()
         {
-            
+            dg = new DependencyGraph();
+            nonEmptyCells = new Dictionary<string, Cell>();
         }
 
         /// <summary>
@@ -73,8 +75,10 @@ namespace SS
         /// </summary>
         public override object GetCellContents(string name)
         {
-            return null;
-
+            if (!Cell.ValidName(name)) throw new InvalidNameException();
+            else if (nonEmptyCells.ContainsKey(name))
+                return nonEmptyCells[name].Contents;
+            else return "";
         }
 
         /// <summary>
@@ -83,7 +87,10 @@ namespace SS
         /// </summary>
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
-            return null;
+            foreach(string name in nonEmptyCells.Keys)
+            {
+                yield return name;
+            }
         }
 
         /// <summary>
@@ -104,8 +111,9 @@ namespace SS
         /// </summary>
         public override ISet<string> SetCellContents(string name, Formula formula)
         {
-            if (formula == null) throw new ArgumentNullException();
-            if (name == null) throw new InvalidNameException();
+            if ((object)formula == null) throw new ArgumentNullException();
+            else if (!Cell.ValidName(name)) throw new InvalidNameException();
+            nonEmptyCells.Add(name, new Cell(name, formula));
             return null;
         }
 
@@ -126,8 +134,8 @@ namespace SS
         {
             if (text == null) throw new ArgumentNullException();
             else if (name == null) throw new InvalidNameException();
+            nonEmptyCells.Add(name, new Cell(name, text));
             return null;
-
         }
 
         /// <summary>
@@ -143,7 +151,9 @@ namespace SS
         /// </summary>
         public override ISet<string> SetCellContents(string name, double number)
         {
-            throw new NotImplementedException();
+            if (!Cell.ValidName(name)) throw new InvalidNameException();
+            nonEmptyCells.Add(name, new Cell(name, number));
+            return null;
         }
         
         /// <summary>
@@ -167,7 +177,7 @@ namespace SS
         protected override IEnumerable<string> GetDirectDependents(string name)
         {
             if (name == null) throw new ArgumentNullException("Cell name cannot be null when searching for direct dependents.");
-            
+            else if (!Cell.ValidName(name)) throw new InvalidNameException();
             throw new NotImplementedException();
         }
     }
@@ -184,6 +194,12 @@ namespace SS
             {
                 return new Regex(@"(([a-zA-Z]|[_])+[0-9]*)");
             }
+        }
+
+        public static bool ValidName(string name)
+        {
+            if (name != null && rx.IsMatch(name) && rx.Match(name).Value.Equals(name)) return true;
+            else return false;
         }
             
         public Cell(string name, object contents)
