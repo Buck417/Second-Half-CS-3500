@@ -51,6 +51,7 @@ namespace SS.Tests
         [TestMethod()]
         public void GetCellContentsStringTest()
         {
+            //Gets the contents of a string-type cell
             Spreadsheet s = new Spreadsheet();
             s.SetCellContents("a1", "Hey there");
             Assert.AreEqual("Hey there", s.GetCellContents("a1"));
