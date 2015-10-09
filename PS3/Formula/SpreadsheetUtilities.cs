@@ -160,16 +160,7 @@ namespace SpreadsheetUtilities
                         return new FormulaError("Invalid variable " + token);
                     }
                 }
-            }
-            catch (DivideByZeroException e)
-            {
-                return new FormulaError("Cannot divide by 0.");
-            }
-            catch(ArgumentException e)
-            {
-                return new FormulaError(e.Message);
-            }
-
+            
             if (opStack.Count == 0)
             {
                 if (valStack.Count == 1)
@@ -215,6 +206,16 @@ namespace SpreadsheetUtilities
                     }
                 }
                 return valStack.Pop();
+
+            }
+            }
+            catch (DivideByZeroException e)
+            {
+                return new FormulaError("Cannot divide by 0.");
+            }
+            catch (ArgumentException e)
+            {
+                return new FormulaError(e.Message);
             }
         }
 
@@ -231,7 +232,8 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<String> GetVariables()
         {
-            List<string> vars = new List<string>();
+            HashSet<string> vars = new HashSet<string>();
+            
             foreach(string token in GetTokens(formulaString))
             {
                 Regex reg = new Regex(@"(([a-zA-Z]|[_])+[0-9]*)");
@@ -240,7 +242,7 @@ namespace SpreadsheetUtilities
                     vars.Add(token);
                 }
             }
-            return vars;
+            return vars.ToList(); ;
         }
 
         /// <summary>
@@ -296,6 +298,10 @@ namespace SpreadsheetUtilities
             {
                 return true;
             }
+
+            //See if the actual objects themselves are null
+            
+
             //If both formula strings are null, return true
             if (f1.formulaString == null && f2.formulaString == null) return true;
 
