@@ -3,6 +3,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using SpreadsheetUtilities;
+using System.IO;
+using System;
 
 namespace SS.Tests
 {
@@ -236,172 +238,260 @@ namespace SS.Tests
         }
 
         [TestMethod()]
-        public void GetSavedVersionTest()
+        public void ChangedFromNewSpreadsheetTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "2");
+            Assert.AreEqual(true, s.Changed);
+        }
+
+        [TestMethod()]
+        public void ChangedFromSavedSpreadsheetTest()
+        {
+            MockSpreadsheet s = new MockSpreadsheet();
+            s.SetContentsOfCell("a1", "3");
+            s.Save("test");
+            Assert.AreEqual(false, s.Changed);
+            s.SetContentsOfCell("a2", "a");
+            Assert.AreEqual(true, s.Changed);
+        }
+
+        [TestMethod()]
+        public void IsValidTest()
         {
             Assert.Fail();
         }
 
         [TestMethod()]
-        public void GetCellValueTest()
+        public void NormalizeTest()
         {
             Assert.Fail();
+        }
+
+        [TestMethod()]
+        public void GetSavedVersionTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            Assert.AreEqual("test123", s.GetSavedVersion("test.xml"));
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void GetSavedVersionNonexistentFileTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.GetSavedVersion("234.txt");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void GetSavedVersionNotXMLTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.GetSavedVersion("Spreadsheet.cs");
         }
 
         [TestMethod()]
         public void SaveTest()
         {
-            Assert.Fail();
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("A1", "2");
+            s.SetContentsOfCell("B1", "2 + 2");
+            s.SetContentsOfCell("C1", "=3 * 3");
+            s.Save("saveTest.xml");
+            Assert.AreEqual(true, File.Exists("saveTest.xml"));
+            File.Delete("saveTest.xml");
+            Spreadsheet s2 = new Spreadsheet();
+            s2.Save("saveTest2.xml");
+            Assert.AreEqual(true, File.Exists("saveTest2.xml"));
         }
 
         [TestMethod()]
-        public void SetContentsOfCellTest()
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void SaveNotXMLTest()
         {
-            Assert.Fail();
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "2");
+            s.Save("asdf.txt");
         }
 
+        [TestMethod()]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void SaveNoExtensionTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.Save("hello");
+        }
+
+        [TestMethod()]
+        public void SaveExistingSpreadsheetTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "2");
+            s.Save("existingTest.xml");
+            Assert.AreEqual(true, File.Exists("existingTest.xml"));
+            s.SetContentsOfCell("a1", "35");
+            s.Save("existingTest.xml");
+            Assert.AreEqual(true, File.Exists("existingTest.xml"));
+        }
+
+        [TestMethod()]
+        public void GetCellValueFromFormulaTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "=2+2");
+            Assert.AreEqual(4.0, s.GetCellValue("a1"));
+        }
+
+        [TestMethod()]
+        public void GetCellValueFromStringTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "Hello");
+            Assert.AreEqual("Hello", s.GetCellValue("a1"));
+        }
+
+        [TestMethod()]
+        public void GetCellValueFromDoubleTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "2.0");
+            Assert.AreEqual(2.0, s.GetCellValue("a1"));
+        }
+        
+        [TestMethod()]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void SetCellContentsNullContentsTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", null);
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(InvalidNameException))]
+        public void SetCellContentsInvalidNameTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("11a", "asdf");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(InvalidNameException))]
+        public void SetCellContentsNullNameTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell(null, "asdf");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void SetCelLContentsInvalidFormulaTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "=a + b + c)");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(CircularException))]
+        public void SetCellContentsCircularDependencyTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "=b2 + 3");
+            s.SetContentsOfCell("b2", "=a1 + 4");
+        }
+
+        /// <summary>
+        /// Tests the empty constructor
+        /// </summary>
         [TestMethod()]
         public void SpreadsheetTest()
         {
-            Assert.Fail();
+            Spreadsheet s = new Spreadsheet();
+            Assert.AreEqual("a", s.Normalize("a"));
+            Assert.AreEqual(true, s.IsValid("a"));
+            Assert.AreEqual("default", s.Version);
+        }
+
+        /// <summary>
+        /// Tests the three argument constructor
+        /// </summary>
+        [TestMethod()]
+        public void SpreadsheetThreeArgumentConstructorTest()
+        {
+            Spreadsheet s = new Spreadsheet(TestValidToFalse, TestNormalizeToUpperCase, "1.1");
+            Assert.AreEqual(false, s.IsValid("a"));
+            Assert.AreEqual("A1", s.Normalize("a1"));
+            Assert.AreEqual("1.1", s.Version);
         }
 
         [TestMethod()]
-        public void SpreadsheetTest1()
+        public void SpreadsheetFourArgumentConstructorTest()
         {
-            Assert.Fail();
+            Spreadsheet s = new Spreadsheet("fourarg.xml", TestValidToFalse, TestNormalizeToUpperCase, "2.2");
+            Assert.AreEqual(false, s.IsValid("a"));
+            Assert.AreEqual("A", s.Normalize("a"));
+            Assert.AreEqual("2.2", s.Version);
         }
 
         [TestMethod()]
-        public void SpreadsheetTest2()
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void SpreadsheetFourArgumentConstructorWrongVersionTest()
         {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void GetCellContentsTest()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void GetNamesOfAllNonemptyCellsTest1()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void SetContentsOfCellTest1()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void GetSavedVersionTest1()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void SaveTest1()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void GetCellValueTest1()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void AbstractSpreadsheetTest()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void ValidNameTest()
-        {
-            Assert.Fail();
+            Spreadsheet s = new Spreadsheet("fourarg.xml", TestValidToFalse, TestNormalizeToUpperCase, "1.01");
         }
 
         [TestMethod()]
         public void CellTest()
         {
-            Assert.Fail();
+            Cell c = new Cell("a1", "2+2");
+            Assert.AreEqual("2+2", c.Contents);
+            Assert.AreEqual("a1", c.Name);
         }
 
         [TestMethod()]
-        public void GetCellValueTest2()
+        public void SpreadsheetReadWriteExceptionTest()
         {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void GetSavedVersionTest2()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void SpreadsheetTest3()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void SpreadsheetTest4()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void SpreadsheetTest5()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void SpreadsheetTest6()
-        {
-            Assert.Fail();
+            SpreadsheetReadWriteException e = new SpreadsheetReadWriteException("Hello");
+            Assert.AreEqual("Hello", e.Message);
         }
         
-
-        [TestMethod()]
-        public void GetCellContentsTest1()
+        /// <summary>
+        /// Just using this to test the constructors
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public bool TestValidToFalse(string str)
         {
-            Assert.Fail();
+            return false;
         }
 
-        [TestMethod()]
-        public void GetNamesOfAllNonemptyCellsTest2()
+        /// <summary>
+        /// Just using this to test the constructors
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public string TestNormalizeToUpperCase(string str)
         {
-            Assert.Fail();
+            return str.ToUpper();
         }
+    }
 
-        [TestMethod()]
-        public void SetContentsOfCellTest2()
+    public class MockSpreadsheet : Spreadsheet
+    {
+        /// <summary>
+        /// Saves the file if the filename isn't "test"
+        /// </summary>
+        /// <param name="filename"></param>
+        public void Save(string filename)
         {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void GetSavedVersionTest3()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void SaveTest2()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void GetCellValueTest3()
-        {
-            Assert.Fail();
+            if (filename.Equals("test"))
+            {
+                //Do nothing
+            }
+            else
+            {
+                base.Save(filename);
+            }
         }
     }
 }
