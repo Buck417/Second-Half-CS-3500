@@ -17,6 +17,7 @@ namespace SS
         private DependencyGraph dg;
         private Dictionary<string, Cell> nonEmptyCells;
         
+
         /// <summary>
         /// Empty constructor, basically makes all validation
         /// pass and all normalization do nothing. Version is
@@ -54,23 +55,17 @@ namespace SS
             nonEmptyCells = new Dictionary<string, Cell>();
         }
 
+        private bool changed;
         /// <summary>
         /// Tells us whether the spreadsheet has changed
         /// </summary>
         public override bool Changed
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-
-            protected set
-            {
-                throw new NotImplementedException();
-            }
+            get { return changed; }
+            protected set { changed = value; }
         }
 
-        
+
 
         /// <summary>
         /// Gets the contents of a given cell (not the value).
@@ -80,8 +75,14 @@ namespace SS
         public override object GetCellContents(string name)
         {
             if (!Cell.ValidName(name)) throw new InvalidNameException();
-            else if (nonEmptyCells.ContainsKey(name))
-                return nonEmptyCells[name].Contents;
+
+            //Cell does exist, let's find out what it has
+            else if (nonEmptyCells.ContainsKey(name)) {
+                object contents = nonEmptyCells[name].Contents;
+                if (contents.GetType() == typeof(Formula)) return "=" + ((Formula)contents).ToString();
+                return contents;
+            }
+            
             else return "";
         }
 
@@ -92,12 +93,12 @@ namespace SS
         /// <returns></returns>
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
-            foreach(string name in nonEmptyCells.Keys)
+            foreach (string name in nonEmptyCells.Keys)
             {
                 yield return name;
             }
         }
-        
+
         /// <summary>
         /// This sets a cell's contents to have a formula that can be evaluated.
         /// Dependencies are re-evaluated based on the variables in the formula given.
@@ -123,11 +124,11 @@ namespace SS
             //Add the cell-in-question's name
             result.Add(name);
             //Get all the cells that need to be recalculated, based on the dependees in this formula
-            foreach(string cellName in GetCellsToRecalculate(dependees))
+            foreach (string cellName in GetCellsToRecalculate(dependees))
             {
                 result.Add(cellName);
             }
-            
+
             return result;
         }
 
@@ -162,17 +163,17 @@ namespace SS
         protected override ISet<string> SetCellContents(string name, double number)
         {
             if (!Cell.ValidName(name)) throw new InvalidNameException();
-            
+
             nonEmptyCells.AddIfNotExists(name, new Cell(name, number));
             HashSet<string> result = new HashSet<string>();
             result.Add(name);
-            foreach(string cellName in GetCellsToRecalculate(name))
+            foreach (string cellName in GetCellsToRecalculate(name))
             {
                 result.Add(cellName);
             }
             return result;
         }
-        
+
         /// <summary>
         /// Gets the direct dependents of the cell 'name'. I.e., this returns
         /// all of the cells that depend on 'name'.
@@ -201,23 +202,29 @@ namespace SS
         /// <returns></returns>
         public override ISet<string> SetContentsOfCell(string name, string contents)
         {
-            double result = 0;
+            if (contents == null) throw new ArgumentNullException("contents");
+            ISet<string> result;
+            double number = 0;
             //If "contents" contains a formula
-            if(contents.Substring(0, 1).Equals("="))
+            if (contents.Substring(0, 1).Equals("="))
             {
-                return SetCellContents(name, new Formula(contents.Substring(1), Normalize, IsValid));
+                result = SetCellContents(name, new Formula(contents.Substring(1), Normalize, IsValid));
             }
             //If the "contents" are just a number
-            else if(Double.TryParse(contents, out result))
+            else if (Double.TryParse(contents, out number))
             {
-                return SetCellContents(name, result);
+                result = SetCellContents(name, number);
             }
             //If the contents are a string, aka everything else
             else
             {
-                return SetCellContents(name, contents);
+                result = SetCellContents(name, contents);
             }
-            
+
+            //Make sure we mark this as changed
+            Changed = true;
+
+            return result;
         }
 
         /// <summary>
@@ -228,7 +235,9 @@ namespace SS
         /// <returns></returns>
         public override string GetSavedVersion(string filename)
         {
-            throw new NotImplementedException();
+            Regex rx = new Regex(@"[a-zA-z]+\[.xml]");
+            if (!rx.IsMatch(filename)) throw new SpreadsheetReadWriteException("Invalid file name " + filename);
+            return "";
         }
 
         /// <summary>
@@ -237,7 +246,9 @@ namespace SS
         /// <param name="filename"></param>
         public override void Save(string filename)
         {
-            throw new NotImplementedException();
+            Regex rx = new Regex(@"[a-zA-z]+\[.xml]");
+            if (!rx.IsMatch(filename)) throw new SpreadsheetReadWriteException("Invalid file name " + filename);
+            Changed = false;
         }
 
         /// <summary>
@@ -249,8 +260,33 @@ namespace SS
         /// <returns></returns>
         public override object GetCellValue(string name)
         {
-            throw new NotImplementedException();
+            //If the cell name is invalid or null, throw an InvalidNameException
+            if (!Cell.ValidName(name)) throw new InvalidNameException();
+
+            //See if the cell exists
+            if (nonEmptyCells.ContainsKey(name))
+            {
+                Cell c = nonEmptyCells[name];
+                double number = 0;
+                //Return type is based on what the contents are
+                if(c.Contents.GetType() == typeof(Formula))
+                {
+                    //TODO: Need the lookup function here
+                    return ((Formula)c.Contents).Evaluate(s => 2);
+                }
+                else if(Double.TryParse(c.Contents.ToString(), out number))
+                {
+                    return number;
+                }
+                else
+                {
+                    return c.Contents;
+                }
+            }
+
+            return 0;
         }
+        
     }
 
     /// <summary>
@@ -284,7 +320,9 @@ namespace SS
     public class Cell
     {
         private static Regex rx = new Regex(@"(([a-zA-Z]|[_])+[0-9]*)");
-
+        
+        private string contentsType;
+        
         /// <summary>
         /// This helper method just helps us see whether not a given
         /// name is a valid cell name.

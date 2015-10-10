@@ -74,7 +74,7 @@ namespace SS.Tests
         {
             Spreadsheet s = new Spreadsheet();
             s.SetContentsOfCell("a1", "=x1 + x2");
-            Assert.AreEqual("=x1 + x2", s.GetCellContents("a1"));
+            Assert.AreEqual("=x1+x2", s.GetCellContents("a1"));
         }
 
         [TestMethod()]
@@ -82,7 +82,7 @@ namespace SS.Tests
         {
             Spreadsheet s = new Spreadsheet();
             s.SetContentsOfCell("a1", "=a2 + a3");
-            Assert.AreEqual("=a2 + a3", s.GetCellContents("a1"));
+            Assert.AreEqual("=a2+a3", s.GetCellContents("a1"));
         }
 
         [TestMethod()]
@@ -191,7 +191,7 @@ namespace SS.Tests
             Spreadsheet s = new Spreadsheet();
             s.SetContentsOfCell("A1", "=2 + 3");
             Assert.AreEqual(true, s.SetContentsOfCell("A1", "=5 * 6").Contains("A1"));
-            Assert.AreEqual("=5 * 6", s.GetCellContents("A1"));
+            Assert.AreEqual("=5*6", s.GetCellContents("A1"));
         }
 
         [TestMethod()]
@@ -255,19 +255,7 @@ namespace SS.Tests
             s.SetContentsOfCell("a2", "a");
             Assert.AreEqual(true, s.Changed);
         }
-
-        [TestMethod()]
-        public void IsValidTest()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void NormalizeTest()
-        {
-            Assert.Fail();
-        }
-
+        
         [TestMethod()]
         public void GetSavedVersionTest()
         {
@@ -341,6 +329,16 @@ namespace SS.Tests
             Spreadsheet s = new Spreadsheet();
             s.SetContentsOfCell("a1", "=2+2");
             Assert.AreEqual(4.0, s.GetCellValue("a1"));
+        }
+
+        [TestMethod()]
+        public void GetCellValueFromFormulaWithVariablesTest()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "=23");
+            s.SetContentsOfCell("b1", "=a1 * 2");
+            Assert.AreEqual(23.0, s.GetCellValue("a1"));
+            Assert.AreEqual(46.0, s.GetCellValue("b1"));
         }
 
         [TestMethod()]
