@@ -16,15 +16,23 @@ namespace SS
     {
         private DependencyGraph dg;
         private Dictionary<string, Cell> nonEmptyCells;
+        private Func<string, bool> IsValid;
+        private Func<string, string> Normalize;
 
-        /// <summary>
-        /// Instantiates a new Spreadsheet, with all empty cells.
-        /// </summary>
-        public Spreadsheet()
+        public override bool Changed
         {
-            dg = new DependencyGraph();
-            nonEmptyCells = new Dictionary<string, Cell>();
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            protected set
+            {
+                throw new NotImplementedException();
+            }
         }
+
+        
 
         /// <summary>
         /// Gets the contents of a given cell (not the value).
@@ -51,7 +59,7 @@ namespace SS
                 yield return name;
             }
         }
-
+        
         /// <summary>
         /// This sets a cell's contents to have a formula that can be evaluated.
         /// Dependencies are re-evaluated based on the variables in the formula given.
@@ -59,7 +67,7 @@ namespace SS
         /// <param name="name"></param>
         /// <param name="formula"></param>
         /// <returns></returns>
-        public override ISet<string> SetCellContents(string name, Formula formula)
+        protected override ISet<string> SetCellContents(string name, Formula formula)
         {
             if ((object)formula == null) throw new ArgumentNullException();
             else if (!Cell.ValidName(name)) throw new InvalidNameException();
@@ -91,7 +99,7 @@ namespace SS
         /// <param name="name"></param>
         /// <param name="text"></param>
         /// <returns></returns>
-        public override ISet<string> SetCellContents(string name, string text)
+        protected override ISet<string> SetCellContents(string name, string text)
         {
             if (text == null) throw new ArgumentNullException();
             else if (name == null) throw new InvalidNameException();
@@ -113,7 +121,7 @@ namespace SS
         /// <param name="name"></param>
         /// <param name="number"></param>
         /// <returns></returns>
-        public override ISet<string> SetCellContents(string name, double number)
+        protected override ISet<string> SetCellContents(string name, double number)
         {
             if (!Cell.ValidName(name)) throw new InvalidNameException();
             
@@ -141,7 +149,37 @@ namespace SS
             return dg.GetDependees(name);
         }
 
-        
+
+
+
+
+        /***************************************** NEW FOR PS5 ********************************************/
+
+        /// <summary>
+        /// This is basically a wrapper for the protected SetCellContents methods.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="contents"></param>
+        /// <returns></returns>
+        public override ISet<string> SetContentsOfCell(string name, string contents)
+        {
+            return null;
+        }
+
+        public override string GetSavedVersion(string filename)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Save(string filename)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object GetCellValue(string name)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
