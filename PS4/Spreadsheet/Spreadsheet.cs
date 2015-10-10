@@ -16,23 +16,47 @@ namespace SS
     {
         private DependencyGraph dg;
         private Dictionary<string, Cell> nonEmptyCells;
-        private Func<string, bool> IsValid {
-            get
-            {
-
-            }
-            protected set
-            {
-
-            }
-        };
-        private Func<string, string> Normalize;
-
-        public Spreadsheet(Func<string, bool> isValid, Func<string, string> normalize, string version)
+        
+        /// <summary>
+        /// Empty constructor, basically makes all validation
+        /// pass and all normalization do nothing. Version is
+        /// "default" with this constructor.
+        /// </summary>
+        public Spreadsheet() : base(s => true, s => s, "default")
         {
-
+            dg = new DependencyGraph();
+            nonEmptyCells = new Dictionary<string, Cell>();
         }
 
+        /// <summary>
+        /// This constructor chains up to the AbstractSpreadsheet class.
+        /// </summary>
+        /// <param name="isValid"></param>
+        /// <param name="normalize"></param>
+        /// <param name="version"></param>
+        public Spreadsheet(Func<string, bool> isValid, Func<string, string> normalize, string version) : base(isValid, normalize, version)
+        {
+            dg = new DependencyGraph();
+            nonEmptyCells = new Dictionary<string, Cell>();
+        }
+
+        /// <summary>
+        /// This constructor gives the option to pass in a filePath,
+        /// which reads in a new spreadsheet from the filePath given.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="isValid"></param>
+        /// <param name="normalize"></param>
+        /// <param name="version"></param>
+        public Spreadsheet(string filePath, Func<string, bool> isValid, Func<string, string> normalize, string version) : base(isValid, normalize, version)
+        {
+            dg = new DependencyGraph();
+            nonEmptyCells = new Dictionary<string, Cell>();
+        }
+
+        /// <summary>
+        /// Tells us whether the spreadsheet has changed
+        /// </summary>
         public override bool Changed
         {
             get
@@ -177,19 +201,52 @@ namespace SS
         /// <returns></returns>
         public override ISet<string> SetContentsOfCell(string name, string contents)
         {
-            return null;
+            double result = 0;
+            //If "contents" contains a formula
+            if(contents.Substring(0, 1).Equals("="))
+            {
+                return SetCellContents(name, new Formula(contents.Substring(1), Normalize, IsValid));
+            }
+            //If the "contents" are just a number
+            else if(Double.TryParse(contents, out result))
+            {
+                return SetCellContents(name, result);
+            }
+            //If the contents are a string, aka everything else
+            else
+            {
+                return SetCellContents(name, contents);
+            }
+            
         }
 
+        /// <summary>
+        /// Gets the saved version of the spreadsheet
+        /// that was saved at "filename". 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
         public override string GetSavedVersion(string filename)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Saves the spreadsheet to file.
+        /// </summary>
+        /// <param name="filename"></param>
         public override void Save(string filename)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Gets a cell's value, based on its contents.
+        /// If the contents are a string, then just return the string.
+        /// If the contents comprise a formula, return the evaluation of that formula.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public override object GetCellValue(string name)
         {
             throw new NotImplementedException();
