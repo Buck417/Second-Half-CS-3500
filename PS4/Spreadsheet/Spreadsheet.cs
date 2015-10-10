@@ -16,8 +16,22 @@ namespace SS
     {
         private DependencyGraph dg;
         private Dictionary<string, Cell> nonEmptyCells;
-        private Func<string, bool> IsValid;
+        private Func<string, bool> IsValid {
+            get
+            {
+
+            }
+            protected set
+            {
+
+            }
+        };
         private Func<string, string> Normalize;
+
+        public Spreadsheet(Func<string, bool> isValid, Func<string, string> normalize, string version)
+        {
+
+        }
 
         public override bool Changed
         {
