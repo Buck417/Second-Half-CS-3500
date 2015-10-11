@@ -255,19 +255,7 @@ namespace SS.Tests
             s.SetContentsOfCell("a2", "a");
             Assert.AreEqual(true, s.Changed);
         }
-
-        [TestMethod()]
-        public void IsValidTest()
-        {
-            Assert.Fail();
-        }
-
-        [TestMethod()]
-        public void NormalizeTest()
-        {
-            Assert.Fail();
-        }
-
+        
         [TestMethod()]
         public void GetSavedVersionTest()
         {
