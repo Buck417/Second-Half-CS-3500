@@ -54,13 +54,12 @@ namespace SS
             dg = new DependencyGraph();
             nonEmptyCells = new Dictionary<string, Cell>();
             
-            int i = 0;
             try
             {
                 XmlReader xr = XmlReader.Create(filePath);
                 while (xr.Read())
                 {
-                    i++;
+                    
                 }
             }
             catch(XmlException e)
@@ -260,6 +259,13 @@ namespace SS
         /// <param name="filename"></param>
         public override void Save(string filename)
         {
+            filename = filename.Trim();
+            //Make sure the extension is XML
+            if(!filename.IsXMLFilename())
+            {
+                throw new SpreadsheetReadWriteException("Invalid filename: " + filename);
+            }
+
             try {
                 using (XmlWriter writer = XmlWriter.Create(filename))
                 {
@@ -348,6 +354,20 @@ namespace SS
             {
                 dict.Add(name, cell);
             }
+        }
+
+        /// <summary>
+        /// Checks a string to see if it's a valid XML filename.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static bool IsXMLFilename(this string filename)
+        {
+            if(filename.Length < 4)
+            {
+                return false;
+            }
+            return filename.Substring(filename.Length - 3).ToLower().Equals("xml");
         }
     }
 
