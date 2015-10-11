@@ -248,19 +248,22 @@ namespace SS.Tests
         [TestMethod()]
         public void ChangedFromSavedSpreadsheetTest()
         {
-            MockSpreadsheet s = new MockSpreadsheet();
+            Spreadsheet s = new Spreadsheet();
             s.SetContentsOfCell("a1", "3");
-            s.Save("test");
+            s.Save("testChangedFromSpreadsheet.xml");
             Assert.AreEqual(false, s.Changed);
             s.SetContentsOfCell("a2", "a");
             Assert.AreEqual(true, s.Changed);
+            File.Delete("testChangedFromSpreadsheet.xml");
         }
         
         [TestMethod()]
         public void GetSavedVersionTest()
         {
-            Spreadsheet s = new Spreadsheet();
+            Spreadsheet s = new Spreadsheet(TestValidToFalse, TestNormalizeToUpperCase, "test123");
+            s.Save("test.xml");
             Assert.AreEqual("test123", s.GetSavedVersion("test.xml"));
+            File.Delete("test.xml");
         }
 
         [TestMethod()]
@@ -426,9 +429,19 @@ namespace SS.Tests
         [TestMethod()]
         public void SpreadsheetFourArgumentConstructorTest()
         {
+            if (!File.Exists("fourarg.xml"))
+            {
+                Spreadsheet old = new Spreadsheet(TestValidToFalse, TestNormalizeToUpperCase, "2.2");
+                old.SetContentsOfCell("A1", "asdf");
+                old.SetContentsOfCell("B2", "23");
+                old.Save("fourarg.xml");
+            }
             Spreadsheet s = new Spreadsheet("fourarg.xml", TestValidToFalse, TestNormalizeToUpperCase, "2.2");
             Assert.AreEqual(false, s.IsValid("a"));
             Assert.AreEqual("A", s.Normalize("a"));
+            Assert.AreEqual("asdf", s.GetCellContents("A1"));
+            Assert.AreEqual(23.0, s.GetCellContents("B2"));
+            Assert.AreEqual(23.0, s.GetCellValue("B2"));
             Assert.AreEqual("2.2", s.Version);
         }
 

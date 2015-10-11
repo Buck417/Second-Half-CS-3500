@@ -53,18 +53,31 @@ namespace SS
         {
             dg = new DependencyGraph();
             nonEmptyCells = new Dictionary<string, Cell>();
-            
-            try
+            string versionFromFile = GetSavedVersion(filePath);
+            if (version == null) throw new SpreadsheetReadWriteException("Version cannot be null in constructor");
+            if (!version.Equals(versionFromFile)) throw new SpreadsheetReadWriteException("Versions don't match");
+
+            string cellName, cellContents;
+            using (XmlReader reader = XmlReader.Create(filePath))
             {
-                XmlReader xr = XmlReader.Create(filePath);
-                while (xr.Read())
+                try
                 {
-                    
+                    while (reader.Read())
+                    {
+                        //Make sure we only parse the cells in the XML
+                        if (reader.Name.Equals("cell"))
+                        {
+                            reader.Read();
+                            cellName = reader.ReadInnerXml();
+                            cellContents = reader.ReadInnerXml().ToString();
+                            SetContentsOfCell(cellName, cellContents);
+                        }
+                    }
                 }
-            }
-            catch(XmlException e)
-            {
-                throw new SpreadsheetReadWriteException(e.Message);
+                catch (XmlException e)
+                {
+                    throw new SpreadsheetReadWriteException(e.Message);
+                }
             }
         }
 
@@ -77,9 +90,7 @@ namespace SS
             get { return changed; }
             protected set { changed = value; }
         }
-
-
-
+        
         /// <summary>
         /// Gets the contents of a given cell (not the value).
         /// </summary>
@@ -248,9 +259,39 @@ namespace SS
         /// <returns></returns>
         public override string GetSavedVersion(string filename)
         {
-            Regex rx = new Regex(@"[a-zA-z]+\[.xml]");
-            if (!rx.IsMatch(filename)) throw new SpreadsheetReadWriteException("Invalid file name " + filename);
-            return "";
+            filename = filename.Trim();
+            if (!filename.IsXMLFilename()) throw new SpreadsheetReadWriteException(filename + " is not a valid XML file.");
+            using (XmlReader reader = XmlReader.Create(filename))
+            {
+                try
+                {
+                    string result;
+                    reader.MoveToContent();
+                    if (reader.HasAttributes)
+                    {
+                        reader.MoveToFirstAttribute();
+                        if (reader.Name.Equals("version"))
+                        {
+                            result = reader.Value;
+                            reader.Close();
+                            return result;
+                        }
+                        else
+                        {
+                            throw new Exception("First attribute must be 'version', " + reader.Name + " is invalid.");
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Version number missing from file.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    reader.Close();
+                    throw new SpreadsheetReadWriteException(e.Message);
+                }
+            }
         }
 
         /// <summary>
