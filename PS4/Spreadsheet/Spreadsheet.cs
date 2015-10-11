@@ -69,7 +69,10 @@ namespace SS
                         {
                             reader.Read();
                             cellName = reader.ReadInnerXml();
+                            if (!Cell.ValidName(cellName) || !IsValid(cellName)) throw new InvalidNameException();
+
                             cellContents = reader.ReadInnerXml().ToString();
+
                             SetContentsOfCell(cellName, cellContents);
                         }
                     }
@@ -98,10 +101,11 @@ namespace SS
         /// <returns></returns>
         public override object GetCellContents(string name)
         {
-            if (!Cell.ValidName(name)) throw new InvalidNameException();
+            if (!Cell.ValidName(name) || !IsValid(name)) throw new InvalidNameException();
+            name = Normalize(name);
 
             //Cell does exist, let's find out what it has
-            else if (nonEmptyCells.ContainsKey(name)) {
+            if (nonEmptyCells.ContainsKey(name)) {
                 object contents = nonEmptyCells[name].Contents;
                 if (contents.GetType() == typeof(Formula)) return "=" + ((Formula)contents).ToString();
                 return contents;
@@ -226,13 +230,18 @@ namespace SS
         /// <returns></returns>
         public override ISet<string> SetContentsOfCell(string name, string contents)
         {
+            if (!Cell.ValidName(name) || !IsValid(name)) throw new InvalidNameException();
+            name = Normalize(name);
             if (contents == null) throw new ArgumentNullException("contents");
             ISet<string> result;
             double number = 0;
             //If "contents" contains a formula
             if (contents.Substring(0, 1).Equals("="))
             {
-                result = SetCellContents(name, new Formula(contents.Substring(1), Normalize, IsValid));
+                Formula f = new Formula(contents.Substring(1), Normalize, IsValid);
+                result = SetCellContents(name, f);
+                //Try to "evaluate" the formula to see if it's valid
+                if (f.Evaluate(s => 1).GetType() == typeof(FormulaError)) throw new FormulaFormatException("Invalid formula format");
             }
             //If the "contents" are just a number
             else if (Double.TryParse(contents, out number))
@@ -336,6 +345,25 @@ namespace SS
         }
 
         /// <summary>
+        /// Recursively gets the variable's value, based on any dependencies
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private double GetVariableValue(string name)
+        {
+            //First, get the cell in question
+            object contents = nonEmptyCells[name].Contents;
+
+            if(contents.GetType() == typeof(Formula))
+            {
+                return (double)((Formula)contents).Evaluate(GetVariableValue);
+            }
+
+            //Next, see if this cell has a formula. Get the values from the variables in those cells first.
+            return Double.Parse(contents.ToString());
+        }
+
+        /// <summary>
         /// Gets a cell's value, based on its contents.
         /// If the contents are a string, then just return the string.
         /// If the contents comprise a formula, return the evaluation of that formula.
@@ -345,7 +373,8 @@ namespace SS
         public override object GetCellValue(string name)
         {
             //If the cell name is invalid or null, throw an InvalidNameException
-            if (!Cell.ValidName(name)) throw new InvalidNameException();
+            if (!Cell.ValidName(name) || !IsValid(name)) throw new InvalidNameException();
+            name = Normalize(name);
 
             //See if the cell exists
             if (nonEmptyCells.ContainsKey(name))
@@ -355,8 +384,8 @@ namespace SS
                 //Return type is based on what the contents are
                 if(c.Contents.GetType() == typeof(Formula))
                 {
-                    //TODO: Need the lookup function here
-                    return ((Formula)c.Contents).Evaluate(s => 2);
+                    //All dependents must be evaluated before this one
+                    return ((Formula)c.Contents).Evaluate(GetVariableValue);
                 }
                 else if(Double.TryParse(c.Contents.ToString(), out number))
                 {

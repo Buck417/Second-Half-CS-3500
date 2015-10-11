@@ -339,10 +339,21 @@ namespace SS.Tests
         public void GetCellValueFromFormulaWithVariablesTest()
         {
             Spreadsheet s = new Spreadsheet();
-            s.SetContentsOfCell("a1", "=23");
-            s.SetContentsOfCell("b1", "=a1 * 2");
-            Assert.AreEqual(23.0, s.GetCellValue("a1"));
-            Assert.AreEqual(46.0, s.GetCellValue("b1"));
+            s.SetContentsOfCell("a1", "=b1 + 23");
+            s.SetContentsOfCell("b1", "=b2 * 2");
+            s.SetContentsOfCell("b2", "3");
+            Assert.AreEqual(29.0, s.GetCellValue("a1"));
+            Assert.AreEqual(6.0, s.GetCellValue("b1"));
+            Assert.AreEqual(3.0, s.GetCellValue("b2"));
+
+            s.SetContentsOfCell("A1", "3");
+            s.SetContentsOfCell("B1", "=A1 * A1");
+            s.SetContentsOfCell("D1", "=B1 - C1");
+            s.SetContentsOfCell("C1", "=B1 + A1");
+            Assert.AreEqual(3.0, s.GetCellValue("A1"));
+            Assert.AreEqual(9.0, s.GetCellValue("B1"));
+            Assert.AreEqual(12.0, s.GetCellValue("C1"));
+            Assert.AreEqual(9.0-12.0, s.GetCellValue("D1"));
         }
 
         [TestMethod()]
@@ -431,13 +442,13 @@ namespace SS.Tests
         {
             if (!File.Exists("fourarg.xml"))
             {
-                Spreadsheet old = new Spreadsheet(TestValidToFalse, TestNormalizeToUpperCase, "2.2");
+                Spreadsheet old = new Spreadsheet(TestValidToTrue, TestNormalizeToUpperCase, "2.2");
                 old.SetContentsOfCell("A1", "asdf");
                 old.SetContentsOfCell("B2", "23");
                 old.Save("fourarg.xml");
             }
-            Spreadsheet s = new Spreadsheet("fourarg.xml", TestValidToFalse, TestNormalizeToUpperCase, "2.2");
-            Assert.AreEqual(false, s.IsValid("a"));
+            Spreadsheet s = new Spreadsheet("fourarg.xml", TestValidToTrue, TestNormalizeToUpperCase, "2.2");
+            Assert.AreEqual(true, s.IsValid("a"));
             Assert.AreEqual("A", s.Normalize("a"));
             Assert.AreEqual("asdf", s.GetCellContents("A1"));
             Assert.AreEqual(23.0, s.GetCellContents("B2"));
@@ -475,6 +486,16 @@ namespace SS.Tests
         public bool TestValidToFalse(string str)
         {
             return false;
+        }
+
+        /// <summary>
+        /// Always validates to true
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public bool TestValidToTrue(string str)
+        {
+            return true;
         }
 
         /// <summary>
