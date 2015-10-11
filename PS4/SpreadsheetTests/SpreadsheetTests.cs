@@ -292,6 +292,7 @@ namespace SS.Tests
             Spreadsheet s2 = new Spreadsheet();
             s2.Save("saveTest2.xml");
             Assert.AreEqual(true, File.Exists("saveTest2.xml"));
+            File.Delete("saveTest2.xml");
         }
 
         [TestMethod()]
@@ -383,7 +384,7 @@ namespace SS.Tests
 
         [TestMethod()]
         [ExpectedException(typeof(FormulaFormatException))]
-        public void SetCelLContentsInvalidFormulaTest()
+        public void SetCellContentsInvalidFormulaTest()
         {
             Spreadsheet s = new Spreadsheet();
             s.SetContentsOfCell("a1", "=a + b + c)");

@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using SpreadsheetUtilities;
+using System.Xml;
 
 namespace SS
 {
@@ -16,7 +17,6 @@ namespace SS
     {
         private DependencyGraph dg;
         private Dictionary<string, Cell> nonEmptyCells;
-        
 
         /// <summary>
         /// Empty constructor, basically makes all validation
@@ -53,6 +53,20 @@ namespace SS
         {
             dg = new DependencyGraph();
             nonEmptyCells = new Dictionary<string, Cell>();
+            
+            int i = 0;
+            try
+            {
+                XmlReader xr = XmlReader.Create(filePath);
+                while (xr.Read())
+                {
+                    i++;
+                }
+            }
+            catch(XmlException e)
+            {
+                throw new SpreadsheetReadWriteException(e.Message);
+            }
         }
 
         private bool changed;
@@ -246,9 +260,32 @@ namespace SS
         /// <param name="filename"></param>
         public override void Save(string filename)
         {
-            Regex rx = new Regex(@"[a-zA-z]+\[.xml]");
-            if (!rx.IsMatch(filename)) throw new SpreadsheetReadWriteException("Invalid file name " + filename);
-            Changed = false;
+            try {
+                using (XmlWriter writer = XmlWriter.Create(filename))
+                {
+                    writer.WriteStartDocument();
+
+                    //Write the spreadsheet part
+                    writer.WriteStartElement("spreadsheet");
+                    writer.WriteAttributeString("version", Version);
+
+                    foreach (Cell c in nonEmptyCells.Values)
+                    {
+                        writer.WriteStartElement("cell");
+                        writer.WriteElementString("name", c.Name);
+                        writer.WriteElementString("contents", c.Contents.ToString());
+                        writer.WriteEndElement();
+                    }
+
+                    writer.WriteEndElement();
+                    writer.WriteEndDocument();
+                }
+                Changed = false;
+            }
+            catch(XmlException e)
+            {
+                throw new SpreadsheetReadWriteException(e.Message);
+            }
         }
 
         /// <summary>
