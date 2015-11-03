@@ -1223,7 +1223,7 @@ namespace SS.Tests
         /// Saves the file if the filename isn't "test"
         /// </summary>
         /// <param name="filename"></param>
-        public void Save(string filename)
+        override public void Save(string filename)
         {
             if (filename.Equals("test"))
             {
