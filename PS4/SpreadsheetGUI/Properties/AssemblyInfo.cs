@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SpreadsheetGUI")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyCompany("College of Engineering")]
 [assembly: AssemblyProduct("SpreadsheetGUI")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2015")]
+[assembly: AssemblyCopyright("Copyright © College of Engineering 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("3056e631-3364-4b6b-9f00-33b0ad68b399")]
+[assembly: Guid("917b6479-94fd-4c16-9b5c-5564a2d1e9fb")]
 
 // Version information for an assembly consists of the following four values:
 //

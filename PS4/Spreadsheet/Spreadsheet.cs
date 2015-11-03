@@ -233,8 +233,16 @@ namespace SS
             if (!Cell.ValidName(name) || !IsValid(name)) throw new InvalidNameException();
             name = Normalize(name);
             if (contents == null) throw new ArgumentNullException("contents");
+            
             ISet<string> result;
             double number = 0;
+
+            //Handle empty strings
+            if (contents.Equals(""))
+            {
+                return SetCellContents(name, contents);
+            }
+
             //If "contents" contains a formula
             if (contents.Substring(0, 1).Equals("="))
             {
@@ -269,7 +277,7 @@ namespace SS
         public override string GetSavedVersion(string filename)
         {
             filename = filename.Trim();
-            if (!filename.IsXMLFilename()) throw new SpreadsheetReadWriteException(filename + " is not a valid XML file.");
+            //if (!filename.IsXMLFilename()) throw new SpreadsheetReadWriteException(filename + " is not a valid XML file.");
             using (XmlReader reader = XmlReader.Create(filename))
             {
                 try
@@ -313,7 +321,7 @@ namespace SS
             //Make sure the extension is XML
             if(!filename.IsXMLFilename())
             {
-                throw new SpreadsheetReadWriteException("Invalid filename: " + filename);
+                //throw new SpreadsheetReadWriteException("Invalid filename: " + filename);
             }
 
             try {
@@ -376,25 +384,36 @@ namespace SS
             if (!Cell.ValidName(name) || !IsValid(name)) throw new InvalidNameException();
             name = Normalize(name);
 
-            //See if the cell exists
-            if (nonEmptyCells.ContainsKey(name))
-            {
-                Cell c = nonEmptyCells[name];
-                double number = 0;
-                //Return type is based on what the contents are
-                if(c.Contents.GetType() == typeof(Formula))
+            try {
+                //See if the cell exists
+                if (nonEmptyCells.ContainsKey(name))
                 {
-                    //All dependents must be evaluated before this one
-                    return ((Formula)c.Contents).Evaluate(GetVariableValue);
+                    Cell c = nonEmptyCells[name];
+                    double number = 0;
+                    //Return type is based on what the contents are
+                    if (c.Contents.GetType() == typeof(Formula))
+                    {
+                        //All dependents must be evaluated before this one
+                        return ((Formula)c.Contents).Evaluate(GetVariableValue);
+                    }
+                    else if (Double.TryParse(c.Contents.ToString(), out number))
+                    {
+                        return number;
+                    }
+                    else
+                    {
+                        return c.Contents;
+                    }
                 }
-                else if(Double.TryParse(c.Contents.ToString(), out number))
-                {
-                    return number;
-                }
+                //Cell not in there
                 else
                 {
-                    return c.Contents;
+                    return "";
                 }
+            }
+            catch(Exception e)
+            {
+                return new FormulaError(e.Message);
             }
 
             return 0;

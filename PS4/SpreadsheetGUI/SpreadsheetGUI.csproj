@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5DA55254-CF77-45DC-886C-6ABAFB57D074}</ProjectGuid>
+    <ProjectGuid>{917B6479-94FD-4C16-9B5C-5564A2D1E9FB}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SpreadsheetGUI</RootNamespace>
@@ -51,9 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SpreadsheetForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="SpreadsheetForm.cs" />
     <Compile Include="SpreadsheetForm.Designer.cs">
       <DependentUpon>SpreadsheetForm.cs</DependentUpon>
     </Compile>
