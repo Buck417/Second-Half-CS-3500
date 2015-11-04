@@ -186,7 +186,7 @@ namespace SpreadsheetGUI
             //Ask if they want to save their changes, if they need to
 
             //Close the window
-            this.Close();
+            Close();
         }
 
         private void openMenuItemClickHandler(object sender, EventArgs e)
@@ -197,6 +197,11 @@ namespace SpreadsheetGUI
             d.ShowDialog();
             
             
+        }
+
+        private void newMenuItemClickHandler(object sender, EventArgs e)
+        {
+            SpreadsheetProgram.GetAppContext().RunForm(new Form1());
         }
 
 
