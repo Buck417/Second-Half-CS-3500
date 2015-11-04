@@ -345,13 +345,13 @@ namespace SS
             /// <summary>
             /// Constructor for a formula cell
             /// </summary>
-            /// <param name="name">Name of Cell</param>
+            /// <param name="formula">Formula in Cell</param>
             /// <param name="lookup">Lookup delegate</param>
-            public Cell(Formula name, Func<string, double> lookup)
+            public Cell(Formula formula, Func<string, double> lookup)
             {
-                contents = name;
-                value = name.Evaluate(lookup);
-                contents_type = name.GetType().ToString();
+                contents = formula;
+                value = formula.Evaluate(lookup);
+                contents_type = formula.GetType().ToString();
                 value_type = value.GetType().ToString();
 
             }

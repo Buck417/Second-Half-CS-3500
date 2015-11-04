@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SpreadsheetUtilities;
+using System.IO;
 
 namespace SpreadsheetGUI
 {
@@ -22,14 +23,14 @@ namespace SpreadsheetGUI
         public Form1()
         {
             InitializeComponent();
-            ss = new Spreadsheet(Validator, UppercaseString, "");
+            ss = new Spreadsheet(Validator, UppercaseString, "ps6");
 
             updateTextBox(spreadsheetPanel1);
         }
 
         private void cellContentsBox_TextChanged(object sender, EventArgs e)
         {
-
+            
         }
 
         /// <summary>
@@ -84,13 +85,14 @@ namespace SpreadsheetGUI
         private void updateTextBox(SpreadsheetPanel s)
         {
             String name;
+            cellValueTextBox.Focus();
 
             //Assigns the cell name textbox to name for the selected cell
             name = getCellName();
             cellContentsBox.Text = name;
 
             //Checks the cell if its a formula so it knows to add a '=' or not in front of the value
-            if (ss.GetCellValue(name).GetType() == typeof(Formula))
+            if (ss.GetCellContents(name).GetType() == typeof(Formula))
                 cellValueTextBox.Text = "=" + ss.GetCellContents(name).ToString();
             else
                 cellValueTextBox.Text = ss.GetCellContents(name).ToString();
@@ -155,6 +157,48 @@ namespace SpreadsheetGUI
             }
 
         }
+
+        private void spreadsheetPanel1_Enter(object sender, EventArgs e)
+        {
+            cellValueTextBox.Focus();
+        }
+
+        private void cellValueTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)13)
+                solveButtonClick(sender, e);
+        }
+
+        private void saveMenuItemClickHandler(object sender, EventArgs e)
+        {
+            SaveFileDialog d = new SaveFileDialog();
+            
+            d.AddExtension = true;
+            d.CheckFileExists = true;
+            
+            d.ShowDialog();
+            
+
+        }
+
+        private void closeMenuItemClickHandler(object sender, EventArgs e)
+        {
+            //Ask if they want to save their changes, if they need to
+
+            //Close the window
+            this.Close();
+        }
+
+        private void openMenuItemClickHandler(object sender, EventArgs e)
+        {
+            
+            OpenFileDialog d = new OpenFileDialog();
+            d.CheckFileExists = true;
+            d.ShowDialog();
+            
+            
+        }
+
 
         //TODO We need to work on saving and the menu options
     }
