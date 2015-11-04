@@ -221,6 +221,7 @@ namespace SS.Tests
             s.SetContentsOfCell("2x", "=x + 2");
         }
 
+        /*
         [TestMethod()]
         public void CellValidNameTest()
         {
@@ -237,7 +238,7 @@ namespace SS.Tests
             Assert.AreEqual(false, Cell.ValidName("2A"));
             Assert.AreEqual(true, Cell.ValidName("x1"));
             Assert.AreEqual(true, Cell.ValidName("x"));
-        }
+        }*/
 
         [TestMethod()]
         public void ChangedFromNewSpreadsheetTest()
@@ -467,13 +468,14 @@ namespace SS.Tests
             Spreadsheet s = new Spreadsheet("fourarg.xml", TestValidToFalse, TestNormalizeToUpperCase, "1.01");
         }
 
+        /*
         [TestMethod()]
         public void CellTest()
         {
             Cell c = new Cell("a1", "2+2");
             Assert.AreEqual("2+2", c.Contents);
             Assert.AreEqual("a1", c.Name);
-        }
+        }*/
 
         [TestMethod()]
         public void SpreadsheetReadWriteExceptionTest()
