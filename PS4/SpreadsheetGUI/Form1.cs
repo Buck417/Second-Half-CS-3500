@@ -9,16 +9,22 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SpreadsheetUtilities;
 
 namespace SpreadsheetGUI
 {
     public partial class Form1 : Form
     {
-        Spreadsheet ss;
+        private Spreadsheet ss;
+        /// <summary>
+        /// Constructor for Empty Spreadsheet Form
+        /// </summary>
         public Form1()
         {
             InitializeComponent();
             ss = new Spreadsheet(Validator, UppercaseString, "");
+
+            updateTextBox(spreadsheetPanel1);
         }
 
         private void cellContentsBox_TextChanged(object sender, EventArgs e)
@@ -55,6 +61,37 @@ namespace SpreadsheetGUI
             //If there was no match, the cell name isn't valid.
             return false;
         }
+
+        /// <summary>
+        /// Helper method that gets and creates the cell name that was selected
+        /// by the user.
+        /// </summary>
+        /// <returns>Returns a string of the selected cell name</returns>
+        private String getCellName()
+        {
+            int col, row;
+            spreadsheetPanel1.GetSelection(out col, out row);
+            int cell_number = row + 1;
+            char cell_letter = (Char)('A' + col);
+
+            return cell_letter + "" + cell_number;
+        }
+
+        /// <summary>
+        /// Helper method that updates all text boxes when something changes
+        /// </summary>
+        /// <param name="s"></param>
+        private void updateTextBox(SpreadsheetPanel s)
+        {
+            String name;
+
+            name = getCellName();
+            cellContentsBox.Text = name;
+        }
+
+
+
         
     }
 }
+

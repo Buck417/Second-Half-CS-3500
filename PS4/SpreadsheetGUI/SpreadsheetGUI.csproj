@@ -51,6 +51,10 @@
     <Reference Include="SpreadsheetPanel">
       <HintPath>..\Resources\SpreadsheetPanel.dll</HintPath>
     </Reference>
+    <Reference Include="SpreadsheetUtilities, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Resources\Libraries\SpreadsheetUtilities.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
