@@ -29,7 +29,7 @@ namespace SpreadsheetGUI
 
         private void cellContentsBox_TextChanged(object sender, EventArgs e)
         {
-            
+
         }
 
         /// <summary>
@@ -85,13 +85,78 @@ namespace SpreadsheetGUI
         {
             String name;
 
+            //Assigns the cell name textbox to name for the selected cell
             name = getCellName();
             cellContentsBox.Text = name;
+
+            //Checks the cell if its a formula so it knows to add a '=' or not in front of the value
+            if (ss.GetCellValue(name).GetType() == typeof(Formula))
+                cellValueTextBox.Text = "=" + ss.GetCellContents(name).ToString();
+            else
+                cellValueTextBox.Text = ss.GetCellContents(name).ToString();
         }
 
+        /// <summary>
+        /// Helper method that assigns a value to the selected cell
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void solveButtonClick(object sender, EventArgs e)
+        {
+            //returns current cell name
+            String name = getCellName();
+            //IEnumerable set needed to store what setcontents returns
+            ISet<String> solved;
 
+            //Tries adding cells to the set, catching formula errors and circular exceptions
+            try
+            {
+                solved = ss.SetContentsOfCell(name, cellValueTextBox.Text);
+            }
+            catch(CircularException)
+            {
+                cellValueTextBox.Text = "Circular Exception Thrown Referring To Itself";
+                return;
+            }
+            catch(FormulaFormatException f)
+            {
+                cellValueTextBox.Text = f.Message;
+                return;
+            }
+            //TODO Did we handle all possible exceptions?
+            updateTextBox(spreadsheetPanel1);
 
-        
+            //Update each cell with the new value
+            foreach (String s in solved)
+                updateCellValue(s);
+        }
+
+        /// <summary>
+        /// Helper method that takes the grid number for the cell and inserts the value
+        /// of the cell into the grid, displaying the value in the spreadsheet
+        /// </summary>
+        /// <param name="name"></param>
+        private void updateCellValue(String name)
+        {
+            //Need location of cell selected
+            int cell_row;
+            int.TryParse(name.Substring(1), out cell_row);
+            cell_row--;
+            int cell_col = name.First<char>() - 'A';
+
+            //Set the cell to the new value
+            if (ss.GetCellValue(name).GetType() == typeof(FormulaError))  //TODO needs to return a message?
+            {
+                return;
+            }
+            else
+            {
+                spreadsheetPanel1.SetValue(cell_col, cell_row, ss.GetCellValue(name).ToString());
+            }
+
+        }
+
+        //TODO We need to work on saving and the menu options
     }
 }
 
