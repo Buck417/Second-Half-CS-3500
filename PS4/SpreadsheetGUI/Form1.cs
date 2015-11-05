@@ -279,7 +279,7 @@ namespace SpreadsheetGUI
 
                 if (result == DialogResult.No)
                 {
-                    this.Close();
+                    this.OnClosed(e);
                 }
                     
                 else if (result == DialogResult.Yes)
@@ -295,10 +295,9 @@ namespace SpreadsheetGUI
             //Close the window
             else
             {
-                this.Close();
+                this.OnClosed(e);
             }
         }
-        
     }
 }
 
