@@ -13,12 +13,12 @@ using Keyboard = Microsoft.VisualStudio.TestTools.UITesting.Keyboard;
 namespace SpreadsheetGUITest
 {
     /// <summary>
-    /// Summary description for CodedUITest3
+    /// Summary description for CodedUITest5
     /// </summary>
     [CodedUITest]
-    public class CodedUITest3
+    public class CodedUITest5
     {
-        public CodedUITest3()
+        public CodedUITest5()
         {
         }
 
@@ -26,6 +26,19 @@ namespace SpreadsheetGUITest
         public void CodedUITestMethod1()
         {
             // To generate code for this test, select "Generate Code for Coded UI Test" from the shortcut menu and select one of the menu items.
+            this.UIMap.NewWindowTest();
+            this.UIMap.AssertNewWindow();
+            this.UIMap.OpenTest();
+            this.UIMap.AssertOpenTest();
+            this.UIMap.SaveTest();
+            this.UIMap.AssertSaveTest();
+            this.UIMap.CloseFromWindowTest();
+            this.UIMap.AssertClosePromptShowsUp();
+            this.UIMap.AssertFormShowsAfterCancelClose();
+            this.UIMap.CancelDialogYesSaveTest();
+            this.UIMap.AssertSaveDialogShows();
+            this.UIMap.CloseFromMenuTest();
+            this.UIMap.AssertCloseFromMenuTest();
         }
 
         #region Additional test attributes
@@ -64,5 +77,20 @@ namespace SpreadsheetGUITest
             }
         }
         private TestContext testContextInstance;
+
+        public UIMap UIMap
+        {
+            get
+            {
+                if ((this.map == null))
+                {
+                    this.map = new UIMap();
+                }
+
+                return this.map;
+            }
+        }
+
+        private UIMap map;
     }
 }
