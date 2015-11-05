@@ -70,23 +70,7 @@ namespace SS.Tests
             Assert.AreEqual(true, s.SetContentsOfCell("a1", "What's up?").Contains("a1"));
             Assert.AreEqual("What's up?", s.GetCellContents("a1"));
         }
-
-        [TestMethod()]
-        public void GetCellContentsFormulaTest()
-        {
-            Spreadsheet s = new Spreadsheet();
-            s.SetContentsOfCell("a1", "=x1 + x2");
-            Assert.AreEqual("=x1+x2", s.GetCellContents("a1"));
-        }
-
-        [TestMethod()]
-        public void GetCellContentsFormulaWithOtherCellTest()
-        {
-            Spreadsheet s = new Spreadsheet();
-            s.SetContentsOfCell("a1", "=a2 + a3");
-            Assert.AreEqual("=a2+a3", s.GetCellContents("a1"));
-        }
-
+        
         [TestMethod()]
         public void GetNamesOfAllNonemptyCellsNoCellsTest()
         {
@@ -104,20 +88,7 @@ namespace SS.Tests
             Assert.AreEqual(true, names.Contains("a1"));
             Assert.AreEqual(true, names.Contains("a2"));
         }
-
-        [TestMethod()]
-        public void SetContentsOfCellMixedTypeTest()
-        {
-            Spreadsheet s = new Spreadsheet();
-            s.SetContentsOfCell("A1", "2.0");
-            s.SetContentsOfCell("B1", "Title of this cell");
-            IEnumerable<string> result = s.SetContentsOfCell("C1", "=A1 * 4 / 3");
-            Assert.AreEqual(true, result.Contains("A1"));
-            Assert.AreEqual(true, result.Contains("C1"));
-            Assert.AreEqual(false, result.Contains("B1"));
-            Assert.AreEqual(2, result.Count());
-        }
-
+        
         [TestMethod()]
         public void SetContentsOfCellDoubleTest()
         {
@@ -170,32 +141,7 @@ namespace SS.Tests
             Spreadsheet s = new Spreadsheet();
             s.SetContentsOfCell("2_a", "Hey there");
         }
-
-        [TestMethod()]
-        public void SetContentsOfCellFormulaTest()
-        {
-            Spreadsheet s = new Spreadsheet();
-
-            Assert.AreEqual(true, s.SetContentsOfCell("B1", "=A1 * A1").Contains("A1"));
-            s.SetContentsOfCell("C1", "=B1 + A1");
-            s.SetContentsOfCell("D1", "=B1 - C1");
-            IEnumerable<string> result = s.SetContentsOfCell("A1", "3");
-            Assert.AreEqual(true, result.Contains("A1"));
-            Assert.AreEqual(true, result.Contains("B1"));
-            Assert.AreEqual(true, result.Contains("C1"));
-            Assert.AreEqual(true, result.Contains("D1"));
-
-        }
-
-        [TestMethod()]
-        public void SetContentsOfCellFormulaCellExists()
-        {
-            Spreadsheet s = new Spreadsheet();
-            s.SetContentsOfCell("A1", "=2 + 3");
-            Assert.AreEqual(true, s.SetContentsOfCell("A1", "=5 * 6").Contains("A1"));
-            Assert.AreEqual("=5*6", s.GetCellContents("A1"));
-        }
-
+        
         [TestMethod()]
         [ExpectedException(typeof(CircularException))]
         public void SetContentsOfCellFormulaCircularReferenceTest()

@@ -30,82 +30,88 @@ namespace SpreadsheetGUITest
     {
         
         /// <summary>
-        /// SimpleMathTest - Use 'SimpleMathTestParams' to pass parameters into this method.
+        /// BasicMathWithError - Use 'BasicMathWithErrorParams' to pass parameters into this method.
         /// </summary>
-        public void SimpleMathTest()
+        public void BasicMathWithError()
         {
             #region Variable Declarations
             WinListItem uISpreadsheetGUIShortcListItem = this.UIProgramManagerWindow.UIDesktopList.UISpreadsheetGUIShortcListItem;
             WinButton uIOpenButton = this.UIOpenFileSecurityWarnWindow.UIOpenWindow.UIOpenButton;
             WinEdit uICellValueTextBoxEdit = this.UIForm1Window.UICellValueTextBoxWindow.UICellValueTextBoxEdit;
             WinClient uICellValueClient = this.UIForm1Window.UIItemWindow.UICellValueClient;
-            WinButton uISolveButton = this.UIForm1Window.UISolveWindow.UISolveButton;
             #endregion
 
             // Double-Click 'SpreadsheetGUI - Shortcut' list item
-            Mouse.DoubleClick(uISpreadsheetGUIShortcListItem, new Point(47, 24));
+            Mouse.DoubleClick(uISpreadsheetGUIShortcListItem, new Point(46, 24));
 
             // Click '&Open' button
-            Mouse.Click(uIOpenButton, new Point(58, 7));
-
-            // Type '55' in 'cellValueTextBox' text box
-            uICellValueTextBoxEdit.Text = this.SimpleMathTestParams.UICellValueTextBoxEditText;
-
-            // Type '{Enter}' in 'cellValueTextBox' text box
-            Keyboard.SendKeys(uICellValueTextBoxEdit, this.SimpleMathTestParams.UICellValueTextBoxEditSendKeys, ModifierKeys.None);
-
-            // Click 'Cell Value' client
-            Mouse.Click(uICellValueClient, new Point(166, 37));
+            Mouse.Click(uIOpenButton, new Point(55, 5));
 
             // Type '2' in 'cellValueTextBox' text box
-            uICellValueTextBoxEdit.Text = this.SimpleMathTestParams.UICellValueTextBoxEditText1;
+            uICellValueTextBoxEdit.Text = this.BasicMathWithErrorParams.UICellValueTextBoxEditText;
 
-            // Type '{Enter}' in 'cellValueTextBox' text box
-            Keyboard.SendKeys(uICellValueTextBoxEdit, this.SimpleMathTestParams.UICellValueTextBoxEditSendKeys1, ModifierKeys.None);
-
-            // Click 'Cell Value' client
-            Mouse.Click(uICellValueClient, new Point(243, 34));
-
-            // Type '=A1/B2' in 'cellValueTextBox' text box
-            uICellValueTextBoxEdit.Text = this.SimpleMathTestParams.UICellValueTextBoxEditText2;
-
-            // Type '{Enter}' in 'cellValueTextBox' text box
-            Keyboard.SendKeys(uICellValueTextBoxEdit, this.SimpleMathTestParams.UICellValueTextBoxEditSendKeys2, ModifierKeys.None);
-
-            // Click 'Solve' button
-            Mouse.Click(uISolveButton, new Point(35, 14));
+            // Type '{Enter}{Down}' in 'cellValueTextBox' text box
+            Keyboard.SendKeys(uICellValueTextBoxEdit, this.BasicMathWithErrorParams.UICellValueTextBoxEditSendKeys, ModifierKeys.None);
 
             // Click 'Cell Value' client
-            Mouse.Click(uICellValueClient, new Point(139, 58));
+            Mouse.Click(uICellValueClient, new Point(91, 59));
 
-            // Type '=A1*B1' in 'cellValueTextBox' text box
-            uICellValueTextBoxEdit.Text = this.SimpleMathTestParams.UICellValueTextBoxEditText3;
-
-            // Click 'Cell Value' client
-            Mouse.Click(uICellValueClient, new Point(240, 33));
-
-            // Type '=A1/B1' in 'cellValueTextBox' text box
-            uICellValueTextBoxEdit.Text = this.SimpleMathTestParams.UICellValueTextBoxEditText4;
+            // Type '3' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.BasicMathWithErrorParams.UICellValueTextBoxEditText1;
 
             // Type '{Enter}' in 'cellValueTextBox' text box
-            Keyboard.SendKeys(uICellValueTextBoxEdit, this.SimpleMathTestParams.UICellValueTextBoxEditSendKeys3, ModifierKeys.None);
+            Keyboard.SendKeys(uICellValueTextBoxEdit, this.BasicMathWithErrorParams.UICellValueTextBoxEditSendKeys1, ModifierKeys.None);
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(160, 38));
+
+            // Type '=A1+A2' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.BasicMathWithErrorParams.UICellValueTextBoxEditText2;
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(160, 61));
+
+            // Type '=B1*3' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.BasicMathWithErrorParams.UICellValueTextBoxEditText3;
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(167, 99));
+
+            // Type '=B2*10' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.BasicMathWithErrorParams.UICellValueTextBoxEditText4;
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(326, 81));
+
+            // Type '=B4/20' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.BasicMathWithErrorParams.UICellValueTextBoxEditText5;
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(310, 120));
+
+            // Type 'The last token of your formula must be a number, variable, or opening parentheses' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.BasicMathWithErrorParams.UICellValueTextBoxEditText6;
         }
         
         /// <summary>
-        /// TestCellDiagnostics - Use 'TestCellDiagnosticsExpectedValues' to pass parameters into this method.
+        /// BasicMathWithErrorAssertions - Use 'BasicMathWithErrorAssertionsExpectedValues' to pass parameters into this method.
         /// </summary>
-        public void TestCellDiagnostics()
+        public void BasicMathWithErrorAssertions()
         {
             #region Variable Declarations
-            WinEdit uICellContentsBoxEdit = this.UIForm1Window.UIA1Window.UICellContentsBoxEdit;
             WinEdit uICellValueTextBoxEdit = this.UIForm1Window.UICellValueTextBoxWindow.UICellValueTextBoxEdit;
+            WinEdit uICellValueWindowEdit = this.UIForm1Window.UICellValueWindowWindow.UICellValueWindowEdit;
+            WinEdit uICellContentsBoxEdit = this.UIForm1Window.UIA1Window.UICellContentsBoxEdit;
             #endregion
 
-            // Verify that the 'Text' property of 'cellContentsBox' text box equals 'C1'
-            Assert.AreEqual(this.TestCellDiagnosticsExpectedValues.UICellContentsBoxEditText, uICellContentsBoxEdit.Text, "Cell name should be C1");
+            // Verify that the 'Text' property of 'cellValueTextBox' text box equals '=B4/20'
+            Assert.AreEqual(this.BasicMathWithErrorAssertionsExpectedValues.UICellValueTextBoxEditText, uICellValueTextBoxEdit.Text);
 
-            // Verify that the 'Text' property of 'cellValueTextBox' text box equals '=A1/B1'
-            Assert.AreEqual(this.TestCellDiagnosticsExpectedValues.UICellValueTextBoxEditText, uICellValueTextBoxEdit.Text, "Equation should be =A1/B1");
+            // Verify that the 'Text' property of 'cellValueWindow' text box equals '7.5'
+            Assert.AreEqual(this.BasicMathWithErrorAssertionsExpectedValues.UICellValueWindowEditText, uICellValueWindowEdit.Text);
+
+            // Verify that the 'Text' property of 'cellContentsBox' text box equals 'D3'
+            Assert.AreEqual(this.BasicMathWithErrorAssertionsExpectedValues.UICellContentsBoxEditText, uICellContentsBoxEdit.Text);
         }
         
         /// <summary>
@@ -116,15 +122,22 @@ namespace SpreadsheetGUITest
             #region Variable Declarations
             WinListItem uISpreadsheetGUIShortcListItem = this.UIProgramManagerWindow.UIDesktopList.UISpreadsheetGUIShortcListItem;
             WinButton uIOpenButton = this.UIOpenFileSecurityWarnWindow.UIOpenWindow.UIOpenButton;
-            WinEdit uICellValueTextBoxEdit = this.UIForm1Window.UICellValueTextBoxWindow.UICellValueTextBoxEdit;
+            WinClient uIEditCellClient = this.UIForm1Window.UISpreadsheetPanel1Window.UIEditCellClient;
             WinClient uICellValueClient = this.UIForm1Window.UIItemWindow.UICellValueClient;
+            WinEdit uICellValueTextBoxEdit = this.UIForm1Window.UICellValueTextBoxWindow.UICellValueTextBoxEdit;
             #endregion
 
             // Double-Click 'SpreadsheetGUI - Shortcut' list item
-            Mouse.DoubleClick(uISpreadsheetGUIShortcListItem, new Point(37, 27));
+            Mouse.DoubleClick(uISpreadsheetGUIShortcListItem, new Point(35, 17));
 
             // Click '&Open' button
-            Mouse.Click(uIOpenButton, new Point(30, 5));
+            Mouse.Click(uIOpenButton, new Point(58, 7));
+
+            // Type '2{Enter}' in 'Edit Cell' client
+            Keyboard.SendKeys(uIEditCellClient, this.BasicMathTestParams.UIEditCellClientSendKeys, ModifierKeys.None);
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(78, 40));
 
             // Type '2' in 'cellValueTextBox' text box
             uICellValueTextBoxEdit.Text = this.BasicMathTestParams.UICellValueTextBoxEditText;
@@ -133,7 +146,7 @@ namespace SpreadsheetGUITest
             Keyboard.SendKeys(uICellValueTextBoxEdit, this.BasicMathTestParams.UICellValueTextBoxEditSendKeys, ModifierKeys.None);
 
             // Click 'Cell Value' client
-            Mouse.Click(uICellValueClient, new Point(158, 71));
+            Mouse.Click(uICellValueClient, new Point(50, 63));
 
             // Type '3' in 'cellValueTextBox' text box
             uICellValueTextBoxEdit.Text = this.BasicMathTestParams.UICellValueTextBoxEditText1;
@@ -142,51 +155,84 @@ namespace SpreadsheetGUITest
             Keyboard.SendKeys(uICellValueTextBoxEdit, this.BasicMathTestParams.UICellValueTextBoxEditSendKeys1, ModifierKeys.None);
 
             // Click 'Cell Value' client
-            Mouse.Click(uICellValueClient, new Point(245, 60));
+            Mouse.Click(uICellValueClient, new Point(123, 40));
 
-            // Type '=A1*B3' in 'cellValueTextBox' text box
+            // Type '=A1*A2' in 'cellValueTextBox' text box
             uICellValueTextBoxEdit.Text = this.BasicMathTestParams.UICellValueTextBoxEditText2;
+
+            // Type '2{Enter}' in 'Edit Cell' client
+            Keyboard.SendKeys(uIEditCellClient, this.BasicMathTestParams.UIEditCellClientSendKeys, ModifierKeys.None);
         }
         
         /// <summary>
-        /// BasicMathAssertions - Use 'BasicMathAssertionsExpectedValues' to pass parameters into this method.
+        /// AssertFormula - Use 'AssertFormulaExpectedValues' to pass parameters into this method.
         /// </summary>
-        public void BasicMathAssertions()
+        public void AssertFormula()
         {
             #region Variable Declarations
             WinEdit uICellContentsBoxEdit = this.UIForm1Window.UIA1Window.UICellContentsBoxEdit;
+            WinEdit uICellValueWindowEdit = this.UIForm1Window.UICellValueWindowWindow.UICellValueWindowEdit;
             WinEdit uICellValueTextBoxEdit = this.UIForm1Window.UICellValueTextBoxWindow.UICellValueTextBoxEdit;
             #endregion
 
-            // Verify that the 'Text' property of 'cellContentsBox' text box equals 'C2'
-            Assert.AreEqual(this.BasicMathAssertionsExpectedValues.UICellContentsBoxEditText, uICellContentsBoxEdit.Text);
+            // Verify that the 'Text' property of 'cellContentsBox' text box equals 'B1'
+            Assert.AreEqual(this.AssertFormulaExpectedValues.UICellContentsBoxEditText, uICellContentsBoxEdit.Text);
 
-            // Verify that the 'SelectionText' property of 'cellValueTextBox' text box equals '=A1*B3'
-            Assert.AreEqual(this.BasicMathAssertionsExpectedValues.UICellValueTextBoxEditSelectionText, uICellValueTextBoxEdit.SelectionText);
+            // Verify that the 'Text' property of 'cellValueWindow' text box equals '6'
+            Assert.AreEqual(this.AssertFormulaExpectedValues.UICellValueWindowEditText, uICellValueWindowEdit.Text);
+
+            // Verify that the 'Text' property of 'cellValueTextBox' text box equals '=A1*A2'
+            Assert.AreEqual(this.AssertFormulaExpectedValues.UICellValueTextBoxEditText, uICellValueTextBoxEdit.Text);
+        }
+        
+        /// <summary>
+        /// AssertCellNameB1 - Use 'AssertCellNameB1ExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertCellNameB1()
+        {
+            #region Variable Declarations
+            WinEdit uICellContentsBoxEdit = this.UIForm1Window.UIA1Window.UICellContentsBoxEdit;
+            #endregion
+
+            // Verify that the 'Text' property of 'cellContentsBox' text box equals 'B1'
+            Assert.AreEqual(this.AssertCellNameB1ExpectedValues.UICellContentsBoxEditText, uICellContentsBoxEdit.Text);
+        }
+        
+        /// <summary>
+        /// AssertCellValue6 - Use 'AssertCellValue6ExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertCellValue6()
+        {
+            #region Variable Declarations
+            WinEdit uICellValueWindowEdit = this.UIForm1Window.UICellValueWindowWindow.UICellValueWindowEdit;
+            #endregion
+
+            // Verify that the 'Text' property of 'cellValueWindow' text box equals '6'
+            Assert.AreEqual(this.AssertCellValue6ExpectedValues.UICellValueWindowEditText, uICellValueWindowEdit.Text);
         }
         
         #region Properties
-        public virtual SimpleMathTestParams SimpleMathTestParams
+        public virtual BasicMathWithErrorParams BasicMathWithErrorParams
         {
             get
             {
-                if ((this.mSimpleMathTestParams == null))
+                if ((this.mBasicMathWithErrorParams == null))
                 {
-                    this.mSimpleMathTestParams = new SimpleMathTestParams();
+                    this.mBasicMathWithErrorParams = new BasicMathWithErrorParams();
                 }
-                return this.mSimpleMathTestParams;
+                return this.mBasicMathWithErrorParams;
             }
         }
         
-        public virtual TestCellDiagnosticsExpectedValues TestCellDiagnosticsExpectedValues
+        public virtual BasicMathWithErrorAssertionsExpectedValues BasicMathWithErrorAssertionsExpectedValues
         {
             get
             {
-                if ((this.mTestCellDiagnosticsExpectedValues == null))
+                if ((this.mBasicMathWithErrorAssertionsExpectedValues == null))
                 {
-                    this.mTestCellDiagnosticsExpectedValues = new TestCellDiagnosticsExpectedValues();
+                    this.mBasicMathWithErrorAssertionsExpectedValues = new BasicMathWithErrorAssertionsExpectedValues();
                 }
-                return this.mTestCellDiagnosticsExpectedValues;
+                return this.mBasicMathWithErrorAssertionsExpectedValues;
             }
         }
         
@@ -202,15 +248,39 @@ namespace SpreadsheetGUITest
             }
         }
         
-        public virtual BasicMathAssertionsExpectedValues BasicMathAssertionsExpectedValues
+        public virtual AssertFormulaExpectedValues AssertFormulaExpectedValues
         {
             get
             {
-                if ((this.mBasicMathAssertionsExpectedValues == null))
+                if ((this.mAssertFormulaExpectedValues == null))
                 {
-                    this.mBasicMathAssertionsExpectedValues = new BasicMathAssertionsExpectedValues();
+                    this.mAssertFormulaExpectedValues = new AssertFormulaExpectedValues();
                 }
-                return this.mBasicMathAssertionsExpectedValues;
+                return this.mAssertFormulaExpectedValues;
+            }
+        }
+        
+        public virtual AssertCellNameB1ExpectedValues AssertCellNameB1ExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertCellNameB1ExpectedValues == null))
+                {
+                    this.mAssertCellNameB1ExpectedValues = new AssertCellNameB1ExpectedValues();
+                }
+                return this.mAssertCellNameB1ExpectedValues;
+            }
+        }
+        
+        public virtual AssertCellValue6ExpectedValues AssertCellValue6ExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertCellValue6ExpectedValues == null))
+                {
+                    this.mAssertCellValue6ExpectedValues = new AssertCellValue6ExpectedValues();
+                }
+                return this.mAssertCellValue6ExpectedValues;
             }
         }
         
@@ -252,13 +322,17 @@ namespace SpreadsheetGUITest
         #endregion
         
         #region Fields
-        private SimpleMathTestParams mSimpleMathTestParams;
+        private BasicMathWithErrorParams mBasicMathWithErrorParams;
         
-        private TestCellDiagnosticsExpectedValues mTestCellDiagnosticsExpectedValues;
+        private BasicMathWithErrorAssertionsExpectedValues mBasicMathWithErrorAssertionsExpectedValues;
         
         private BasicMathTestParams mBasicMathTestParams;
         
-        private BasicMathAssertionsExpectedValues mBasicMathAssertionsExpectedValues;
+        private AssertFormulaExpectedValues mAssertFormulaExpectedValues;
+        
+        private AssertCellNameB1ExpectedValues mAssertCellNameB1ExpectedValues;
+        
+        private AssertCellValue6ExpectedValues mAssertCellValue6ExpectedValues;
         
         private UIProgramManagerWindow mUIProgramManagerWindow;
         
@@ -269,27 +343,27 @@ namespace SpreadsheetGUITest
     }
     
     /// <summary>
-    /// Parameters to be passed into 'SimpleMathTest'
+    /// Parameters to be passed into 'BasicMathWithError'
     /// </summary>
     [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
-    public class SimpleMathTestParams
+    public class BasicMathWithErrorParams
     {
         
         #region Fields
         /// <summary>
-        /// Type '55' in 'cellValueTextBox' text box
-        /// </summary>
-        public string UICellValueTextBoxEditText = "55";
-        
-        /// <summary>
-        /// Type '{Enter}' in 'cellValueTextBox' text box
-        /// </summary>
-        public string UICellValueTextBoxEditSendKeys = "{Enter}";
-        
-        /// <summary>
         /// Type '2' in 'cellValueTextBox' text box
         /// </summary>
-        public string UICellValueTextBoxEditText1 = "2";
+        public string UICellValueTextBoxEditText = "2";
+        
+        /// <summary>
+        /// Type '{Enter}{Down}' in 'cellValueTextBox' text box
+        /// </summary>
+        public string UICellValueTextBoxEditSendKeys = "{Enter}{Down}";
+        
+        /// <summary>
+        /// Type '3' in 'cellValueTextBox' text box
+        /// </summary>
+        public string UICellValueTextBoxEditText1 = "3";
         
         /// <summary>
         /// Type '{Enter}' in 'cellValueTextBox' text box
@@ -297,49 +371,55 @@ namespace SpreadsheetGUITest
         public string UICellValueTextBoxEditSendKeys1 = "{Enter}";
         
         /// <summary>
-        /// Type '=A1/B2' in 'cellValueTextBox' text box
+        /// Type '=A1+A2' in 'cellValueTextBox' text box
         /// </summary>
-        public string UICellValueTextBoxEditText2 = "=A1/B2";
+        public string UICellValueTextBoxEditText2 = "=A1+A2";
         
         /// <summary>
-        /// Type '{Enter}' in 'cellValueTextBox' text box
+        /// Type '=B1*3' in 'cellValueTextBox' text box
         /// </summary>
-        public string UICellValueTextBoxEditSendKeys2 = "{Enter}";
+        public string UICellValueTextBoxEditText3 = "=B1*3";
         
         /// <summary>
-        /// Type '=A1*B1' in 'cellValueTextBox' text box
+        /// Type '=B2*10' in 'cellValueTextBox' text box
         /// </summary>
-        public string UICellValueTextBoxEditText3 = "=A1*B1";
+        public string UICellValueTextBoxEditText4 = "=B2*10";
         
         /// <summary>
-        /// Type '=A1/B1' in 'cellValueTextBox' text box
+        /// Type '=B4/20' in 'cellValueTextBox' text box
         /// </summary>
-        public string UICellValueTextBoxEditText4 = "=A1/B1";
+        public string UICellValueTextBoxEditText5 = "=B4/20";
         
         /// <summary>
-        /// Type '{Enter}' in 'cellValueTextBox' text box
+        /// Type 'The last token of your formula must be a number, variable, or opening parentheses' in 'cellValueTextBox' text box
         /// </summary>
-        public string UICellValueTextBoxEditSendKeys3 = "{Enter}";
+        public string UICellValueTextBoxEditText6 = "The last token of your formula must be a number, variable, or opening parentheses" +
+            "";
         #endregion
     }
     
     /// <summary>
-    /// Parameters to be passed into 'TestCellDiagnostics'
+    /// Parameters to be passed into 'BasicMathWithErrorAssertions'
     /// </summary>
     [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
-    public class TestCellDiagnosticsExpectedValues
+    public class BasicMathWithErrorAssertionsExpectedValues
     {
         
         #region Fields
         /// <summary>
-        /// Verify that the 'Text' property of 'cellContentsBox' text box equals 'C1'
+        /// Verify that the 'Text' property of 'cellValueTextBox' text box equals '=B4/20'
         /// </summary>
-        public string UICellContentsBoxEditText = "C1";
+        public string UICellValueTextBoxEditText = "=B4/20";
         
         /// <summary>
-        /// Verify that the 'Text' property of 'cellValueTextBox' text box equals '=A1/B1'
+        /// Verify that the 'Text' property of 'cellValueWindow' text box equals '7.5'
         /// </summary>
-        public string UICellValueTextBoxEditText = "=A1/B1";
+        public string UICellValueWindowEditText = "7.5";
+        
+        /// <summary>
+        /// Verify that the 'Text' property of 'cellContentsBox' text box equals 'D3'
+        /// </summary>
+        public string UICellContentsBoxEditText = "D3";
         #endregion
     }
     
@@ -351,6 +431,11 @@ namespace SpreadsheetGUITest
     {
         
         #region Fields
+        /// <summary>
+        /// Type '2{Enter}' in 'Edit Cell' client
+        /// </summary>
+        public string UIEditCellClientSendKeys = "2{Enter}";
+        
         /// <summary>
         /// Type '2' in 'cellValueTextBox' text box
         /// </summary>
@@ -372,29 +457,64 @@ namespace SpreadsheetGUITest
         public string UICellValueTextBoxEditSendKeys1 = "{Enter}";
         
         /// <summary>
-        /// Type '=A1*B3' in 'cellValueTextBox' text box
+        /// Type '=A1*A2' in 'cellValueTextBox' text box
         /// </summary>
-        public string UICellValueTextBoxEditText2 = "=A1*B3";
+        public string UICellValueTextBoxEditText2 = "=A1*A2";
         #endregion
     }
     
     /// <summary>
-    /// Parameters to be passed into 'BasicMathAssertions'
+    /// Parameters to be passed into 'AssertFormula'
     /// </summary>
     [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
-    public class BasicMathAssertionsExpectedValues
+    public class AssertFormulaExpectedValues
     {
         
         #region Fields
         /// <summary>
-        /// Verify that the 'Text' property of 'cellContentsBox' text box equals 'C2'
+        /// Verify that the 'Text' property of 'cellContentsBox' text box equals 'B1'
         /// </summary>
-        public string UICellContentsBoxEditText = "C2";
+        public string UICellContentsBoxEditText = "B1";
         
         /// <summary>
-        /// Verify that the 'SelectionText' property of 'cellValueTextBox' text box equals '=A1*B3'
+        /// Verify that the 'Text' property of 'cellValueWindow' text box equals '6'
         /// </summary>
-        public string UICellValueTextBoxEditSelectionText = "=A1*B3";
+        public string UICellValueWindowEditText = "6";
+        
+        /// <summary>
+        /// Verify that the 'Text' property of 'cellValueTextBox' text box equals '=A1*A2'
+        /// </summary>
+        public string UICellValueTextBoxEditText = "=A1*A2";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertCellNameB1'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertCellNameB1ExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'Text' property of 'cellContentsBox' text box equals 'B1'
+        /// </summary>
+        public string UICellContentsBoxEditText = "B1";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertCellValue6'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertCellValue6ExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'Text' property of 'cellValueWindow' text box equals '6'
+        /// </summary>
+        public string UICellValueWindowEditText = "6";
         #endregion
     }
     
@@ -595,6 +715,30 @@ namespace SpreadsheetGUITest
                 return this.mUIA1Window;
             }
         }
+        
+        public UICellValueWindowWindow UICellValueWindowWindow
+        {
+            get
+            {
+                if ((this.mUICellValueWindowWindow == null))
+                {
+                    this.mUICellValueWindowWindow = new UICellValueWindowWindow(this);
+                }
+                return this.mUICellValueWindowWindow;
+            }
+        }
+        
+        public UISpreadsheetPanel1Window UISpreadsheetPanel1Window
+        {
+            get
+            {
+                if ((this.mUISpreadsheetPanel1Window == null))
+                {
+                    this.mUISpreadsheetPanel1Window = new UISpreadsheetPanel1Window(this);
+                }
+                return this.mUISpreadsheetPanel1Window;
+            }
+        }
         #endregion
         
         #region Fields
@@ -605,6 +749,10 @@ namespace SpreadsheetGUITest
         private UISolveWindow mUISolveWindow;
         
         private UIA1Window mUIA1Window;
+        
+        private UICellValueWindowWindow mUICellValueWindowWindow;
+        
+        private UISpreadsheetPanel1Window mUISpreadsheetPanel1Window;
         #endregion
     }
     
@@ -747,6 +895,78 @@ namespace SpreadsheetGUITest
         
         #region Fields
         private WinEdit mUICellContentsBoxEdit;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UICellValueWindowWindow : WinWindow
+    {
+        
+        public UICellValueWindowWindow(UITestControl searchLimitContainer) : 
+                base(searchLimitContainer)
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.ControlName] = "cellValueWindow";
+            this.WindowTitles.Add("Form1");
+            #endregion
+        }
+        
+        #region Properties
+        public WinEdit UICellValueWindowEdit
+        {
+            get
+            {
+                if ((this.mUICellValueWindowEdit == null))
+                {
+                    this.mUICellValueWindowEdit = new WinEdit(this);
+                    #region Search Criteria
+                    this.mUICellValueWindowEdit.SearchProperties[WinEdit.PropertyNames.Name] = "Cell Value";
+                    this.mUICellValueWindowEdit.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUICellValueWindowEdit;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinEdit mUICellValueWindowEdit;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UISpreadsheetPanel1Window : WinWindow
+    {
+        
+        public UISpreadsheetPanel1Window(UITestControl searchLimitContainer) : 
+                base(searchLimitContainer)
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.ControlName] = "spreadsheetPanel1";
+            this.WindowTitles.Add("Form1");
+            #endregion
+        }
+        
+        #region Properties
+        public WinClient UIEditCellClient
+        {
+            get
+            {
+                if ((this.mUIEditCellClient == null))
+                {
+                    this.mUIEditCellClient = new WinClient(this);
+                    #region Search Criteria
+                    this.mUIEditCellClient.SearchProperties[WinControl.PropertyNames.Name] = "Edit Cell";
+                    this.mUIEditCellClient.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUIEditCellClient;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinClient mUIEditCellClient;
         #endregion
     }
 }

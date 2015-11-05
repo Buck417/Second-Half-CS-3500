@@ -17,15 +17,29 @@ namespace SpreadsheetGUI
     public partial class Form1 : Form
     {
         private Spreadsheet ss;
+        private string version = "ps6";
         /// <summary>
         /// Constructor for Empty Spreadsheet Form
         /// </summary>
         public Form1()
         {
             InitializeComponent();
-            ss = new Spreadsheet(Validator, UppercaseString, "ps6");
+            ss = new Spreadsheet(Validator, UppercaseString, version);
 
             updateTextBox(spreadsheetPanel1);
+        }
+
+        public Form1(string filename)
+        {
+            InitializeComponent();
+            ss = new Spreadsheet(filename, Validator, UppercaseString, version);
+            updateTextBox(spreadsheetPanel1);
+
+            //Make sure all the existing cells show up
+            foreach (string name in ss.GetNamesOfAllNonemptyCells())
+            {
+                updateCellValue(name);
+            }
         }
 
         private void cellContentsBox_TextChanged(object sender, EventArgs e)
@@ -130,6 +144,11 @@ namespace SpreadsheetGUI
                 cellValueTextBox.Text = f.Message;
                 return;
             }
+            catch (Exception e1)
+            {
+                cellValueTextBox.Text = e1.Message;
+                return;
+            }
             //TODO Did we handle all possible exceptions?
             updateTextBox(spreadsheetPanel1);
 
@@ -172,6 +191,8 @@ namespace SpreadsheetGUI
         {
             if (e.KeyChar == (char)13)
                 solveButtonClick(sender, e);
+            
+
         }
 
         /// <summary>
@@ -182,12 +203,16 @@ namespace SpreadsheetGUI
         private void saveMenuItemClickHandler(object sender, EventArgs e)
         {
             SaveFileDialog d = new SaveFileDialog();
-            
+            d.Filter = "Spreadsheet File (*.sprd)|*.sprd|All Files (*.*)|*.*";
             d.AddExtension = true;
-            d.CheckFileExists = true;
             
-            d.ShowDialog();
+            DialogResult result = d.ShowDialog();
             
+            //User chose to save
+            if(result == DialogResult.OK)
+            {
+                ss.Save(d.FileName);
+            }
 
         }
 
@@ -198,26 +223,7 @@ namespace SpreadsheetGUI
         /// <param name="e"></param>
         private void closeMenuItemClickHandler(object sender, EventArgs e)
         {
-            //Ask if they want to save their changes, if they need to
-            if (ss.Changed)
-            {
-                DialogResult result = MessageBox.Show("Would you like to save?", "Close Spreadsheet", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                if (result == DialogResult.No)
-                    Close();
-                else if(result == DialogResult.Yes)
-                {
-                    saveMenuItemClickHandler(sender, e);
-                    
-                }
-                    
-
-            }
-            //Close the window
-            else
-            {
-                Close();
-            }
+            Close();
         }
 
         /// <summary>
@@ -231,8 +237,14 @@ namespace SpreadsheetGUI
             OpenFileDialog d = new OpenFileDialog();
             d.CheckFileExists = true;
             d.Filter = "Spreadsheet File (*.sprd)|*.sprd|All Files (*.*)|*.*";
-            d.ShowDialog();
-            
+            DialogResult result = d.ShowDialog();
+            string filename = "";
+
+            if(result == DialogResult.OK)
+            {
+                filename = d.FileName;
+                SpreadsheetProgram.GetAppContext().RunForm(new Form1(filename));
+            }
             
         }
 
@@ -246,22 +258,63 @@ namespace SpreadsheetGUI
             SpreadsheetProgram.GetAppContext().RunForm(new Form1());
         }
 
-        /// <summary>
-        /// Menu help item that creates a message box that explains how to use the spreadsheet application
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             
             MessageBox.Show("\tTo use this spreadsheet application, select a cell in the grid and enter either a name, number or formula." +
                 "\n\tThe format for a formula begins with an '=' sign and can only use cells that exist on the grid A1-Z99. The operations " +
                 "that can be used are +, -, *, and divide. \n\tYou can change a cell by selecting the cell and editing the value in the " +
-                "value box. All other cells that depend on the changed cell will also update to their new value.", "How To Use The Spreadsheet");
+                "value box. All other cells that depend on the changed cell will also update to their new value. For example, you can either type 2, =2*A1, or 'Hello' in the text box labeled 'Edit Cell'.", "How To Use The Spreadsheet");
         }
 
+        /// <summary>
+        /// Event for when the form closes.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void closeSpreadsheetHandler(object sender, FormClosingEventArgs e)
+        {
+            //Ask if they want to save their changes, if they need to
+            if (ss.Changed)
+            {
+                DialogResult result = MessageBox.Show("Would you like to save?", "Close Spreadsheet", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
+                if (result == DialogResult.No)
+                    Close();
+                else if (result == DialogResult.Yes)
+                {
+                    saveMenuItemClickHandler(sender, e);
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+            //Close the window
+            else
+            {
+                Close();
+            }
+        }
 
+        /// <summary>
+        /// Helper method that handles shortcuts for the spreadsheet
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            //Pressing CTRL-O opens a file
+            if ((e.KeyCode == Keys.O && e.Control))
+                openMenuItemClickHandler(sender, e);
+            //Pressing CTRL-S saves a file
+            if ((e.KeyCode == Keys.S && e.Control))
+                saveMenuItemClickHandler(sender, e);
+            //Pressing CTRL-N creates a new file
+            if ((e.KeyCode == Keys.N && e.Control))
+                newMenuItemClickHandler(sender, e);
+        }
     }
 }
 
