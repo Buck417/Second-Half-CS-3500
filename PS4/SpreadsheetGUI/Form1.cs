@@ -246,6 +246,11 @@ namespace SpreadsheetGUI
             SpreadsheetProgram.GetAppContext().RunForm(new Form1());
         }
 
+        /// <summary>
+        /// Menu help item that creates a message box that explains how to use the spreadsheet application
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             
@@ -254,6 +259,8 @@ namespace SpreadsheetGUI
                 "that can be used are +, -, *, and divide. \n\tYou can change a cell by selecting the cell and editing the value in the " +
                 "value box. All other cells that depend on the changed cell will also update to their new value.", "How To Use The Spreadsheet");
         }
+
+
 
     }
 }
