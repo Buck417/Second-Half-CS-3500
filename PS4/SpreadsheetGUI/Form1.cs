@@ -29,6 +29,10 @@ namespace SpreadsheetGUI
             updateTextBox(spreadsheetPanel1);
         }
 
+        /// <summary>
+        /// Constructor for a Spreadsheet Form created from a file
+        /// </summary>
+        /// <param name="filename">The name of the file given</param>
         public Form1(string filename)
         {
             InitializeComponent();
@@ -44,7 +48,7 @@ namespace SpreadsheetGUI
 
         private void cellContentsBox_TextChanged(object sender, EventArgs e)
         {
-            
+
         }
 
         /// <summary>
@@ -256,13 +260,21 @@ namespace SpreadsheetGUI
             SpreadsheetProgram.GetAppContext().RunForm(new Form1());
         }
 
+        /// <summary>
+        /// Help menu item that introducts the user on how to use the spreadsheet application
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            
-            MessageBox.Show("\tTo use this spreadsheet application, select a cell in the grid and enter either a name, number or formula." +
-                "\n\tThe format for a formula begins with an '=' sign and can only use cells that exist on the grid A1-Z99. The operations " +
-                "that can be used are +, -, *, and divide. \n\tYou can change a cell by selecting the cell and editing the value in the " +
-                "value box. All other cells that depend on the changed cell will also update to their new value. For example, you can either type 2, =2*A1, or 'Hello' in the text box labeled 'Edit Cell'.", "How To Use The Spreadsheet");
+
+            MessageBox.Show("\tTo use this spreadsheet application, select a cell in the grid and enter either a name, number or formula, clicking " +
+                "\n\ton the cell moves the cursor to the Edit Cell text box. If you want to insert a Formula into a cell, use the '=' character then" +
+                "\n add in numbers or other cell names with standard arithmetic operators. These operators are +, -, *, /, and ()." +
+                "\n\t Each cell is capable of having values that exist in neighboring cells, and changing a cell will also change the values of all of its " +
+                "\n dependents. \n\tYou can save your spreadsheet file with an extension of .sprd by either clicking on File -> Save or by pressing CTRL+S." +
+                "\n You can open a new .sprd file by doing File -> Open or by pressing CTRL+O. CTRL+N opens a new spreadsheet and CTRL+W closes the current " +
+                "\n spreadsheet.");
         }
         
         /// <summary>
