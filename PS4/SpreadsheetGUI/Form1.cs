@@ -297,6 +297,8 @@ namespace SpreadsheetGUI
             {
                 this.Close();
             }
+
+
         }
         
     }
