@@ -159,9 +159,6 @@ namespace SpreadsheetGUITest
 
             // Type '=A1*A2' in 'cellValueTextBox' text box
             uICellValueTextBoxEdit.Text = this.BasicMathTestParams.UICellValueTextBoxEditText2;
-
-            // Type '2{Enter}' in 'Edit Cell' client
-            Keyboard.SendKeys(uIEditCellClient, this.BasicMathTestParams.UIEditCellClientSendKeys, ModifierKeys.None);
         }
         
         /// <summary>
@@ -209,6 +206,351 @@ namespace SpreadsheetGUITest
 
             // Verify that the 'Text' property of 'cellValueWindow' text box equals '6'
             Assert.AreEqual(this.AssertCellValue6ExpectedValues.UICellValueWindowEditText, uICellValueWindowEdit.Text);
+        }
+        
+        /// <summary>
+        /// RecordedMethod1 - Use 'RecordedMethod1Params' to pass parameters into this method.
+        /// </summary>
+        public void RecordedMethod1()
+        {
+            #region Variable Declarations
+            WinClient uICellValueClient = this.UIForm1Window.UIItemWindow.UICellValueClient;
+            WinEdit uICellValueTextBoxEdit = this.UIForm1Window.UICellValueTextBoxWindow.UICellValueTextBoxEdit;
+            WinButton uISolveButton = this.UIForm1Window.UISolveWindow.UISolveButton;
+            #endregion
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(237, 60));
+
+            // Type '22' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.RecordedMethod1Params.UICellValueTextBoxEditText;
+
+            // Click 'Solve' button
+            Mouse.Click(uISolveButton, new Point(54, 8));
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(325, 64));
+
+            // Type '33' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.RecordedMethod1Params.UICellValueTextBoxEditText1;
+
+            // Click 'Solve' button
+            Mouse.Click(uISolveButton, new Point(14, 12));
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(257, 95));
+
+            // Type '=c2+d2' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.RecordedMethod1Params.UICellValueTextBoxEditText2;
+
+            // Click 'Solve' button
+            Mouse.Click(uISolveButton, new Point(31, 10));
+        }
+        
+        /// <summary>
+        /// AssertCellNameC4 - Use 'AssertCellNameC4ExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertCellNameC4()
+        {
+            #region Variable Declarations
+            WinEdit uICellContentsBoxEdit = this.UIForm1Window.UIA1Window.UICellContentsBoxEdit;
+            #endregion
+
+            // Verify that the 'Text' property of 'cellContentsBox' text box equals 'C4'
+            Assert.AreEqual(this.AssertCellNameC4ExpectedValues.UICellContentsBoxEditText, uICellContentsBoxEdit.Text);
+        }
+        
+        /// <summary>
+        /// AssertCellFormula - Use 'AssertCellFormulaExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertCellFormula()
+        {
+            #region Variable Declarations
+            WinEdit uICellValueTextBoxEdit = this.UIForm1Window.UICellValueTextBoxWindow.UICellValueTextBoxEdit;
+            #endregion
+
+            // Verify that the 'Text' property of 'cellValueTextBox' text box equals '=C2+D2'
+            Assert.AreEqual(this.AssertCellFormulaExpectedValues.UICellValueTextBoxEditText, uICellValueTextBoxEdit.Text);
+        }
+        
+        /// <summary>
+        /// AssertResult - Use 'AssertResultExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertResult()
+        {
+            #region Variable Declarations
+            WinEdit uICellValueWindowEdit = this.UIForm1Window.UICellValueWindowWindow.UICellValueWindowEdit;
+            #endregion
+
+            // Verify that the 'Text' property of 'cellValueWindow' text box equals '55'
+            Assert.AreEqual(this.AssertResultExpectedValues.UICellValueWindowEditText, uICellValueWindowEdit.Text);
+        }
+        
+        /// <summary>
+        /// NewWindowTest
+        /// </summary>
+        public void NewWindowTest()
+        {
+            #region Variable Declarations
+            WinMenuItem uINewMenuItem = this.UIForm1Window.UIMenuStrip1MenuBar.UIFileMenuItem.UINewMenuItem;
+            #endregion
+
+            // Click 'File' -> 'New' menu item
+            Mouse.Click(uINewMenuItem, new Point(36, 8));
+        }
+        
+        /// <summary>
+        /// AssertNewWindow - Use 'AssertNewWindowExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertNewWindow()
+        {
+            #region Variable Declarations
+            WinClient uIForm1Client = this.UIForm1Window1.UIForm1Client;
+            #endregion
+
+            // Verify that the 'IsTopParent' property of 'Form1' client equals 'False'
+            Assert.AreEqual(this.AssertNewWindowExpectedValues.UIForm1ClientIsTopParent, uIForm1Client.IsTopParent);
+        }
+        
+        /// <summary>
+        /// OpenTest
+        /// </summary>
+        public void OpenTest()
+        {
+            #region Variable Declarations
+            WinMenuItem uIOpenMenuItem = this.UIForm1Window.UIMenuStrip1MenuBar.UIFileMenuItem.UIOpenMenuItem;
+            #endregion
+
+            // Click 'File' -> 'Open' menu item
+            Mouse.Click(uIOpenMenuItem, new Point(42, 12));
+        }
+        
+        /// <summary>
+        /// AssertOpenTest - Use 'AssertOpenTestExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertOpenTest()
+        {
+            #region Variable Declarations
+            WinControl uIOpenDialog = this.UIOpenWindow.UIOpenDialog;
+            #endregion
+
+            // Verify that the 'ControlType' property of 'Open' Dialog equals 'Dialog'
+            Assert.AreEqual(this.AssertOpenTestExpectedValues.UIOpenDialogControlType, uIOpenDialog.ControlType.ToString());
+
+            // Verify that the 'FriendlyName' property of 'Open' Dialog equals 'Open'
+            Assert.AreEqual(this.AssertOpenTestExpectedValues.UIOpenDialogFriendlyName, uIOpenDialog.FriendlyName);
+        }
+        
+        /// <summary>
+        /// SaveTest
+        /// </summary>
+        public void SaveTest()
+        {
+            #region Variable Declarations
+            WinMenuItem uISaveMenuItem = this.UIForm1Window.UIMenuStrip1MenuBar.UIFileMenuItem.UISaveMenuItem;
+            #endregion
+
+            // Click 'File' -> 'Save' menu item
+            Mouse.Click(uISaveMenuItem, new Point(41, 6));
+        }
+        
+        /// <summary>
+        /// AssertSaveTest - Use 'AssertSaveTestExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertSaveTest()
+        {
+            #region Variable Declarations
+            WinControl uISaveAsDialog = this.UISaveAsWindow.UISaveAsDialog;
+            #endregion
+
+            // Verify that the 'FriendlyName' property of 'Save As' Dialog equals 'Save As'
+            Assert.AreEqual(this.AssertSaveTestExpectedValues.UISaveAsDialogFriendlyName, uISaveAsDialog.FriendlyName);
+
+            // Verify that the 'ControlType' property of 'Save As' Dialog equals 'Dialog'
+            Assert.AreEqual(this.AssertSaveTestExpectedValues.UISaveAsDialogControlType, uISaveAsDialog.ControlType.ToString());
+
+            // Verify that the 'Name' property of 'Save As' Dialog equals 'Save As'
+            Assert.AreEqual(this.AssertSaveTestExpectedValues.UISaveAsDialogName, uISaveAsDialog.Name);
+        }
+        
+        /// <summary>
+        /// CloseFromWindowTest - Use 'CloseFromWindowTestParams' to pass parameters into this method.
+        /// </summary>
+        public void CloseFromWindowTest()
+        {
+            #region Variable Declarations
+            WinButton uICloseButton = this.UIForm1Window.UIForm1TitleBar.UICloseButton;
+            WinClient uICellValueClient = this.UIForm1Window.UIItemWindow.UICellValueClient;
+            WinEdit uICellValueTextBoxEdit = this.UIForm1Window.UICellValueTextBoxWindow.UICellValueTextBoxEdit;
+            #endregion
+
+            // Click 'Close' button
+            Mouse.Click(uICloseButton, new Point(23, 8));
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(339, 75));
+
+            // Type '22' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.CloseFromWindowTestParams.UICellValueTextBoxEditText;
+
+            // Type '{Enter}' in 'cellValueTextBox' text box
+            Keyboard.SendKeys(uICellValueTextBoxEdit, this.CloseFromWindowTestParams.UICellValueTextBoxEditSendKeys, ModifierKeys.None);
+
+            // Click 'Close' button
+            Mouse.Click(uICloseButton, new Point(27, 4));
+        }
+        
+        /// <summary>
+        /// AssertClosePromptShowsUp - Use 'AssertClosePromptShowsUpExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertClosePromptShowsUp()
+        {
+            #region Variable Declarations
+            WinControl uICloseSpreadsheetDialog = this.UICloseSpreadsheetWindow.UICloseSpreadsheetDialog;
+            #endregion
+
+            // Verify that the 'ControlType' property of 'Close Spreadsheet' Dialog equals 'Dialog'
+            Assert.AreEqual(this.AssertClosePromptShowsUpExpectedValues.UICloseSpreadsheetDialogControlType, uICloseSpreadsheetDialog.ControlType.ToString());
+
+            // Verify that the 'Name' property of 'Close Spreadsheet' Dialog equals 'Close Spreadsheet'
+            Assert.AreEqual(this.AssertClosePromptShowsUpExpectedValues.UICloseSpreadsheetDialogName, uICloseSpreadsheetDialog.Name);
+        }
+        
+        /// <summary>
+        /// AssertFormShowsAfterCancelClose - Use 'AssertFormShowsAfterCancelCloseExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertFormShowsAfterCancelClose()
+        {
+            #region Variable Declarations
+            WinClient uIForm1Client = this.UIForm1Window.UIForm1Client;
+            #endregion
+
+            // Verify that the 'Name' property of 'Form1' client equals 'Form1'
+            Assert.AreEqual(this.AssertFormShowsAfterCancelCloseExpectedValues.UIForm1ClientName, uIForm1Client.Name);
+
+            // Verify that the 'Exists' property of 'Form1' client equals 'True'
+            Assert.AreEqual(this.AssertFormShowsAfterCancelCloseExpectedValues.UIForm1ClientExists, uIForm1Client.Exists);
+        }
+        
+        /// <summary>
+        /// CancelDialogYesSaveTest
+        /// </summary>
+        public void CancelDialogYesSaveTest()
+        {
+            #region Variable Declarations
+            WinButton uICloseButton = this.UIForm1Window.UIForm1TitleBar.UICloseButton;
+            WinButton uIYesButton = this.UICloseSpreadsheetWindow.UIYesWindow.UIYesButton;
+            WinToolBar uIAddressLibrariesDocuToolBar = this.UISaveAsWindow.UIAddressLibrariesDocuWindow.UIAddressLibrariesDocuToolBar;
+            #endregion
+
+            // Click 'Close' button
+            Mouse.Click(uICloseButton, new Point(24, 11));
+
+            // Click '&Yes' button
+            Mouse.Click(uIYesButton, new Point(63, 13));
+
+            // Click 'Address: Libraries\Documents' tool bar
+            Mouse.Click(uIAddressLibrariesDocuToolBar, new Point(257, 8));
+        }
+        
+        /// <summary>
+        /// AssertSaveDialogShows - Use 'AssertSaveDialogShowsExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertSaveDialogShows()
+        {
+            #region Variable Declarations
+            WinControl uISaveAsDialog = this.UISaveAsWindow.UISaveAsDialog;
+            #endregion
+
+            // Verify that the 'Exists' property of 'Save As' Dialog equals 'True'
+            Assert.AreEqual(this.AssertSaveDialogShowsExpectedValues.UISaveAsDialogExists, uISaveAsDialog.Exists);
+
+            // Verify that the 'Name' property of 'Save As' Dialog equals 'Save As'
+            Assert.AreEqual(this.AssertSaveDialogShowsExpectedValues.UISaveAsDialogName, uISaveAsDialog.Name);
+        }
+        
+        /// <summary>
+        /// CloseFromMenuTest - Use 'CloseFromMenuTestParams' to pass parameters into this method.
+        /// </summary>
+        public void CloseFromMenuTest()
+        {
+            #region Variable Declarations
+            WinMenuItem uICloseMenuItem = this.UIForm1Window.UIMenuStrip1MenuBar.UIFileMenuItem.UICloseMenuItem;
+            WinClient uICellValueClient = this.UIForm1Window.UIItemWindow.UICellValueClient;
+            WinEdit uICellValueTextBoxEdit = this.UIForm1Window.UICellValueTextBoxWindow.UICellValueTextBoxEdit;
+            WinButton uINOButton = this.UICloseSpreadsheetWindow.UINOWindow.UINOButton;
+            #endregion
+
+            // Click 'File' -> 'Close' menu item
+            Mouse.Click(uICloseMenuItem, new Point(53, 10));
+
+            // Click 'Cell Value' client
+            Mouse.Click(uICellValueClient, new Point(302, 93));
+
+            // Type '234' in 'cellValueTextBox' text box
+            uICellValueTextBoxEdit.Text = this.CloseFromMenuTestParams.UICellValueTextBoxEditText;
+
+            // Type '{Enter}' in 'cellValueTextBox' text box
+            Keyboard.SendKeys(uICellValueTextBoxEdit, this.CloseFromMenuTestParams.UICellValueTextBoxEditSendKeys, ModifierKeys.None);
+
+            // Click 'File' -> 'Close' menu item
+            Mouse.Click(uICloseMenuItem, new Point(40, 8));
+
+            // Click '&No' button
+            Mouse.Click(uINOButton, new Point(48, 12));
+        }
+        
+        /// <summary>
+        /// AssertCloseFromMenuTest - Use 'AssertCloseFromMenuTestExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertCloseFromMenuTest()
+        {
+            #region Variable Declarations
+            WinList uIDesktopList = this.UIProgramManagerWindow.UIFolderViewWindow.UIDesktopList;
+            #endregion
+
+            // Verify that the 'Exists' property of 'Desktop' list box equals 'True'
+            Assert.AreEqual(this.AssertCloseFromMenuTestExpectedValues.UIDesktopListExists, uIDesktopList.Exists);
+
+            // Verify that the 'Name' property of 'Desktop' list box equals 'Desktop'
+            Assert.AreEqual(this.AssertCloseFromMenuTestExpectedValues.UIDesktopListName, uIDesktopList.Name);
+        }
+        
+        /// <summary>
+        /// OpenHelpDialog
+        /// </summary>
+        public void OpenHelpDialog()
+        {
+            #region Variable Declarations
+            WinListItem uISpreadsheetGUIShortcListItem = this.UIProgramManagerWindow.UIDesktopList.UISpreadsheetGUIShortcListItem;
+            WinButton uIOpenButton = this.UIOpenFileSecurityWarnWindow.UIOpenWindow.UIOpenButton;
+            WinMenuItem uIHelpMenuItem = this.UIForm1Window.UIMenuStrip1MenuBar.UIHelpMenuItem;
+            #endregion
+
+            // Double-Click 'SpreadsheetGUI - Shortcut' list item
+            Mouse.DoubleClick(uISpreadsheetGUIShortcListItem, new Point(38, 20));
+
+            // Click '&Open' button
+            Mouse.Click(uIOpenButton, new Point(41, 8));
+
+            // Click 'Help' menu item
+            Mouse.Click(uIHelpMenuItem, new Point(28, 5));
+        }
+        
+        /// <summary>
+        /// AssertHelpDialogShowsUp - Use 'AssertHelpDialogShowsUpExpectedValues' to pass parameters into this method.
+        /// </summary>
+        public void AssertHelpDialogShowsUp()
+        {
+            #region Variable Declarations
+            WinControl uIHowToUseTheSpreadsheDialog = this.UIHowToUseTheSpreadsheWindow.UIHowToUseTheSpreadsheDialog;
+            #endregion
+
+            // Verify that the 'Name' property of 'How To Use The Spreadsheet' Dialog equals 'How To Use The Spreadsheet'
+            Assert.AreEqual(this.AssertHelpDialogShowsUpExpectedValues.UIHowToUseTheSpreadsheDialogName, uIHowToUseTheSpreadsheDialog.Name);
+
+            // Verify that the 'Exists' property of 'How To Use The Spreadsheet' Dialog equals 'True'
+            Assert.AreEqual(this.AssertHelpDialogShowsUpExpectedValues.UIHowToUseTheSpreadsheDialogExists, uIHowToUseTheSpreadsheDialog.Exists);
         }
         
         #region Properties
@@ -284,6 +626,174 @@ namespace SpreadsheetGUITest
             }
         }
         
+        public virtual RecordedMethod1Params RecordedMethod1Params
+        {
+            get
+            {
+                if ((this.mRecordedMethod1Params == null))
+                {
+                    this.mRecordedMethod1Params = new RecordedMethod1Params();
+                }
+                return this.mRecordedMethod1Params;
+            }
+        }
+        
+        public virtual AssertCellNameC4ExpectedValues AssertCellNameC4ExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertCellNameC4ExpectedValues == null))
+                {
+                    this.mAssertCellNameC4ExpectedValues = new AssertCellNameC4ExpectedValues();
+                }
+                return this.mAssertCellNameC4ExpectedValues;
+            }
+        }
+        
+        public virtual AssertCellFormulaExpectedValues AssertCellFormulaExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertCellFormulaExpectedValues == null))
+                {
+                    this.mAssertCellFormulaExpectedValues = new AssertCellFormulaExpectedValues();
+                }
+                return this.mAssertCellFormulaExpectedValues;
+            }
+        }
+        
+        public virtual AssertResultExpectedValues AssertResultExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertResultExpectedValues == null))
+                {
+                    this.mAssertResultExpectedValues = new AssertResultExpectedValues();
+                }
+                return this.mAssertResultExpectedValues;
+            }
+        }
+        
+        public virtual AssertNewWindowExpectedValues AssertNewWindowExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertNewWindowExpectedValues == null))
+                {
+                    this.mAssertNewWindowExpectedValues = new AssertNewWindowExpectedValues();
+                }
+                return this.mAssertNewWindowExpectedValues;
+            }
+        }
+        
+        public virtual AssertOpenTestExpectedValues AssertOpenTestExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertOpenTestExpectedValues == null))
+                {
+                    this.mAssertOpenTestExpectedValues = new AssertOpenTestExpectedValues();
+                }
+                return this.mAssertOpenTestExpectedValues;
+            }
+        }
+        
+        public virtual AssertSaveTestExpectedValues AssertSaveTestExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertSaveTestExpectedValues == null))
+                {
+                    this.mAssertSaveTestExpectedValues = new AssertSaveTestExpectedValues();
+                }
+                return this.mAssertSaveTestExpectedValues;
+            }
+        }
+        
+        public virtual CloseFromWindowTestParams CloseFromWindowTestParams
+        {
+            get
+            {
+                if ((this.mCloseFromWindowTestParams == null))
+                {
+                    this.mCloseFromWindowTestParams = new CloseFromWindowTestParams();
+                }
+                return this.mCloseFromWindowTestParams;
+            }
+        }
+        
+        public virtual AssertClosePromptShowsUpExpectedValues AssertClosePromptShowsUpExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertClosePromptShowsUpExpectedValues == null))
+                {
+                    this.mAssertClosePromptShowsUpExpectedValues = new AssertClosePromptShowsUpExpectedValues();
+                }
+                return this.mAssertClosePromptShowsUpExpectedValues;
+            }
+        }
+        
+        public virtual AssertFormShowsAfterCancelCloseExpectedValues AssertFormShowsAfterCancelCloseExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertFormShowsAfterCancelCloseExpectedValues == null))
+                {
+                    this.mAssertFormShowsAfterCancelCloseExpectedValues = new AssertFormShowsAfterCancelCloseExpectedValues();
+                }
+                return this.mAssertFormShowsAfterCancelCloseExpectedValues;
+            }
+        }
+        
+        public virtual AssertSaveDialogShowsExpectedValues AssertSaveDialogShowsExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertSaveDialogShowsExpectedValues == null))
+                {
+                    this.mAssertSaveDialogShowsExpectedValues = new AssertSaveDialogShowsExpectedValues();
+                }
+                return this.mAssertSaveDialogShowsExpectedValues;
+            }
+        }
+        
+        public virtual CloseFromMenuTestParams CloseFromMenuTestParams
+        {
+            get
+            {
+                if ((this.mCloseFromMenuTestParams == null))
+                {
+                    this.mCloseFromMenuTestParams = new CloseFromMenuTestParams();
+                }
+                return this.mCloseFromMenuTestParams;
+            }
+        }
+        
+        public virtual AssertCloseFromMenuTestExpectedValues AssertCloseFromMenuTestExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertCloseFromMenuTestExpectedValues == null))
+                {
+                    this.mAssertCloseFromMenuTestExpectedValues = new AssertCloseFromMenuTestExpectedValues();
+                }
+                return this.mAssertCloseFromMenuTestExpectedValues;
+            }
+        }
+        
+        public virtual AssertHelpDialogShowsUpExpectedValues AssertHelpDialogShowsUpExpectedValues
+        {
+            get
+            {
+                if ((this.mAssertHelpDialogShowsUpExpectedValues == null))
+                {
+                    this.mAssertHelpDialogShowsUpExpectedValues = new AssertHelpDialogShowsUpExpectedValues();
+                }
+                return this.mAssertHelpDialogShowsUpExpectedValues;
+            }
+        }
+        
         public UIProgramManagerWindow UIProgramManagerWindow
         {
             get
@@ -319,6 +829,66 @@ namespace SpreadsheetGUITest
                 return this.mUIForm1Window;
             }
         }
+        
+        public UIForm1Window1 UIForm1Window1
+        {
+            get
+            {
+                if ((this.mUIForm1Window1 == null))
+                {
+                    this.mUIForm1Window1 = new UIForm1Window1();
+                }
+                return this.mUIForm1Window1;
+            }
+        }
+        
+        public UIOpenWindow1 UIOpenWindow
+        {
+            get
+            {
+                if ((this.mUIOpenWindow == null))
+                {
+                    this.mUIOpenWindow = new UIOpenWindow1();
+                }
+                return this.mUIOpenWindow;
+            }
+        }
+        
+        public UISaveAsWindow UISaveAsWindow
+        {
+            get
+            {
+                if ((this.mUISaveAsWindow == null))
+                {
+                    this.mUISaveAsWindow = new UISaveAsWindow();
+                }
+                return this.mUISaveAsWindow;
+            }
+        }
+        
+        public UICloseSpreadsheetWindow UICloseSpreadsheetWindow
+        {
+            get
+            {
+                if ((this.mUICloseSpreadsheetWindow == null))
+                {
+                    this.mUICloseSpreadsheetWindow = new UICloseSpreadsheetWindow();
+                }
+                return this.mUICloseSpreadsheetWindow;
+            }
+        }
+        
+        public UIHowToUseTheSpreadsheWindow UIHowToUseTheSpreadsheWindow
+        {
+            get
+            {
+                if ((this.mUIHowToUseTheSpreadsheWindow == null))
+                {
+                    this.mUIHowToUseTheSpreadsheWindow = new UIHowToUseTheSpreadsheWindow();
+                }
+                return this.mUIHowToUseTheSpreadsheWindow;
+            }
+        }
         #endregion
         
         #region Fields
@@ -334,11 +904,49 @@ namespace SpreadsheetGUITest
         
         private AssertCellValue6ExpectedValues mAssertCellValue6ExpectedValues;
         
+        private RecordedMethod1Params mRecordedMethod1Params;
+        
+        private AssertCellNameC4ExpectedValues mAssertCellNameC4ExpectedValues;
+        
+        private AssertCellFormulaExpectedValues mAssertCellFormulaExpectedValues;
+        
+        private AssertResultExpectedValues mAssertResultExpectedValues;
+        
+        private AssertNewWindowExpectedValues mAssertNewWindowExpectedValues;
+        
+        private AssertOpenTestExpectedValues mAssertOpenTestExpectedValues;
+        
+        private AssertSaveTestExpectedValues mAssertSaveTestExpectedValues;
+        
+        private CloseFromWindowTestParams mCloseFromWindowTestParams;
+        
+        private AssertClosePromptShowsUpExpectedValues mAssertClosePromptShowsUpExpectedValues;
+        
+        private AssertFormShowsAfterCancelCloseExpectedValues mAssertFormShowsAfterCancelCloseExpectedValues;
+        
+        private AssertSaveDialogShowsExpectedValues mAssertSaveDialogShowsExpectedValues;
+        
+        private CloseFromMenuTestParams mCloseFromMenuTestParams;
+        
+        private AssertCloseFromMenuTestExpectedValues mAssertCloseFromMenuTestExpectedValues;
+        
+        private AssertHelpDialogShowsUpExpectedValues mAssertHelpDialogShowsUpExpectedValues;
+        
         private UIProgramManagerWindow mUIProgramManagerWindow;
         
         private UIOpenFileSecurityWarnWindow mUIOpenFileSecurityWarnWindow;
         
         private UIForm1Window mUIForm1Window;
+        
+        private UIForm1Window1 mUIForm1Window1;
+        
+        private UIOpenWindow1 mUIOpenWindow;
+        
+        private UISaveAsWindow mUISaveAsWindow;
+        
+        private UICloseSpreadsheetWindow mUICloseSpreadsheetWindow;
+        
+        private UIHowToUseTheSpreadsheWindow mUIHowToUseTheSpreadsheWindow;
         #endregion
     }
     
@@ -518,6 +1126,276 @@ namespace SpreadsheetGUITest
         #endregion
     }
     
+    /// <summary>
+    /// Parameters to be passed into 'RecordedMethod1'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class RecordedMethod1Params
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Type '22' in 'cellValueTextBox' text box
+        /// </summary>
+        public string UICellValueTextBoxEditText = "22";
+        
+        /// <summary>
+        /// Type '33' in 'cellValueTextBox' text box
+        /// </summary>
+        public string UICellValueTextBoxEditText1 = "33";
+        
+        /// <summary>
+        /// Type '=c2+d2' in 'cellValueTextBox' text box
+        /// </summary>
+        public string UICellValueTextBoxEditText2 = "=c2+d2";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertCellNameC4'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertCellNameC4ExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'Text' property of 'cellContentsBox' text box equals 'C4'
+        /// </summary>
+        public string UICellContentsBoxEditText = "C4";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertCellFormula'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertCellFormulaExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'Text' property of 'cellValueTextBox' text box equals '=C2+D2'
+        /// </summary>
+        public string UICellValueTextBoxEditText = "=C2+D2";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertResult'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertResultExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'Text' property of 'cellValueWindow' text box equals '55'
+        /// </summary>
+        public string UICellValueWindowEditText = "55";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertNewWindow'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertNewWindowExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'IsTopParent' property of 'Form1' client equals 'False'
+        /// </summary>
+        public bool UIForm1ClientIsTopParent = false;
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertOpenTest'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertOpenTestExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'ControlType' property of 'Open' Dialog equals 'Dialog'
+        /// </summary>
+        public string UIOpenDialogControlType = "Dialog";
+        
+        /// <summary>
+        /// Verify that the 'FriendlyName' property of 'Open' Dialog equals 'Open'
+        /// </summary>
+        public string UIOpenDialogFriendlyName = "Open";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertSaveTest'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertSaveTestExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'FriendlyName' property of 'Save As' Dialog equals 'Save As'
+        /// </summary>
+        public string UISaveAsDialogFriendlyName = "Save As";
+        
+        /// <summary>
+        /// Verify that the 'ControlType' property of 'Save As' Dialog equals 'Dialog'
+        /// </summary>
+        public string UISaveAsDialogControlType = "Dialog";
+        
+        /// <summary>
+        /// Verify that the 'Name' property of 'Save As' Dialog equals 'Save As'
+        /// </summary>
+        public string UISaveAsDialogName = "Save As";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'CloseFromWindowTest'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class CloseFromWindowTestParams
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Type '22' in 'cellValueTextBox' text box
+        /// </summary>
+        public string UICellValueTextBoxEditText = "22";
+        
+        /// <summary>
+        /// Type '{Enter}' in 'cellValueTextBox' text box
+        /// </summary>
+        public string UICellValueTextBoxEditSendKeys = "{Enter}";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertClosePromptShowsUp'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertClosePromptShowsUpExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'ControlType' property of 'Close Spreadsheet' Dialog equals 'Dialog'
+        /// </summary>
+        public string UICloseSpreadsheetDialogControlType = "Dialog";
+        
+        /// <summary>
+        /// Verify that the 'Name' property of 'Close Spreadsheet' Dialog equals 'Close Spreadsheet'
+        /// </summary>
+        public string UICloseSpreadsheetDialogName = "Close Spreadsheet";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertFormShowsAfterCancelClose'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertFormShowsAfterCancelCloseExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'Name' property of 'Form1' client equals 'Form1'
+        /// </summary>
+        public string UIForm1ClientName = "Form1";
+        
+        /// <summary>
+        /// Verify that the 'Exists' property of 'Form1' client equals 'True'
+        /// </summary>
+        public bool UIForm1ClientExists = true;
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertSaveDialogShows'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertSaveDialogShowsExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'Exists' property of 'Save As' Dialog equals 'True'
+        /// </summary>
+        public bool UISaveAsDialogExists = true;
+        
+        /// <summary>
+        /// Verify that the 'Name' property of 'Save As' Dialog equals 'Save As'
+        /// </summary>
+        public string UISaveAsDialogName = "Save As";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'CloseFromMenuTest'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class CloseFromMenuTestParams
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Type '234' in 'cellValueTextBox' text box
+        /// </summary>
+        public string UICellValueTextBoxEditText = "234";
+        
+        /// <summary>
+        /// Type '{Enter}' in 'cellValueTextBox' text box
+        /// </summary>
+        public string UICellValueTextBoxEditSendKeys = "{Enter}";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertCloseFromMenuTest'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertCloseFromMenuTestExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'Exists' property of 'Desktop' list box equals 'True'
+        /// </summary>
+        public bool UIDesktopListExists = true;
+        
+        /// <summary>
+        /// Verify that the 'Name' property of 'Desktop' list box equals 'Desktop'
+        /// </summary>
+        public string UIDesktopListName = "Desktop";
+        #endregion
+    }
+    
+    /// <summary>
+    /// Parameters to be passed into 'AssertHelpDialogShowsUp'
+    /// </summary>
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class AssertHelpDialogShowsUpExpectedValues
+    {
+        
+        #region Fields
+        /// <summary>
+        /// Verify that the 'Name' property of 'How To Use The Spreadsheet' Dialog equals 'How To Use The Spreadsheet'
+        /// </summary>
+        public string UIHowToUseTheSpreadsheDialogName = "How To Use The Spreadsheet";
+        
+        /// <summary>
+        /// Verify that the 'Exists' property of 'How To Use The Spreadsheet' Dialog equals 'True'
+        /// </summary>
+        public bool UIHowToUseTheSpreadsheDialogExists = true;
+        #endregion
+    }
+    
     [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
     public class UIProgramManagerWindow : WinWindow
     {
@@ -543,10 +1421,24 @@ namespace SpreadsheetGUITest
                 return this.mUIDesktopList;
             }
         }
+        
+        public UIFolderViewWindow UIFolderViewWindow
+        {
+            get
+            {
+                if ((this.mUIFolderViewWindow == null))
+                {
+                    this.mUIFolderViewWindow = new UIFolderViewWindow(this);
+                }
+                return this.mUIFolderViewWindow;
+            }
+        }
         #endregion
         
         #region Fields
         private UIDesktopList mUIDesktopList;
+        
+        private UIFolderViewWindow mUIFolderViewWindow;
         #endregion
     }
     
@@ -583,6 +1475,42 @@ namespace SpreadsheetGUITest
         
         #region Fields
         private WinListItem mUISpreadsheetGUIShortcListItem;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UIFolderViewWindow : WinWindow
+    {
+        
+        public UIFolderViewWindow(UITestControl searchLimitContainer) : 
+                base(searchLimitContainer)
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.ControlId] = "1";
+            this.WindowTitles.Add("Program Manager");
+            #endregion
+        }
+        
+        #region Properties
+        public WinList UIDesktopList
+        {
+            get
+            {
+                if ((this.mUIDesktopList == null))
+                {
+                    this.mUIDesktopList = new WinList(this);
+                    #region Search Criteria
+                    this.mUIDesktopList.SearchProperties[WinList.PropertyNames.Name] = "Desktop";
+                    this.mUIDesktopList.WindowTitles.Add("Program Manager");
+                    #endregion
+                }
+                return this.mUIDesktopList;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinList mUIDesktopList;
         #endregion
     }
     
@@ -739,6 +1667,46 @@ namespace SpreadsheetGUITest
                 return this.mUISpreadsheetPanel1Window;
             }
         }
+        
+        public UIMenuStrip1MenuBar UIMenuStrip1MenuBar
+        {
+            get
+            {
+                if ((this.mUIMenuStrip1MenuBar == null))
+                {
+                    this.mUIMenuStrip1MenuBar = new UIMenuStrip1MenuBar(this);
+                }
+                return this.mUIMenuStrip1MenuBar;
+            }
+        }
+        
+        public UIForm1TitleBar UIForm1TitleBar
+        {
+            get
+            {
+                if ((this.mUIForm1TitleBar == null))
+                {
+                    this.mUIForm1TitleBar = new UIForm1TitleBar(this);
+                }
+                return this.mUIForm1TitleBar;
+            }
+        }
+        
+        public WinClient UIForm1Client
+        {
+            get
+            {
+                if ((this.mUIForm1Client == null))
+                {
+                    this.mUIForm1Client = new WinClient(this);
+                    #region Search Criteria
+                    this.mUIForm1Client.SearchProperties[WinControl.PropertyNames.Name] = "Form1";
+                    this.mUIForm1Client.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUIForm1Client;
+            }
+        }
         #endregion
         
         #region Fields
@@ -753,6 +1721,12 @@ namespace SpreadsheetGUITest
         private UICellValueWindowWindow mUICellValueWindowWindow;
         
         private UISpreadsheetPanel1Window mUISpreadsheetPanel1Window;
+        
+        private UIMenuStrip1MenuBar mUIMenuStrip1MenuBar;
+        
+        private UIForm1TitleBar mUIForm1TitleBar;
+        
+        private WinClient mUIForm1Client;
         #endregion
     }
     
@@ -967,6 +1941,521 @@ namespace SpreadsheetGUITest
         
         #region Fields
         private WinClient mUIEditCellClient;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UIMenuStrip1MenuBar : WinMenuBar
+    {
+        
+        public UIMenuStrip1MenuBar(UITestControl searchLimitContainer) : 
+                base(searchLimitContainer)
+        {
+            #region Search Criteria
+            this.SearchProperties[WinMenu.PropertyNames.Name] = "menuStrip1";
+            this.WindowTitles.Add("Form1");
+            #endregion
+        }
+        
+        #region Properties
+        public UIFileMenuItem UIFileMenuItem
+        {
+            get
+            {
+                if ((this.mUIFileMenuItem == null))
+                {
+                    this.mUIFileMenuItem = new UIFileMenuItem(this);
+                }
+                return this.mUIFileMenuItem;
+            }
+        }
+        
+        public WinMenuItem UIHelpMenuItem
+        {
+            get
+            {
+                if ((this.mUIHelpMenuItem == null))
+                {
+                    this.mUIHelpMenuItem = new WinMenuItem(this);
+                    #region Search Criteria
+                    this.mUIHelpMenuItem.SearchProperties[WinMenuItem.PropertyNames.Name] = "Help";
+                    this.mUIHelpMenuItem.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUIHelpMenuItem;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private UIFileMenuItem mUIFileMenuItem;
+        
+        private WinMenuItem mUIHelpMenuItem;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UIFileMenuItem : WinMenuItem
+    {
+        
+        public UIFileMenuItem(UITestControl searchLimitContainer) : 
+                base(searchLimitContainer)
+        {
+            #region Search Criteria
+            this.SearchProperties[WinMenuItem.PropertyNames.Name] = "File";
+            this.WindowTitles.Add("Form1");
+            #endregion
+        }
+        
+        #region Properties
+        public WinMenuItem UINewMenuItem
+        {
+            get
+            {
+                if ((this.mUINewMenuItem == null))
+                {
+                    this.mUINewMenuItem = new WinMenuItem(this);
+                    #region Search Criteria
+                    this.mUINewMenuItem.SearchProperties[WinMenuItem.PropertyNames.Name] = "New";
+                    this.mUINewMenuItem.SearchConfigurations.Add(SearchConfiguration.ExpandWhileSearching);
+                    this.mUINewMenuItem.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUINewMenuItem;
+            }
+        }
+        
+        public WinMenuItem UIOpenMenuItem
+        {
+            get
+            {
+                if ((this.mUIOpenMenuItem == null))
+                {
+                    this.mUIOpenMenuItem = new WinMenuItem(this);
+                    #region Search Criteria
+                    this.mUIOpenMenuItem.SearchProperties[WinMenuItem.PropertyNames.Name] = "Open";
+                    this.mUIOpenMenuItem.SearchConfigurations.Add(SearchConfiguration.ExpandWhileSearching);
+                    this.mUIOpenMenuItem.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUIOpenMenuItem;
+            }
+        }
+        
+        public WinMenuItem UISaveMenuItem
+        {
+            get
+            {
+                if ((this.mUISaveMenuItem == null))
+                {
+                    this.mUISaveMenuItem = new WinMenuItem(this);
+                    #region Search Criteria
+                    this.mUISaveMenuItem.SearchProperties[WinMenuItem.PropertyNames.Name] = "Save";
+                    this.mUISaveMenuItem.SearchConfigurations.Add(SearchConfiguration.ExpandWhileSearching);
+                    this.mUISaveMenuItem.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUISaveMenuItem;
+            }
+        }
+        
+        public WinMenuItem UICloseMenuItem
+        {
+            get
+            {
+                if ((this.mUICloseMenuItem == null))
+                {
+                    this.mUICloseMenuItem = new WinMenuItem(this);
+                    #region Search Criteria
+                    this.mUICloseMenuItem.SearchProperties[WinMenuItem.PropertyNames.Name] = "Close";
+                    this.mUICloseMenuItem.SearchConfigurations.Add(SearchConfiguration.ExpandWhileSearching);
+                    this.mUICloseMenuItem.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUICloseMenuItem;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinMenuItem mUINewMenuItem;
+        
+        private WinMenuItem mUIOpenMenuItem;
+        
+        private WinMenuItem mUISaveMenuItem;
+        
+        private WinMenuItem mUICloseMenuItem;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UIForm1TitleBar : WinTitleBar
+    {
+        
+        public UIForm1TitleBar(UITestControl searchLimitContainer) : 
+                base(searchLimitContainer)
+        {
+            #region Search Criteria
+            this.WindowTitles.Add("Form1");
+            #endregion
+        }
+        
+        #region Properties
+        public WinButton UICloseButton
+        {
+            get
+            {
+                if ((this.mUICloseButton == null))
+                {
+                    this.mUICloseButton = new WinButton(this);
+                    #region Search Criteria
+                    this.mUICloseButton.SearchProperties[WinButton.PropertyNames.Name] = "Close";
+                    this.mUICloseButton.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUICloseButton;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinButton mUICloseButton;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UIForm1Window1 : WinWindow
+    {
+        
+        public UIForm1Window1()
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.Name] = "Form1";
+            this.SearchProperties.Add(new PropertyExpression(WinWindow.PropertyNames.ClassName, "WindowsForms10.Window", PropertyExpressionOperator.Contains));
+            this.FilterProperties[WinWindow.PropertyNames.OrderOfInvocation] = "2";
+            this.WindowTitles.Add("Form1");
+            #endregion
+        }
+        
+        #region Properties
+        public WinClient UIForm1Client
+        {
+            get
+            {
+                if ((this.mUIForm1Client == null))
+                {
+                    this.mUIForm1Client = new WinClient(this);
+                    #region Search Criteria
+                    this.mUIForm1Client.SearchProperties[WinControl.PropertyNames.Name] = "Form1";
+                    this.mUIForm1Client.WindowTitles.Add("Form1");
+                    #endregion
+                }
+                return this.mUIForm1Client;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinClient mUIForm1Client;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UIOpenWindow1 : WinWindow
+    {
+        
+        public UIOpenWindow1()
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.Name] = "Open";
+            this.SearchProperties[WinWindow.PropertyNames.ClassName] = "#32770";
+            this.WindowTitles.Add("Open");
+            #endregion
+        }
+        
+        #region Properties
+        public WinControl UIOpenDialog
+        {
+            get
+            {
+                if ((this.mUIOpenDialog == null))
+                {
+                    this.mUIOpenDialog = new WinControl(this);
+                    #region Search Criteria
+                    this.mUIOpenDialog.SearchProperties[UITestControl.PropertyNames.Name] = "Open";
+                    this.mUIOpenDialog.SearchProperties[UITestControl.PropertyNames.ControlType] = "Dialog";
+                    this.mUIOpenDialog.WindowTitles.Add("Open");
+                    #endregion
+                }
+                return this.mUIOpenDialog;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinControl mUIOpenDialog;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UISaveAsWindow : WinWindow
+    {
+        
+        public UISaveAsWindow()
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.Name] = "Save As";
+            this.SearchProperties[WinWindow.PropertyNames.ClassName] = "#32770";
+            this.WindowTitles.Add("Save As");
+            #endregion
+        }
+        
+        #region Properties
+        public WinControl UISaveAsDialog
+        {
+            get
+            {
+                if ((this.mUISaveAsDialog == null))
+                {
+                    this.mUISaveAsDialog = new WinControl(this);
+                    #region Search Criteria
+                    this.mUISaveAsDialog.SearchProperties[UITestControl.PropertyNames.Name] = "Save As";
+                    this.mUISaveAsDialog.SearchProperties[UITestControl.PropertyNames.ControlType] = "Dialog";
+                    this.mUISaveAsDialog.WindowTitles.Add("Save As");
+                    #endregion
+                }
+                return this.mUISaveAsDialog;
+            }
+        }
+        
+        public UIAddressLibrariesDocuWindow UIAddressLibrariesDocuWindow
+        {
+            get
+            {
+                if ((this.mUIAddressLibrariesDocuWindow == null))
+                {
+                    this.mUIAddressLibrariesDocuWindow = new UIAddressLibrariesDocuWindow(this);
+                }
+                return this.mUIAddressLibrariesDocuWindow;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinControl mUISaveAsDialog;
+        
+        private UIAddressLibrariesDocuWindow mUIAddressLibrariesDocuWindow;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UIAddressLibrariesDocuWindow : WinWindow
+    {
+        
+        public UIAddressLibrariesDocuWindow(UITestControl searchLimitContainer) : 
+                base(searchLimitContainer)
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.ControlId] = "1001";
+            this.SearchProperties[WinWindow.PropertyNames.Instance] = "2";
+            this.WindowTitles.Add("Save As");
+            #endregion
+        }
+        
+        #region Properties
+        public WinToolBar UIAddressLibrariesDocuToolBar
+        {
+            get
+            {
+                if ((this.mUIAddressLibrariesDocuToolBar == null))
+                {
+                    this.mUIAddressLibrariesDocuToolBar = new WinToolBar(this);
+                    #region Search Criteria
+                    this.mUIAddressLibrariesDocuToolBar.SearchProperties[WinToolBar.PropertyNames.Name] = "Address: Libraries\\Documents";
+                    this.mUIAddressLibrariesDocuToolBar.WindowTitles.Add("Save As");
+                    #endregion
+                }
+                return this.mUIAddressLibrariesDocuToolBar;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinToolBar mUIAddressLibrariesDocuToolBar;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UICloseSpreadsheetWindow : WinWindow
+    {
+        
+        public UICloseSpreadsheetWindow()
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.Name] = "Close Spreadsheet";
+            this.SearchProperties[WinWindow.PropertyNames.ClassName] = "#32770";
+            this.WindowTitles.Add("Close Spreadsheet");
+            #endregion
+        }
+        
+        #region Properties
+        public WinControl UICloseSpreadsheetDialog
+        {
+            get
+            {
+                if ((this.mUICloseSpreadsheetDialog == null))
+                {
+                    this.mUICloseSpreadsheetDialog = new WinControl(this);
+                    #region Search Criteria
+                    this.mUICloseSpreadsheetDialog.SearchProperties[UITestControl.PropertyNames.Name] = "Close Spreadsheet";
+                    this.mUICloseSpreadsheetDialog.SearchProperties[UITestControl.PropertyNames.ControlType] = "Dialog";
+                    this.mUICloseSpreadsheetDialog.WindowTitles.Add("Close Spreadsheet");
+                    #endregion
+                }
+                return this.mUICloseSpreadsheetDialog;
+            }
+        }
+        
+        public UIYesWindow UIYesWindow
+        {
+            get
+            {
+                if ((this.mUIYesWindow == null))
+                {
+                    this.mUIYesWindow = new UIYesWindow(this);
+                }
+                return this.mUIYesWindow;
+            }
+        }
+        
+        public UINOWindow UINOWindow
+        {
+            get
+            {
+                if ((this.mUINOWindow == null))
+                {
+                    this.mUINOWindow = new UINOWindow(this);
+                }
+                return this.mUINOWindow;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinControl mUICloseSpreadsheetDialog;
+        
+        private UIYesWindow mUIYesWindow;
+        
+        private UINOWindow mUINOWindow;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UIYesWindow : WinWindow
+    {
+        
+        public UIYesWindow(UITestControl searchLimitContainer) : 
+                base(searchLimitContainer)
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.ControlId] = "6";
+            this.WindowTitles.Add("Close Spreadsheet");
+            #endregion
+        }
+        
+        #region Properties
+        public WinButton UIYesButton
+        {
+            get
+            {
+                if ((this.mUIYesButton == null))
+                {
+                    this.mUIYesButton = new WinButton(this);
+                    #region Search Criteria
+                    this.mUIYesButton.SearchProperties[WinButton.PropertyNames.Name] = "Yes";
+                    this.mUIYesButton.WindowTitles.Add("Close Spreadsheet");
+                    #endregion
+                }
+                return this.mUIYesButton;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinButton mUIYesButton;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UINOWindow : WinWindow
+    {
+        
+        public UINOWindow(UITestControl searchLimitContainer) : 
+                base(searchLimitContainer)
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.ControlId] = "7";
+            this.WindowTitles.Add("Close Spreadsheet");
+            #endregion
+        }
+        
+        #region Properties
+        public WinButton UINOButton
+        {
+            get
+            {
+                if ((this.mUINOButton == null))
+                {
+                    this.mUINOButton = new WinButton(this);
+                    #region Search Criteria
+                    this.mUINOButton.SearchProperties[WinButton.PropertyNames.Name] = "No";
+                    this.mUINOButton.WindowTitles.Add("Close Spreadsheet");
+                    #endregion
+                }
+                return this.mUINOButton;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinButton mUINOButton;
+        #endregion
+    }
+    
+    [GeneratedCode("Coded UITest Builder", "14.0.23107.0")]
+    public class UIHowToUseTheSpreadsheWindow : WinWindow
+    {
+        
+        public UIHowToUseTheSpreadsheWindow()
+        {
+            #region Search Criteria
+            this.SearchProperties[WinWindow.PropertyNames.Name] = "How To Use The Spreadsheet";
+            this.SearchProperties[WinWindow.PropertyNames.ClassName] = "#32770";
+            this.WindowTitles.Add("How To Use The Spreadsheet");
+            #endregion
+        }
+        
+        #region Properties
+        public WinControl UIHowToUseTheSpreadsheDialog
+        {
+            get
+            {
+                if ((this.mUIHowToUseTheSpreadsheDialog == null))
+                {
+                    this.mUIHowToUseTheSpreadsheDialog = new WinControl(this);
+                    #region Search Criteria
+                    this.mUIHowToUseTheSpreadsheDialog.SearchProperties[UITestControl.PropertyNames.Name] = "How To Use The Spreadsheet";
+                    this.mUIHowToUseTheSpreadsheDialog.SearchProperties[UITestControl.PropertyNames.ControlType] = "Dialog";
+                    this.mUIHowToUseTheSpreadsheDialog.WindowTitles.Add("How To Use The Spreadsheet");
+                    #endregion
+                }
+                return this.mUIHowToUseTheSpreadsheDialog;
+            }
+        }
+        #endregion
+        
+        #region Fields
+        private WinControl mUIHowToUseTheSpreadsheDialog;
         #endregion
     }
 }
