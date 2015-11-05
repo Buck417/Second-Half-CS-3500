@@ -107,8 +107,11 @@ namespace SS
 
             try
             {
-                using (XmlReader reader = XmlReader.Create(file_path))
+                XmlReaderSettings settings = new XmlReaderSettings();
+                settings.IgnoreWhitespace = true;
+                using (XmlReader reader = XmlReader.Create(file_path, settings))
                 {
+                    
                     while (reader.Read())
                     {
                         if (reader.IsStartElement())
