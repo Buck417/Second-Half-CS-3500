@@ -158,17 +158,22 @@ namespace SpreadsheetGUI
 
         }
 
-        private void spreadsheetPanel1_Enter(object sender, EventArgs e)
-        {
-            cellValueTextBox.Focus();
-        }
-
+        /// <summary>
+        /// Keyboard listener when the enter key is pressed, use the solve button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void cellValueTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == (char)13)
                 solveButtonClick(sender, e);
         }
 
+        /// <summary>
+        /// Menu item that saves a spreadsheet to a spreadsheet file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void saveMenuItemClickHandler(object sender, EventArgs e)
         {
             SaveFileDialog d = new SaveFileDialog();
@@ -180,32 +185,57 @@ namespace SpreadsheetGUI
             
 
         }
-
+        /// <summary>
+        /// Menu item that closes the spreadsheet, making sure the user saves a changed spreadsheet
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void closeMenuItemClickHandler(object sender, EventArgs e)
         {
             //Ask if they want to save their changes, if they need to
+            if (ss.Changed)
+            {
+                MessageBox.Show("Would you like to save?", "Close Spreadsheet", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
+                if (DialogResult == DialogResult.No)
+                    Close();
+                else 
+                    saveMenuItemClickHandler(sender, e);
+
+            }
             //Close the window
-            Close();
+            else
+            {
+                Close();
+            }
         }
 
+        /// <summary>
+        /// Menu item that opens a spreadsheet file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void openMenuItemClickHandler(object sender, EventArgs e)
         {
             
             OpenFileDialog d = new OpenFileDialog();
             d.CheckFileExists = true;
+            d.Filter = "Spreadsheet File (*.sprd)|*.sprd|All Files (*.*)|*.*";
             d.ShowDialog();
             
             
         }
 
+        /// <summary>
+        /// Menu item that creates a new spreadsheet file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void newMenuItemClickHandler(object sender, EventArgs e)
         {
             SpreadsheetProgram.GetAppContext().RunForm(new Form1());
         }
 
-
-        //TODO We need to work on saving and the menu options
     }
 }
 
