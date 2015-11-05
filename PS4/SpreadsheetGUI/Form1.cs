@@ -300,6 +300,27 @@ namespace SpreadsheetGUI
 
 
         }
+
+        /// <summary>
+        /// Helper method that handles shortcuts for the spreadsheet
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            //Pressing CTRL-O opens a file
+            if ((e.KeyCode == Keys.O && e.Control))
+                openMenuItemClickHandler(sender, e);
+            //Pressing CTRL-S saves a file
+            if ((e.KeyCode == Keys.S && e.Control))
+                saveMenuItemClickHandler(sender, e);
+            //Pressing CTRL-N creates a new file
+            if ((e.KeyCode == Keys.N && e.Control))
+                newMenuItemClickHandler(sender, e);
+            //Pressing CTRL-W closes current spreadsheet
+            if ((e.KeyCode == Keys.W && e.Control))
+                closeMenuItemClickHandler(sender, e);
+        }
     }
 }
 
