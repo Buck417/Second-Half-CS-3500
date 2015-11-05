@@ -264,7 +264,7 @@ namespace SpreadsheetGUI
                 "that can be used are +, -, *, and divide. \n\tYou can change a cell by selecting the cell and editing the value in the " +
                 "value box. All other cells that depend on the changed cell will also update to their new value. For example, you can either type 2, =2*A1, or 'Hello' in the text box labeled 'Edit Cell'.", "How To Use The Spreadsheet");
         }
-
+        
         /// <summary>
         /// Event for when the form closes.
         /// </summary>
@@ -278,7 +278,10 @@ namespace SpreadsheetGUI
                 DialogResult result = MessageBox.Show("Would you like to save?", "Close Spreadsheet", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
                 if (result == DialogResult.No)
-                    Close();
+                {
+                    this.Close();
+                }
+                    
                 else if (result == DialogResult.Yes)
                 {
                     saveMenuItemClickHandler(sender, e);
@@ -292,9 +295,10 @@ namespace SpreadsheetGUI
             //Close the window
             else
             {
-                Close();
+                this.Close();
             }
         }
+        
     }
 }
 
