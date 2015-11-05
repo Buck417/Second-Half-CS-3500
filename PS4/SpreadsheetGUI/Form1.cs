@@ -185,6 +185,7 @@ namespace SpreadsheetGUI
             
 
         }
+
         /// <summary>
         /// Menu item that closes the spreadsheet, making sure the user saves a changed spreadsheet
         /// </summary>
@@ -195,12 +196,16 @@ namespace SpreadsheetGUI
             //Ask if they want to save their changes, if they need to
             if (ss.Changed)
             {
-                MessageBox.Show("Would you like to save?", "Close Spreadsheet", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                DialogResult result = MessageBox.Show("Would you like to save?", "Close Spreadsheet", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
-                if (DialogResult == DialogResult.No)
+                if (result == DialogResult.No)
                     Close();
-                else 
+                else if(result == DialogResult.Yes)
+                {
                     saveMenuItemClickHandler(sender, e);
+                    
+                }
+                    
 
             }
             //Close the window

@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpreadsheetTests", "Spreads
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpreadsheetGUI", "SpreadsheetGUI\SpreadsheetGUI.csproj", "{917B6479-94FD-4C16-9B5C-5564A2D1E9FB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpreadsheetGUITest", "SpreadsheetGUITest\SpreadsheetGUITest.csproj", "{07530E93-8DCB-4A70-958A-F72AD6D2CD28}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{917B6479-94FD-4C16-9B5C-5564A2D1E9FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{917B6479-94FD-4C16-9B5C-5564A2D1E9FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{917B6479-94FD-4C16-9B5C-5564A2D1E9FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07530E93-8DCB-4A70-958A-F72AD6D2CD28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07530E93-8DCB-4A70-958A-F72AD6D2CD28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07530E93-8DCB-4A70-958A-F72AD6D2CD28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07530E93-8DCB-4A70-958A-F72AD6D2CD28}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
