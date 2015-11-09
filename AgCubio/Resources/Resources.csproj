@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B0A8C7B2-777E-4404-A52F-6F8917DAA428}</ProjectGuid>
+    <ProjectGuid>{5F364142-691C-45C6-858C-24081B08929F}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Resources</RootNamespace>
@@ -32,20 +32,11 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Libraries\Formula.dll" />
-    <Content Include="Libraries\Formula.XML" />
-    <Content Include="Libraries\SpreadsheetUtilities.dll" />
-    <Content Include="Libraries\SpreadsheetUtilities.XML" />
-    <Content Include="README.txt" />
-    <Content Include="SpreadsheetPanel.dll" />
-    <Content Include="SpreadsheetPanel.XML" />
+    <Folder Include="Packages\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -10,20 +10,6 @@
             Creates an empty DependencyGraph.
             </summary>
         </member>
-        <member name="P:SpreadsheetUtilities.DependencyGraph.Size">
-            <summary>
-            The number of ordered pairs in the DependencyGraph.
-            </summary>
-        </member>
-        <member name="P:SpreadsheetUtilities.DependencyGraph.Item(System.String)">
-            <summary>
-            The size of dependees(s).
-            This property is an example of an indexer.  If dg is a DependencyGraph, you would
-            invoke it like this:
-            dg["a"]
-            It should return the size of dependees("a")
-            </summary>
-        </member>
         <member name="M:SpreadsheetUtilities.DependencyGraph.HasDependents(System.String)">
             <summary>
             Reports whether dependents(s) is non-empty.
@@ -73,6 +59,20 @@
             <summary>
             Removes all existing ordered pairs of the form (r,s).  Then, for each 
             t in newDependees, adds the ordered pair (t,s).
+            </summary>
+        </member>
+        <member name="P:SpreadsheetUtilities.DependencyGraph.Size">
+            <summary>
+            The number of ordered pairs in the DependencyGraph.
+            </summary>
+        </member>
+        <member name="P:SpreadsheetUtilities.DependencyGraph.Item(System.String)">
+            <summary>
+            The size of dependees(s).
+            This property is an example of an indexer.  If dg is a DependencyGraph, you would
+            invoke it like this:
+            dg["a"]
+            It should return the size of dependees("a")
             </summary>
         </member>
     </members>

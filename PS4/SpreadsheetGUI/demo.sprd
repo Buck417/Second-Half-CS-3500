@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<spreadsheet version="ps6">
+  <cell>
+    <name>A1</name>
+    <contents>6</contents>
+  </cell>
+  <cell>
+    <name>B1</name>
+    <contents>hello</contents>
+  </cell>
+  <cell>
+    <name>C1</name>
+    <contents>=9</contents>
+  </cell>
+  <cell>
+    <name>D1</name>
+    <contents>=A1+C1</contents>
+  </cell>
+  <cell>
+    <name>E1</name>
+    <contents>105</contents>
+  </cell>
+</spreadsheet>
