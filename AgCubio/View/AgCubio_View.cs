@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace View
 {
-    public partial class Form1 : Form
+    public partial class AgCubio_View : Form
     {
-        public Form1()
+        public AgCubio_View()
         {
             InitializeComponent();
         }

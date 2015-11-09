@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Network_Controller
 {
-    public class Class1
+    public class Network_Controller
     {
     }
 }

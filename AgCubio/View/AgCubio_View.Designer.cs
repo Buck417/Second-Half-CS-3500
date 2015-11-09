@@ -1,6 +1,6 @@
 ﻿namespace View
 {
-    partial class Form1
+    partial class AgCubio_View
     {
         /// <summary>
         /// Required designer variable.
