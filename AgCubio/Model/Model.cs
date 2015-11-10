@@ -6,14 +6,20 @@ using System.Threading.Tasks;
 
 namespace Model
 {
+    /// <summary>
+    /// Constructor for creating a cube, defining its position, unique ID, color, name,
+    /// type and mass. Sets a width defined by its mass.
+    /// </summary>
     public class Cube
     {
-        public int UID, X, Y;
+        public int UID;
+        public double X, Y;
         public string Color, Name;
         public bool Food;
         public double Mass;
+        public double Width;
 
-        public Cube(int uID, int x, int y, string color, string name, bool food, double mass)
+        public Cube(int uID, double x, double y, string color, string name, bool food, double mass)
         {
             this.UID = uID;
             this.X = x;
@@ -22,6 +28,7 @@ namespace Model
             this.Name = name;
             this.Food = food;
             this.Mass = mass;
+            this.Width = Math.Sqrt(mass);
         }
     }
 
