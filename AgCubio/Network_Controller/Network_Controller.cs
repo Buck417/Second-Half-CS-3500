@@ -8,6 +8,11 @@ using System.Threading.Tasks;
 namespace Network_Controller
 {
 
+    public class Preserved_State
+    {
+
+    }
+
     public static class Network_Controller
     {
 
@@ -30,7 +35,7 @@ namespace Network_Controller
         /// Once a connection is established the "saved away" callback function needs to called. Additionally, the network connection should "BeginReceive" expecting more data to arrive(and provide the ReceiveCallback function for this purpose)
         /// </summary>
         /// <param name="state_in_an_ar_object"></param>
-        static void Connected_to_Server(IAsyncResult state_in_an_ar_object)
+        static void Connected_to_Server(IAsyncResult ar_state)
         {
 
         }
@@ -40,7 +45,7 @@ namespace Network_Controller
         /// For our purposes, this function should not request more data.It is up to the code in the callback function above to request more data.
         /// </summary>
         /// <param name="state_in_an_ar_object"></param>
-        static void ReceiveCallback(IAsyncResult state_in_an_ar_object)
+        static void ReceiveCallback(IAsyncResult ar_state)
         {
 
         }
