@@ -28,9 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.SuspendLayout();
+            // 
+            // AgCubio_View
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(1007, 797);
+            this.Name = "AgCubio_View";
             this.Text = "Form1";
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.AgCubioPaint);
+            this.ResumeLayout(false);
+
         }
 
         #endregion
