@@ -7,12 +7,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Model;
+using Network_Controller;
+using Newtonsoft.Json;
 
 namespace View
 {
     public partial class AgCubio_View : Form
     {
         private System.Drawing.SolidBrush myBrush;
+        private World world;
 
         public AgCubio_View()
         {
@@ -20,6 +24,24 @@ namespace View
 
             //Use this to prevent screen flickering when redrawing the world
             DoubleBuffered = true;
+
+            world = new World();
+        }
+
+        /// <summary>
+        /// Send the name to the specified host
+        /// </summary>
+        public void DoLogin(string name, string host)
+        {
+            
+
+        }
+
+        
+
+        public void ProcessCube()
+        {
+
         }
 
         int count = 0;
@@ -36,5 +58,15 @@ namespace View
             Console.WriteLine("repainting " + count);
             this.Invalidate();
         }
+
+
+        /********************************************* HELPER METHODS *********************************************/
+        
+
+        private void DrawCube(Cube cube)
+        {
+
+        }
+        /******************************************* END HELPER METHODS ******************************************/
     }
 }

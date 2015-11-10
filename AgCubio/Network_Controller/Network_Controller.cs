@@ -11,10 +11,12 @@ namespace Network_Controller
     public class Preserved_State
     {
 
+        Delegate ReceiveCallback;
     }
 
     public static class Network_Controller
     {
+        
 
         /// <summary>
         /// This guy connects to the server.
