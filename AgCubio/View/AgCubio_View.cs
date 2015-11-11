@@ -7,41 +7,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Model;
-using Network_Controller;
 using Newtonsoft.Json;
+using Model;
 
 namespace View
 {
     public partial class AgCubio_View : Form
     {
         private System.Drawing.SolidBrush myBrush;
-        private World world;
+
+        World world;
+
 
         public AgCubio_View()
         {
             InitializeComponent();
 
+            world = new World();
+
             //Use this to prevent screen flickering when redrawing the world
             DoubleBuffered = true;
-
-            world = new World();
-        }
-
-        /// <summary>
-        /// Send the name to the specified host
-        /// </summary>
-        public void DoLogin(string name, string host)
-        {
-            
-
-        }
-
-        
-
-        public void ProcessCube()
-        {
-
         }
 
         int count = 0;
@@ -60,13 +45,26 @@ namespace View
         }
 
 
-        /********************************************* HELPER METHODS *********************************************/
-        
+        /***************************************CALLBACK DELEGATES*****************************************/
 
-        private void DrawCube(Cube cube)
+        public void ProcessIncomingCubeJson(IAsyncResult state)
         {
+            Byte[] bytes = (Byte[])state.AsyncState;
+            String json = Encoding.UTF8.GetString(bytes);
+            Cube c = Cube.Create(json);
+            lock(world){                                           
+                world.ProcessIncomingCube(c);
+            }
+            ///TODO: Draw method invoke
+            ///
 
         }
-        /******************************************* END HELPER METHODS ******************************************/
+
+
+
+
+        /***************************************CALLBACK DELEGATES*****************************************/
+
+
     }
 }
