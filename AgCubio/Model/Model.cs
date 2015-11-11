@@ -9,7 +9,8 @@ namespace Model
 {
     /// <summary>
     /// Constructor for creating a cube, defining its position, unique ID, color, name,
-    /// type and mass. Sets a width defined by its mass.
+    /// type and mass. Sets a width defined by its mass. Adds function for converting JSON
+    /// string into a cube.
     /// </summary>
     public class Cube
     {
