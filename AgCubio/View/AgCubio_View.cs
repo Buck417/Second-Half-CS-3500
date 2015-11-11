@@ -61,7 +61,18 @@ namespace View
 
 
         /********************************************* HELPER METHODS *********************************************/
-        
+        private void ProcessJsonBlock(string block)
+        {
+            foreach(string line in block.Split('\n'))
+            {
+                ProcessJsonLine(line);
+            }
+        }
+
+        private void ProcessJsonLine(string line)
+        {
+            Cube c = Cube.Create(line);
+        }
 
         private void DrawCube(Cube cube)
         {
