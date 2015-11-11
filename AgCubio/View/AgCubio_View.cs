@@ -59,6 +59,22 @@ namespace View
             this.Invalidate();
         }
 
+        /***************************************CALLBACK DELEGATES*****************************************/
+
+        public void ProcessIncomingCubeJson(IAsyncResult state)
+        {
+            Byte[] bytes = (Byte[])state.AsyncState;
+            String json = Encoding.UTF8.GetString(bytes);
+            ProcessJsonBlock(json);
+        }
+
+
+
+
+        /***************************************CALLBACK DELEGATES*****************************************/
+
+
+
 
         /********************************************* HELPER METHODS *********************************************/
         private void ProcessJsonBlock(string block)
@@ -69,9 +85,19 @@ namespace View
             }
         }
 
-        private void ProcessJsonLine(string line)
+        private void ProcessJsonLine(string json)
         {
-            Cube c = Cube.Create(line);
+            Cube cube = Cube.Create(json);
+            lock (world)
+            {
+                world.ProcessIncomingCube(cube);
+            }
+
+            lock (world)
+            {
+                DrawCube(cube);
+            }
+            
         }
 
         private void DrawCube(Cube cube)
