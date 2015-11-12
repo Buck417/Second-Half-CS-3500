@@ -36,19 +36,15 @@ namespace View
             String json_string = JsonConvert.SerializeObject(json_object);
             Cube cube = JsonConvert.DeserializeObject<Cube>(json_string);
 
+            //Compute the x and y offset, based on where the player cube is and how big it is.
             int center_x = this.Width / 2;
             int center_y = this.Height / 2;
-
-            world.xoff = (cube.X + (cube.Width / 2)) - center_x;
-            world.yoff = (cube.Y + (cube.Width / 2)) - center_y;
+            Cube player_cube = world.GetCube(world.Player_UID);
+            world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
+            world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
 
             DrawCube(cube, e);
-
-            string json = "{\"loc_x\":800.0,\"loc_y\":650.0,\"argb_color\":-65536,\"uid\":5002,\"food\":true,\"Name\":\"\",\"Mass\":100.0}";
-
-
-            Cube c = JsonConvert.DeserializeObject<Cube>(json);
-            DrawCube(c, e);
+            
             Invalidate();
         }
 
@@ -95,7 +91,7 @@ namespace View
             }
 
         }
-
+        
         private void DrawCube(Cube cube, PaintEventArgs e)
         {
             Color color = Color.FromArgb(cube.Color);

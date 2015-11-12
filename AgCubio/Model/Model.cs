@@ -54,6 +54,7 @@ namespace Model
         public int Scale = 1;
         public string Player_Name;
         public int Player_UID;
+        public double Player_Start_Mass;
         public int xoff, yoff;
 
         private Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
