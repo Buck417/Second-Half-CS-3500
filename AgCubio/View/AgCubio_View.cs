@@ -19,6 +19,7 @@ namespace View
     {
         private System.Drawing.SolidBrush myBrush;
         private World world;
+        private Socket socket;
 
         public AgCubio_View()
         {

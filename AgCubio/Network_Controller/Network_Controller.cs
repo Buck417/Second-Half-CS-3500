@@ -49,7 +49,7 @@ namespace Network_Controller
         /// <param name="state_in_an_ar_object"></param>
         static void ReceiveCallback(IAsyncResult ar_state)
         {
-
+            
         }
 
         /// <summary>
