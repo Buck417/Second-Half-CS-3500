@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using Model;
 using Network_Controller;
 using Newtonsoft.Json;
+using System.Threading;
+using System.Net.Sockets;
 
 namespace View
 {
@@ -28,35 +30,26 @@ namespace View
             world = new World();
         }
 
-        /// <summary>
-        /// Send the name to the specified host
-        /// </summary>
-        public void DoLogin(string name, string host)
-        {
-            
-
-        }
-
-        
-
-        public void ProcessCube()
-        {
-
-        }
-
-        int count = 0;
         public void AgCubioPaint(object sender, PaintEventArgs e)
         {
-            Color color = Color.FromArgb(count, count, count);
-            myBrush = new System.Drawing.SolidBrush(color);
+            Cube json_object = new Cube(926, 682, -65536, 5571, false, "name", 1000);
+            String json_string = JsonConvert.SerializeObject(json_object);
+            Cube cube = JsonConvert.DeserializeObject<Cube>(json_string);
 
-            count++;
+            int center_x = this.Width / 2;
+            int center_y = this.Height / 2;
 
-            if (count > 255) count = 0;
+            world.xoff = (cube.X + (cube.Width / 2)) - center_x;
+            world.yoff = (cube.Y + (cube.Width / 2)) - center_y;
 
-            e.Graphics.FillRectangle(myBrush, new Rectangle(count, count, 10 + count, 10 + 2 * count));
-            Console.WriteLine("repainting " + count);
-            this.Invalidate();
+            DrawCube(cube, e);
+
+            string json = "{\"loc_x\":800.0,\"loc_y\":650.0,\"argb_color\":-65536,\"uid\":5002,\"food\":true,\"Name\":\"\",\"Mass\":100.0}";
+
+
+            Cube c = JsonConvert.DeserializeObject<Cube>(json);
+            DrawCube(c, e);
+            Invalidate();
         }
 
         /***************************************CALLBACK DELEGATES*****************************************/
@@ -68,7 +61,10 @@ namespace View
             ProcessJsonBlock(json);
         }
 
+        public void ProcessIncomingLogin(IAsyncResult state)
+        {
 
+        }
 
 
         /***************************************CALLBACK DELEGATES*****************************************/
@@ -79,7 +75,7 @@ namespace View
         /********************************************* HELPER METHODS *********************************************/
         private void ProcessJsonBlock(string block)
         {
-            foreach(string line in block.Split('\n'))
+            foreach (string line in block.Split('\n'))
             {
                 ProcessJsonLine(line);
             }
@@ -95,15 +91,55 @@ namespace View
 
             lock (world)
             {
-                DrawCube(cube);
+                //DrawCube(cube);
             }
-            
+
         }
 
-        private void DrawCube(Cube cube)
+        private void DrawCube(Cube cube, PaintEventArgs e)
         {
+            Color color = Color.FromArgb(cube.Color);
+            myBrush = new System.Drawing.SolidBrush(color);
 
+            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - world.xoff, cube.Y - world.yoff, cube.Width * world.Scale, cube.Width * world.Scale));
+        }
+        
+        private void SendMoveRequest(int x, int y)
+        {
+            string data = "(move, " + x + ", " + y + ")\n";
+            Socket socket = null;
+            Network_Controller.Network_Controller.Send(socket, data);
+        }
+
+        private void SendSplitRequest(int x, int y)
+        {
+            string data = "(split, " + x + ", " + y + ")\n";
+            Socket socket = null;
+            Network_Controller.Network_Controller.Send(socket, data);
         }
         /******************************************* END HELPER METHODS ******************************************/
+
+
+
+        /********************************************* LISTENERS *************************************************/
+        private void AgCubio_View_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            //If the user presses spacebar (32), send a split request based on the mouse's current position
+            if (e.KeyChar == 32)
+            {
+                int dest_x = Cursor.Position.X;
+                int dest_y = Cursor.Position.Y;
+                SendSplitRequest(dest_x, dest_y);
+            }
+        }
+
+        private void AgCubio_View_MouseMove(object sender, MouseEventArgs e)
+        {
+            int mouse_x = e.X - world.xoff;
+            int mouse_y = e.Y - world.yoff;
+
+            SendMoveRequest(mouse_x, mouse_y);
+        }
+        /******************************************* END LISTENERS ***********************************************/
     }
 }

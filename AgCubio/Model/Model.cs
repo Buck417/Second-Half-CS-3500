@@ -14,25 +14,30 @@ namespace Model
     /// </summary>
     public class Cube
     {
+        [JsonProperty]
         public int UID;
-        public double X, Y;
-        public string Color, Name;
+        [JsonProperty]
+        public int X, Y, Color;
+        [JsonProperty]
+        public string Name;
+        [JsonProperty]
         public bool Food;
+        [JsonProperty]
         public double Mass;
-        public double Width;
+        public int Width;
 
-        public Cube(int uID, double x, double y, string color, string name, bool food, double mass)
+        [JsonConstructor]
+        public Cube(double loc_x, double loc_y, int argb_color, int uID, bool food, string name, double mass)
         {
             this.UID = uID;
-            this.X = x;
-            this.Y = y;
-            this.Color = color;
+            this.X = (int)loc_x;
+            this.Y = (int)loc_y;
+            this.Color = argb_color;
             this.Name = name;
             this.Food = food;
             this.Mass = mass;
-            this.Width = Math.Sqrt(mass);
+            this.Width = (int)(Math.Sqrt(mass));
         }
-
 
         public static Cube Create(string json)
         {
@@ -46,8 +51,19 @@ namespace Model
     public class World
     {
         int Max_Height, Max_Width;
+        public int Scale = 1;
+        public string Player_Name;
+        public int Player_UID;
+        public int xoff, yoff;
 
-        private Dictionary<int, Cube> cubes;
+        private Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
+
+        public Cube GetCube(int UID)
+        {
+            if (cubes.ContainsKey(UID))
+                return cubes[UID];
+            else return null;
+        }
 
         /// <summary>
         /// This takes care of what we need to do with a cube, depending on whether it exists and if it has mass.

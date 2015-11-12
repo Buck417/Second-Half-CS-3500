@@ -66,7 +66,7 @@ namespace Network_Controller
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="data"></param>
-        static void Send(Socket socket, String data)
+        public static void Send(Socket socket, String data)
         {
 
         }
