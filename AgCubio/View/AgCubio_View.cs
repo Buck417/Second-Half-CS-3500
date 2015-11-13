@@ -20,17 +20,23 @@ namespace View
         private System.Drawing.SolidBrush myBrush;
         private World world;
         private Socket socket;
-
+        public string PlayerName, GameHost;
+        
         public AgCubio_View()
         {
             InitializeComponent();
+
+            Form1 start_game_popup = new Form1(this);
+            start_game_popup.ShowDialog(this);
+            
+            start_game_popup.FormClosed += play_button_click;
 
             //Use this to prevent screen flickering when redrawing the world
             DoubleBuffered = true;
 
             world = new World();
         }
-
+        
         public void AgCubioPaint(object sender, PaintEventArgs e)
         {
             //Compute the x and y offset, based on where the player cube is and how big it is.
@@ -47,17 +53,26 @@ namespace View
 
         private void ConnectCallback(IAsyncResult ar)
         {
-            Socket socket = (Socket)ar.AsyncState;
-
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+            state.GUI_Callback = new AsyncCallback(ReceivePlayer);
+            
             //Send the player name
-            Network_Controller.Network_Controller.Send(socket, "");
+            Network_Controller.Network_Controller.Send(socket, PlayerName);
         }
 
         private void ReceivePlayer(IAsyncResult ar)
         {
-
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+            Console.WriteLine("Welcome " + PlayerName);
+            state.GUI_Callback = new AsyncCallback(ReceiveData);
+            ReceiveData(ar);
         }
 
+        private void ReceiveData(IAsyncResult ar)
+        {
+            //Get them cubes
+
+        }
         /***************************************CALLBACK DELEGATES*****************************************/
 
 
@@ -131,6 +146,12 @@ namespace View
 
             SendMoveRequest(mouse_x, mouse_y);
         }
+
+        private void play_button_click(object sender, EventArgs e)
+        {
+            Network_Controller.Network_Controller.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
+        }
         /******************************************* END LISTENERS ***********************************************/
     }
+    
 }

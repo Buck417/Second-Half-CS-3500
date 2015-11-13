@@ -11,8 +11,10 @@ namespace Network_Controller
 
     public class Preserved_State
     {
-        public Action<IAsyncResult> GUI_Callback;
-        public Socket socket;
+        public AsyncCallback GUI_Callback;
+        public Socket socket = null;
+        public byte[] buffer = new byte[256];
+        public StringBuilder sb = new StringBuilder();
     }
 
     public static class Network_Controller
@@ -30,11 +32,11 @@ namespace Network_Controller
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             Preserved_State state = new Preserved_State();
+            state.GUI_Callback = new AsyncCallback(callBack);
+            state.socket = socket;
 
-            //TODO: Set the GUI callback on the state object
+            socket.BeginConnect(hostName, 11000, new AsyncCallback(Connected_to_Server), socket);
             
-            socket.BeginConnect(hostName, 11000, Connected_to_Server, socket);
-
             return socket;
         }
 
@@ -45,12 +47,13 @@ namespace Network_Controller
         /// <param name="state_in_an_ar_object"></param>
         static void Connected_to_Server(IAsyncResult ar)
         {
-            Preserved_State state = (Preserved_State)(ar.AsyncState);
-            byte[] bytes = new byte [1024];
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+
+            //Call the first callback, which resets some info in the state
             state.GUI_Callback(ar);
-            
-            state.socket.BeginReceive(bytes, 0, bytes.Length, SocketFlags.None, ReceiveCallback, state);
-            
+
+            byte[] bytes = new byte[1024];
+            state.socket.BeginReceive(bytes, 0, bytes.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), state);
         }
 
         /// <summary>
@@ -79,10 +82,11 @@ namespace Network_Controller
         /// <param name="data"></param>
         public static void Send(Socket socket, String data)
         {
+            if (socket == null) return;
             //Convert the string into a byte array
             byte[] byte_data = Encoding.UTF8.GetBytes(data);
 
-            socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, SendCallBack, socket);
+            socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), socket);
         }
 
         /// <summary>
@@ -91,7 +95,9 @@ namespace Network_Controller
         /// </summary>
         private static void SendCallBack(IAsyncResult ar)
         {
-            
+            Socket client = (Socket)ar.AsyncState;
+
+
         }
     }
 }

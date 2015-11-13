@@ -60,7 +60,6 @@
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "AgCubio_View";
-            this.Text = "Form1";
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.AgCubioPaint);
             this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.AgCubio_View_KeyPress);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.AgCubio_View_MouseMove);
