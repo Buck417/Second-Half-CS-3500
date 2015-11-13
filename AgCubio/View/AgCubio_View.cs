@@ -33,36 +33,30 @@ namespace View
 
         public void AgCubioPaint(object sender, PaintEventArgs e)
         {
-            Cube json_object = new Cube(926, 682, -65536, 5571, false, "name", 1000);
-            String json_string = JsonConvert.SerializeObject(json_object);
-            Cube cube = JsonConvert.DeserializeObject<Cube>(json_string);
-
             //Compute the x and y offset, based on where the player cube is and how big it is.
             int center_x = this.Width / 2;
             int center_y = this.Height / 2;
             Cube player_cube = world.GetCube(world.Player_UID);
             world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
             world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
-
-            DrawCube(cube, e);
             
             Invalidate();
         }
 
         /***************************************CALLBACK DELEGATES*****************************************/
 
-        public void ProcessIncomingCubeJson(IAsyncResult state)
+        private void ConnectCallback(IAsyncResult ar)
         {
-            Byte[] bytes = (Byte[])state.AsyncState;
-            String json = Encoding.UTF8.GetString(bytes);
-            ProcessJsonBlock(json);
+            Socket socket = (Socket)ar.AsyncState;
+
+            //Send the player name
+            Network_Controller.Network_Controller.Send(socket, "");
         }
 
-        public void ProcessIncomingLogin(IAsyncResult state)
+        private void ReceivePlayer(IAsyncResult ar)
         {
 
         }
-
 
         /***************************************CALLBACK DELEGATES*****************************************/
 
@@ -93,7 +87,7 @@ namespace View
 
         }
         
-        private void DrawCube(Cube cube, PaintEventArgs e)
+        private void DrawWorld(Cube cube, PaintEventArgs e)
         {
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);
