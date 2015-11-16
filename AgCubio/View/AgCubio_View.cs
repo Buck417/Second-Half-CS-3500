@@ -20,25 +20,31 @@ namespace View
         private System.Drawing.SolidBrush myBrush;
         private World world;
         private Socket socket;
-        public string PlayerName, GameHost;
+        public string PlayerName = "Richie", GameHost = "localhost";
+        private bool GameStarted = false;
         
         public AgCubio_View()
         {
             InitializeComponent();
-
-            Form1 start_game_popup = new Form1(this);
-            start_game_popup.ShowDialog(this);
-            
-            start_game_popup.FormClosed += play_button_click;
-
             //Use this to prevent screen flickering when redrawing the world
             DoubleBuffered = true;
+
+            /*
+            Form1 start_game_popup = new Form1(this);
+            start_game_popup.ShowDialog(this);
+            start_game_popup.FormClosed += play_button_click;
+            */
+
+            StartGame();
 
             world = new World();
         }
         
         public void AgCubioPaint(object sender, PaintEventArgs e)
         {
+            //Only run this if the game has started
+            if (!GameStarted) return;
+            
             //Compute the x and y offset, based on where the player cube is and how big it is.
             int center_x = this.Width / 2;
             int center_y = this.Height / 2;
@@ -57,15 +63,16 @@ namespace View
             state.GUI_Callback = new AsyncCallback(ReceivePlayer);
             
             //Send the player name
-            Network_Controller.Network_Controller.Send(socket, PlayerName);
+            Network_Controller.Network_Controller.Send(state.socket, PlayerName);
         }
-
+        
         private void ReceivePlayer(IAsyncResult ar)
         {
+            GameStarted = true;
             Preserved_State state = (Preserved_State)ar.AsyncState;
             Console.WriteLine("Welcome " + PlayerName);
             state.GUI_Callback = new AsyncCallback(ReceiveData);
-            ReceiveData(ar);
+            Network_Controller.Network_Controller.i_want_more_data(ar);
         }
 
         private void ReceiveData(IAsyncResult ar)
@@ -149,6 +156,12 @@ namespace View
 
         private void play_button_click(object sender, EventArgs e)
         {
+            StartGame();
+        }
+
+        private void StartGame()
+        {
+            //Start by connecting to the server
             Network_Controller.Network_Controller.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
         }
         /******************************************* END LISTENERS ***********************************************/

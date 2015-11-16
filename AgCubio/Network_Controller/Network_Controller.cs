@@ -35,7 +35,7 @@ namespace Network_Controller
             state.GUI_Callback = new AsyncCallback(callBack);
             state.socket = socket;
 
-            socket.BeginConnect(hostName, 11000, new AsyncCallback(Connected_to_Server), socket);
+            socket.BeginConnect(hostName, 11000, new AsyncCallback(Connected_to_Server), state);
             
             return socket;
         }
@@ -63,7 +63,24 @@ namespace Network_Controller
         /// <param name="state_in_an_ar_object"></param>
         static void ReceiveCallback(IAsyncResult ar)
         {
-            
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+            Socket socket = state.socket;
+
+            byte[] buffer = (byte[])state.buffer;
+            int byte_count = socket.EndReceive(ar);
+
+
+            if (byte_count == 0)
+            {
+                //Connection lost
+                Console.WriteLine("Connection lost");
+                socket.Close();
+            }
+            else
+            {
+                UTF8Encoding encoding = new UTF8Encoding();
+                state.sb.Append(encoding.GetString(buffer, 0, byte_count));
+            }
         }
 
         /// <summary>
@@ -72,7 +89,9 @@ namespace Network_Controller
         /// <param name="state"></param>
         public static void i_want_more_data(IAsyncResult ar)
         {
-
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+            byte[] buffer = new byte[1024];
+            state.socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, state.GUI_Callback, state);
         }
 
         /// <summary>
