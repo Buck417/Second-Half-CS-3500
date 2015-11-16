@@ -17,8 +17,11 @@ namespace Network_Controller
         public StringBuilder sb = new StringBuilder();
     }
 
-    public static class Network_Controller
+    public static class Network
     {
+        private static Socket network_socket;
+        private static UTF8Encoding encoding = new UTF8Encoding();
+
         /// <summary>
         /// This guy connects to the server.
         /// This function should attempt to connect to the server via a provided hostname. It should save the callback function (in a state object) for use when data arrives.
@@ -78,7 +81,6 @@ namespace Network_Controller
             }
             else
             {
-                UTF8Encoding encoding = new UTF8Encoding();
                 state.sb.Append(encoding.GetString(buffer, 0, byte_count));
             }
         }
@@ -102,10 +104,13 @@ namespace Network_Controller
         public static void Send(Socket socket, String data)
         {
             if (socket == null) return;
+            network_socket = socket;
+
             //Convert the string into a byte array
             byte[] byte_data = Encoding.UTF8.GetBytes(data);
-
-            socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), socket);
+            byte[] buffer = new byte[1024];
+            
+            socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), buffer);
         }
 
         /// <summary>
@@ -114,9 +119,20 @@ namespace Network_Controller
         /// </summary>
         private static void SendCallBack(IAsyncResult ar)
         {
-            Socket client = (Socket)ar.AsyncState;
+            byte[] buffer = (byte[])ar.AsyncState;
 
+            //Find out how many bytes were sent
+            int byte_count = network_socket.EndSend(ar);
 
+            if(byte_count == 0)
+            {
+                Console.WriteLine("Connection closed.");
+                network_socket.Close();
+            }
+            else
+            {
+                Send(network_socket, encoding.GetString(buffer));
+            }
         }
     }
 }

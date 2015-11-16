@@ -63,7 +63,7 @@ namespace View
             state.GUI_Callback = new AsyncCallback(ReceivePlayer);
             
             //Send the player name
-            Network_Controller.Network_Controller.Send(state.socket, PlayerName);
+            Network.Send(socket, PlayerName);
         }
         
         private void ReceivePlayer(IAsyncResult ar)
@@ -72,7 +72,7 @@ namespace View
             Preserved_State state = (Preserved_State)ar.AsyncState;
             Console.WriteLine("Welcome " + PlayerName);
             state.GUI_Callback = new AsyncCallback(ReceiveData);
-            Network_Controller.Network_Controller.i_want_more_data(ar);
+            Network.i_want_more_data(ar);
         }
 
         private void ReceiveData(IAsyncResult ar)
@@ -121,14 +121,14 @@ namespace View
         {
             string data = "(move, " + x + ", " + y + ")\n";
             Socket socket = null;
-            Network_Controller.Network_Controller.Send(socket, data);
+            Network.Send(socket, data);
         }
 
         private void SendSplitRequest(int x, int y)
         {
             string data = "(split, " + x + ", " + y + ")\n";
             Socket socket = null;
-            Network_Controller.Network_Controller.Send(socket, data);
+            Network.Send(socket, data);
         }
         /******************************************* END HELPER METHODS ******************************************/
 
@@ -162,7 +162,7 @@ namespace View
         private void StartGame()
         {
             //Start by connecting to the server
-            Network_Controller.Network_Controller.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
+            socket = Network.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
         }
         /******************************************* END LISTENERS ***********************************************/
     }
