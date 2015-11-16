@@ -13,14 +13,14 @@ namespace Network_Controller
     {
         public AsyncCallback GUI_Callback;
         public Socket socket = null;
-        public byte[] buffer = new byte[256];
+        public byte[] buffer = new byte[Network.BUFFER_SIZE];
         public StringBuilder sb = new StringBuilder();
     }
 
     public static class Network
     {
-        private static Socket network_socket;
         private static UTF8Encoding encoding = new UTF8Encoding();
+        public static int BUFFER_SIZE = 4096;
 
         /// <summary>
         /// This guy connects to the server.
@@ -55,8 +55,8 @@ namespace Network_Controller
             //Call the first callback, which resets some info in the state
             state.GUI_Callback(ar);
 
-            byte[] bytes = new byte[1024];
-            state.socket.BeginReceive(bytes, 0, bytes.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), state);
+            state.buffer = new byte[BUFFER_SIZE];
+            state.socket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), state);
         }
 
         /// <summary>
@@ -72,6 +72,10 @@ namespace Network_Controller
             byte[] buffer = (byte[])state.buffer;
             int byte_count = socket.EndReceive(ar);
 
+            StringBuilder s = new StringBuilder();
+            s.Append(state.sb.ToString());
+
+            //state.sb.Clear();
 
             if (byte_count == 0)
             {
@@ -81,7 +85,10 @@ namespace Network_Controller
             }
             else
             {
-                state.sb.Append(encoding.GetString(buffer, 0, byte_count));
+                string the_string = encoding.GetString(buffer, 0, byte_count);
+                s.Append(the_string);
+                state.sb = s;
+                state.GUI_Callback(ar);
             }
         }
 
@@ -92,8 +99,7 @@ namespace Network_Controller
         public static void i_want_more_data(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
-            byte[] buffer = new byte[1024];
-            state.socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, state.GUI_Callback, state);
+            state.socket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), state);
         }
 
         /// <summary>
@@ -104,13 +110,12 @@ namespace Network_Controller
         public static void Send(Socket socket, String data)
         {
             if (socket == null) return;
-            network_socket = socket;
-
+            
             //Convert the string into a byte array
             byte[] byte_data = Encoding.UTF8.GetBytes(data);
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[BUFFER_SIZE];
             
-            socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), buffer);
+            socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), socket);
         }
 
         /// <summary>
@@ -119,20 +124,11 @@ namespace Network_Controller
         /// </summary>
         private static void SendCallBack(IAsyncResult ar)
         {
-            byte[] buffer = (byte[])ar.AsyncState;
+            Socket socket = (Socket)ar.AsyncState;
 
             //Find out how many bytes were sent
-            int byte_count = network_socket.EndSend(ar);
-
-            if(byte_count == 0)
-            {
-                Console.WriteLine("Connection closed.");
-                network_socket.Close();
-            }
-            else
-            {
-                Send(network_socket, encoding.GetString(buffer));
-            }
+            int bytes = socket.EndSend(ar);
+            Console.WriteLine("{0} bytes sent to server.", bytes);
         }
     }
 }

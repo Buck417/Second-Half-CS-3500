@@ -20,7 +20,7 @@ namespace View
         private System.Drawing.SolidBrush myBrush;
         private World world;
         private Socket socket;
-        public string PlayerName = "Richie", GameHost = "localhost";
+        public string PlayerName = "Ryan", GameHost = "127.0.0.1";
         private bool GameStarted = false;
         
         public AgCubio_View()
@@ -63,14 +63,18 @@ namespace View
             state.GUI_Callback = new AsyncCallback(ReceivePlayer);
             
             //Send the player name
-            Network.Send(socket, PlayerName);
+            Network.Send(socket, PlayerName + '\n');
         }
         
         private void ReceivePlayer(IAsyncResult ar)
         {
-            GameStarted = true;
             Preserved_State state = (Preserved_State)ar.AsyncState;
             Console.WriteLine("Welcome " + PlayerName);
+
+            //Handle the player cube coming in
+            string player_json = state.sb.ToString();
+            ProcessJsonBlock(player_json);
+            
             state.GUI_Callback = new AsyncCallback(ReceiveData);
             Network.i_want_more_data(ar);
         }
@@ -78,7 +82,11 @@ namespace View
         private void ReceiveData(IAsyncResult ar)
         {
             //Get them cubes
-
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+            string cube_json = state.sb.ToString();
+            ProcessJsonBlock(cube_json);
+            
+            Network.i_want_more_data(ar);
         }
         /***************************************CALLBACK DELEGATES*****************************************/
 
@@ -90,6 +98,12 @@ namespace View
         {
             foreach (string line in block.Split('\n'))
             {
+
+                if (line.Equals("")) continue;
+
+                //Once we get to \0, we know it's an empty byte, so we don't need to keep looking for more data.
+                else if (line.Contains("\0")) break;
+
                 ProcessJsonLine(line);
             }
         }
