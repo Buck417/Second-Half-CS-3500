@@ -52,6 +52,11 @@ namespace View
             world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
             world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
             
+            foreach(Cube cube in world.cubes.Values)
+            {
+                DrawCube(cube, e);
+            }
+
             Invalidate();
         }
 
@@ -104,13 +109,16 @@ namespace View
                 //Once we get to \0, we know it's an empty byte, so we don't need to keep looking for more data.
                 else if (line.Contains("\0")) break;
 
-                ProcessJsonLine(line);
+                //See if the cube was created with valid JSON. If it wasn't created, it's because the JSON was invalid from being only part of the string.
+                Cube cube = Cube.Create(line);
+                if (cube == null) break;
+
+                ProcessJsonCube(cube);
             }
         }
 
-        private void ProcessJsonLine(string json)
+        private void ProcessJsonCube(Cube cube)
         {
-            Cube cube = Cube.Create(json);
             lock (world)
             {
                 world.ProcessIncomingCube(cube);
@@ -118,12 +126,11 @@ namespace View
 
             lock (world)
             {
-                //DrawCube(cube);
+                Invalidate();
             }
-
         }
         
-        private void DrawWorld(Cube cube, PaintEventArgs e)
+        private void DrawCube(Cube cube, PaintEventArgs e)
         {
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);

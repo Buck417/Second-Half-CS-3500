@@ -57,7 +57,9 @@ namespace Model
         public double Player_Start_Mass;
         public int xoff, yoff;
 
-        private Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
+        public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
+
+        
 
         public Cube GetCube(int UID)
         {
