@@ -20,9 +20,10 @@ namespace View
         private System.Drawing.SolidBrush myBrush;
         private World world;
         private Socket socket;
-        public string PlayerName = "Ryan", GameHost = "127.0.0.1";
+        public string PlayerName = "Ryanadsfadsfadsf", GameHost = "127.0.0.1";
         private bool GameStarted = false;
-        
+        private int dest_x, dest_y;
+
         public AgCubio_View()
         {
             InitializeComponent();
@@ -39,14 +40,15 @@ namespace View
 
             world = new World();
         }
-        
+
         public void AgCubioPaint(object sender, PaintEventArgs e)
         {
             //Only run this if the game has started
             if (!GameStarted) return;
 
             //Compute the x and y offset, based on where the player cube is and how big it is.
-            try {
+            try
+            {
                 lock (world)
                 {
                     int center_x = this.Width / 2;
@@ -54,7 +56,7 @@ namespace View
                     Cube player_cube = world.GetPlayerCube();
 
                     //If the player cube isn't in the world anymore, we know it's game over
-                    if(player_cube == null)
+                    if (player_cube == null)
                     {
                         Console.WriteLine("Game over!");
                         return;
@@ -66,9 +68,15 @@ namespace View
                     {
                         DrawCube(cube, e);
                     }
+
+                    //Check to see if the player cube is where we told it to go. If not, send a move request again.
+                    if(player_cube.X != dest_x || player_cube.Y != dest_y)
+                    {
+                        SendMoveRequest(dest_x, dest_y);
+                    }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
@@ -82,11 +90,11 @@ namespace View
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
             state.GUI_Callback = new AsyncCallback(ReceivePlayer);
-            
+
             //Send the player name
             Network.Send(socket, PlayerName + '\n');
         }
-        
+
         private void ReceivePlayer(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
@@ -110,7 +118,7 @@ namespace View
 
             //Clear out what was in the last version of the world so it gets a fresh copy
             state.sb.Clear();
-            
+
             Network.i_want_more_data(ar);
         }
         /***************************************CALLBACK DELEGATES*****************************************/
@@ -129,7 +137,7 @@ namespace View
                 json_blocks[json_blocks.Length - 1] = "";
             }
 
-            foreach(string json in json_blocks)
+            foreach (string json in json_blocks)
             {
                 if (json.Equals("")) continue;
                 Cube cube = Cube.Create(json);
@@ -149,17 +157,23 @@ namespace View
                 Invalidate();
             }
         }
-        
+
         private void DrawCube(Cube cube, PaintEventArgs e)
         {
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);
 
             e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - world.xoff, cube.Y - world.yoff, cube.Width * world.Scale, cube.Width * world.Scale));
+
+            System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
+            System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
+
+            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.X - world.xoff, cube.Y - world.yoff));
         }
-        
+
         private void SendMoveRequest(int x, int y)
         {
+            //If the player cube isn't at the place we're sending it to yet, keep sending the move request
             string data = "(move, " + x + ", " + y + ")\n";
             Network.Send(socket, data);
         }
@@ -187,8 +201,8 @@ namespace View
 
         private void AgCubio_View_MouseMove(object sender, MouseEventArgs e)
         {
-            int mouse_x = e.X;// - world.xoff;
-            int mouse_y = e.Y;// - world.yoff;
+            int mouse_x = dest_x = e.X;// - world.xoff;
+            int mouse_y = dest_y = e.Y;// - world.yoff;
 
             SendMoveRequest(mouse_x, mouse_y);
         }
@@ -205,5 +219,5 @@ namespace View
         }
         /******************************************* END LISTENERS ***********************************************/
     }
-    
+
 }

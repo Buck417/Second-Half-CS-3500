@@ -17,6 +17,8 @@ namespace Model
         [JsonProperty]
         public int UID;
         [JsonProperty]
+        public int team_id;
+        [JsonProperty]
         public int X, Y, Color;
         [JsonProperty]
         public string Name;
@@ -27,9 +29,10 @@ namespace Model
         public int Width;
 
         [JsonConstructor]
-        public Cube(double loc_x, double loc_y, int argb_color, int uID, bool food, string name, double mass)
+        public Cube(double loc_x, double loc_y, int argb_color, int uID, int team_id, bool food, string name, double mass)
         {
             this.UID = uID;
+            this.team_id = team_id;
             this.X = (int)loc_x;
             this.Y = (int)loc_y;
             this.Color = argb_color;
@@ -52,7 +55,7 @@ namespace Model
     {
         public int Scale = 1;
         public string Player_Name;
-        private int Player_UID;
+        public int Player_UID;
         public double Player_Start_Mass;
         public int xoff, yoff;
 
