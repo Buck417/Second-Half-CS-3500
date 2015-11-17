@@ -39,7 +39,7 @@ namespace Network_Controller
             state.socket = socket;
 
             socket.BeginConnect(hostName, 11000, new AsyncCallback(Connected_to_Server), state);
-            
+
             return socket;
         }
 
@@ -70,12 +70,9 @@ namespace Network_Controller
             Socket socket = state.socket;
 
             byte[] buffer = (byte[])state.buffer;
+
+            //Stop receiving this current request
             int byte_count = socket.EndReceive(ar);
-
-            StringBuilder s = new StringBuilder();
-            s.Append(state.sb.ToString());
-
-            //state.sb.Clear();
 
             if (byte_count == 0)
             {
@@ -86,9 +83,18 @@ namespace Network_Controller
             else
             {
                 string the_string = encoding.GetString(buffer, 0, byte_count);
-                s.Append(the_string);
-                state.sb = s;
-                state.GUI_Callback(ar);
+                state.sb.Append(the_string);
+
+                //If the last character is a newline, we're done receiving, so we can call the callback in the GUI
+                if (the_string.LastIsNewline())
+                {
+                    state.GUI_Callback(ar);
+                }
+                //If the last character isn't a newline, we know we're not done receiving yet, so we need to ask for more data (after appending to the string builder
+                else
+                {
+                    i_want_more_data(ar);
+                }
             }
         }
 
@@ -110,11 +116,11 @@ namespace Network_Controller
         public static void Send(Socket socket, String data)
         {
             if (socket == null) return;
-            
+
             //Convert the string into a byte array
             byte[] byte_data = Encoding.UTF8.GetBytes(data);
             byte[] buffer = new byte[BUFFER_SIZE];
-            
+
             socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), socket);
         }
 
@@ -128,7 +134,16 @@ namespace Network_Controller
 
             //Find out how many bytes were sent
             int bytes = socket.EndSend(ar);
-            Console.WriteLine("{0} bytes sent to server.", bytes);
+        }
+
+        /// <summary>
+        /// Helper method to see if the last char is a newline (for our protocol, that's how we know it's finished)
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        private static bool LastIsNewline(this string str)
+        {
+            return (str.LastIndexOf('\n')) == (str.Length - 1);
         }
     }
 }

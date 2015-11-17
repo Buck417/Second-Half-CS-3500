@@ -46,18 +46,31 @@ namespace View
             if (!GameStarted) return;
 
             //Compute the x and y offset, based on where the player cube is and how big it is.
-            lock (world)
-            {
-                int center_x = this.Width / 2;
-                int center_y = this.Height / 2;
-                Cube player_cube = world.GetPlayerCube();
-                world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
-                world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
-
-                foreach (Cube cube in world.cubes.Values)
+            try {
+                lock (world)
                 {
-                    DrawCube(cube, e);
+                    int center_x = this.Width / 2;
+                    int center_y = this.Height / 2;
+                    Cube player_cube = world.GetPlayerCube();
+
+                    //If the player cube isn't in the world anymore, we know it's game over
+                    if(player_cube == null)
+                    {
+                        Console.WriteLine("Game over!");
+                        return;
+                    }
+                    world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
+                    world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
+
+                    foreach (Cube cube in world.cubes.Values)
+                    {
+                        DrawCube(cube, e);
+                    }
                 }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
 
             Invalidate();
@@ -94,6 +107,9 @@ namespace View
             Preserved_State state = (Preserved_State)ar.AsyncState;
             string world_json = state.sb.ToString();
             ProcessJsonBlock(world_json);
+
+            //Clear out what was in the last version of the world so it gets a fresh copy
+            state.sb.Clear();
             
             Network.i_want_more_data(ar);
         }
@@ -145,14 +161,12 @@ namespace View
         private void SendMoveRequest(int x, int y)
         {
             string data = "(move, " + x + ", " + y + ")\n";
-            Socket socket = null;
             Network.Send(socket, data);
         }
 
         private void SendSplitRequest(int x, int y)
         {
             string data = "(split, " + x + ", " + y + ")\n";
-            Socket socket = null;
             Network.Send(socket, data);
         }
         /******************************************* END HELPER METHODS ******************************************/
@@ -173,8 +187,8 @@ namespace View
 
         private void AgCubio_View_MouseMove(object sender, MouseEventArgs e)
         {
-            int mouse_x = e.X - world.xoff;
-            int mouse_y = e.Y - world.yoff;
+            int mouse_x = e.X;// - world.xoff;
+            int mouse_y = e.Y;// - world.yoff;
 
             SendMoveRequest(mouse_x, mouse_y);
         }
