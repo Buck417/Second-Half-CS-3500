@@ -44,17 +44,20 @@ namespace View
         {
             //Only run this if the game has started
             if (!GameStarted) return;
-            
+
             //Compute the x and y offset, based on where the player cube is and how big it is.
-            int center_x = this.Width / 2;
-            int center_y = this.Height / 2;
-            Cube player_cube = world.GetCube(world.Player_UID);
-            world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
-            world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
-            
-            foreach(Cube cube in world.cubes.Values)
+            lock (world)
             {
-                DrawCube(cube, e);
+                int center_x = this.Width / 2;
+                int center_y = this.Height / 2;
+                Cube player_cube = world.GetPlayerCube();
+                world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
+                world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
+
+                foreach (Cube cube in world.cubes.Values)
+                {
+                    DrawCube(cube, e);
+                }
             }
 
             Invalidate();
@@ -78,8 +81,9 @@ namespace View
 
             //Handle the player cube coming in
             string player_json = state.sb.ToString();
-            ProcessJsonBlock(player_json);
-            
+            world.AddPlayerCube(player_json);
+            GameStarted = true;
+
             state.GUI_Callback = new AsyncCallback(ReceiveData);
             Network.i_want_more_data(ar);
         }
@@ -88,8 +92,8 @@ namespace View
         {
             //Get them cubes
             Preserved_State state = (Preserved_State)ar.AsyncState;
-            string cube_json = state.sb.ToString();
-            ProcessJsonBlock(cube_json);
+            string world_json = state.sb.ToString();
+            ProcessJsonBlock(world_json);
             
             Network.i_want_more_data(ar);
         }
@@ -101,16 +105,18 @@ namespace View
         /********************************************* HELPER METHODS *********************************************/
         private void ProcessJsonBlock(string block)
         {
-            foreach (string line in block.Split('\n'))
+            string[] json_blocks = block.Split('\n');
+
+            //Check the last item to see if it was an entire json block. If not, skip over it.
+            if (!json_blocks[json_blocks.Length - 1].Contains('\n'))
             {
+                json_blocks[json_blocks.Length - 1] = "";
+            }
 
-                if (line.Equals("")) continue;
-
-                //Once we get to \0, we know it's an empty byte, so we don't need to keep looking for more data.
-                else if (line.Contains("\0")) break;
-
-                Cube cube = Cube.Create(line);
-                
+            foreach(string json in json_blocks)
+            {
+                if (json.Equals("")) continue;
+                Cube cube = Cube.Create(json);
                 ProcessJsonCube(cube);
             }
         }

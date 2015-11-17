@@ -50,16 +50,29 @@ namespace Model
     /// </summary>
     public class World
     {
-        int Max_Height, Max_Width;
         public int Scale = 1;
         public string Player_Name;
-        public int Player_UID;
+        private int Player_UID;
         public double Player_Start_Mass;
         public int xoff, yoff;
 
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
 
-        
+        public void AddPlayerCube(string json)
+        {
+            Cube cube = Cube.Create(json);
+            ProcessIncomingCube(cube);
+            Player_Start_Mass = cube.Mass;
+            Player_Name = cube.Name;
+            Player_UID = cube.UID;
+        }
+
+        public Cube GetPlayerCube()
+        {
+            if (cubes.ContainsKey(Player_UID))
+                return cubes[Player_UID];
+            else return null;
+        }
 
         public Cube GetCube(int UID)
         {
