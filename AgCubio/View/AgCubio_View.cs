@@ -46,11 +46,12 @@ namespace View
             //Only run this if the game has started
             if (!GameStarted) return;
 
-            //Compute the x and y offset, based on where the player cube is and how big it is.
+            
             try
             {
                 lock (world)
                 {
+                    //Compute the x and y offset, based on where the player cube is and how big it is.
                     int center_x = this.Width / 2;
                     int center_y = this.Height / 2;
                     Cube player_cube = world.GetPlayerCube();
@@ -74,6 +75,10 @@ namespace View
                     {
                         SendMoveRequest(dest_x, dest_y);
                     }
+
+
+
+                    
                 }
             }
             catch (Exception ex)
@@ -169,6 +174,10 @@ namespace View
             System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
 
             e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.X - world.xoff, cube.Y - world.yoff));
+
+
+
+
         }
 
         private void SendMoveRequest(int x, int y)
@@ -183,6 +192,7 @@ namespace View
             string data = "(split, " + x + ", " + y + ")\n";
             Network.Send(socket, data);
         }
+
         /******************************************* END HELPER METHODS ******************************************/
 
 
@@ -217,6 +227,13 @@ namespace View
             //Start by connecting to the server
             socket = Network.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
         }
+
+        private void AgCubio_View_Load(object sender, EventArgs e)
+        {
+
+        }
+
+
         /******************************************* END LISTENERS ***********************************************/
     }
 
