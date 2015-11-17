@@ -109,10 +109,8 @@ namespace View
                 //Once we get to \0, we know it's an empty byte, so we don't need to keep looking for more data.
                 else if (line.Contains("\0")) break;
 
-                //See if the cube was created with valid JSON. If it wasn't created, it's because the JSON was invalid from being only part of the string.
                 Cube cube = Cube.Create(line);
-                if (cube == null) break;
-
+                
                 ProcessJsonCube(cube);
             }
         }
