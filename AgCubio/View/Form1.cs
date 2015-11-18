@@ -31,9 +31,18 @@ namespace View
             view.GameHost = game_host_box.Text;
         }
 
+        private void inputKeyPress(object sender, KeyPressEventArgs e)
+        {
+            if(e.KeyChar == (char)13)
+            {
+                view.StartGame();
+                this.Close();
+            }
+        }
+
         private void play_button_Click(object sender, EventArgs e)
         {
-
+            view.StartGame();
             this.Close();
         }
 

@@ -27,7 +27,7 @@ namespace Model
         [JsonProperty]
         public double Mass;
         public int Width;
-
+        
         [JsonConstructor]
         public Cube(double loc_x, double loc_y, int argb_color, int uID, int team_id, bool food, string name, double mass)
         {
@@ -45,6 +45,16 @@ namespace Model
         public static Cube Create(string json)
         {
             return JsonConvert.DeserializeObject<Cube>(json);
+        }
+
+        public int GetCenterX()
+        {
+            return X + (Width / 2);
+        }
+
+        public int GetCenterY()
+        {
+            return Y + (Width / 2);
         }
     }
 

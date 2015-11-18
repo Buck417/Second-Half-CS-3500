@@ -20,74 +20,86 @@ namespace View
         private System.Drawing.SolidBrush myBrush;
         private World world;
         private Socket socket;
-        public string PlayerName = "Ryanadsfadsfadsf", GameHost = "127.0.0.1";
-        private bool GameStarted = false;
-        private int dest_x, dest_y;
+        public string PlayerName, GameHost;
+        private bool GameRunning = false;
+        private int dest_x, dest_y, frame_count = 0;
 
         public AgCubio_View()
         {
             InitializeComponent();
             //Use this to prevent screen flickering when redrawing the world
             DoubleBuffered = true;
-
-            /*
+            
             Form1 start_game_popup = new Form1(this);
             start_game_popup.ShowDialog(this);
             start_game_popup.FormClosed += play_button_click;
-             */
             
-
-            StartGame();
-
             world = new World();
         }
 
         public void AgCubioPaint(object sender, PaintEventArgs e)
         {
-            //Only run this if the game has started
-            if (!GameStarted) return;
-
-            
-            try
+            //If the game hasn't started yet, show the inital setup form
+            if (!GameRunning)
             {
-                lock (world)
+                return;
+            }
+            else if (GameRunning)
+            {
+                try
                 {
-                    //Compute the x and y offset, based on where the player cube is and how big it is.
-                    int center_x = this.Width / 2;
-                    int center_y = this.Height / 2;
-                    Cube player_cube = world.GetPlayerCube();
-
-                    //If the player cube isn't in the world anymore, we know it's game over
-                    if (player_cube == null)
+                    lock (world)
                     {
-                        Console.WriteLine("Game over!");
-                        return;
+                        //Compute the x and y offset, based on where the player cube is and how big it is.
+                        int center_x = this.Width / 2;
+                        int center_y = this.Height / 2;
+                        Cube player_cube = world.GetPlayerCube();
+
+                        //If the player cube isn't in the world anymore, we know it's game over
+                        if (player_cube == null)
+                        {
+                            Console.WriteLine("Game over!");
+                            GameRunning = false;
+                            return;
+                        }
+                        world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
+                        world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
+
+                        //Draw the player cube first
+                        DrawCube(player_cube, e);
+
+                        foreach (Cube cube in world.cubes.Values)
+                        {
+                            if (cube == player_cube) continue;
+                            DrawCube(cube, e);
+                        }
+
+                        System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
+                        System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("black"));
+
+                        //Update the frame count in a thread-safe way
+                        Interlocked.Increment(ref frame_count);
+                        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+                        timer.Interval = 1000;
+                        timer.Tick += TimerTick;
+                        int fps = 10;
+                        e.Graphics.DrawString("Frames per second: " + fps, drawFont, nameBrush, new PointF(this.Width - 250, 50));
+                        e.Graphics.DrawString("Player mass: " + (int)player_cube.Mass, drawFont, nameBrush, new PointF(this.Width - 250, 75));
+                        
+                        //Check to see if the player cube is where we told it to go. If not, send a move request again.
+                        if (player_cube.X != dest_x || player_cube.Y != dest_y)
+                        {
+                            SendMoveRequest(dest_x, dest_y);
+                        }
                     }
-                   // world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
-                    //world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
-
-                    foreach (Cube cube in world.cubes.Values)
-                    {
-                        DrawCube(cube, e);
-                    }
-
-                    //Check to see if the player cube is where we told it to go. If not, send a move request again.
-                    if(player_cube.X != dest_x || player_cube.Y != dest_y)
-                    {
-                        SendMoveRequest(dest_x, dest_y);
-                    }
-
-
-
-                    
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
 
-            Invalidate();
+                Invalidate();
+            }
         }
 
         /***************************************CALLBACK DELEGATES*****************************************/
@@ -109,7 +121,7 @@ namespace View
             //Handle the player cube coming in
             string player_json = state.sb.ToString();
             world.AddPlayerCube(player_json);
-            GameStarted = true;
+            GameRunning = true;
 
             state.GUI_Callback = new AsyncCallback(ReceiveData);
             Network.i_want_more_data(ar);
@@ -169,16 +181,14 @@ namespace View
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);
 
-            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X-cube.Width, cube.Y-cube.Width, cube.Width, cube.Width));
+            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - (cube.Width*3 / 2), cube.Y - (cube.Width*3 / 2), cube.Width*3, cube.Width*3));
 
             System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
             System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
 
-           // e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.X - world.xoff, cube.Y - world.yoff));
+            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.GetCenterX(), cube.GetCenterY()));
 
-
-
-
+            //e.Graphics.ScaleTransform(1.5f, 1.5f);
         }
 
         private void SendMoveRequest(int x, int y)
@@ -223,18 +233,16 @@ namespace View
             StartGame();
         }
 
-        private void StartGame()
+        public void StartGame()
         {
             //Start by connecting to the server
             socket = Network.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
         }
 
-        private void AgCubio_View_Load(object sender, EventArgs e)
+        private void TimerTick(object o, EventArgs e)
         {
-
+            frame_count = 0;
         }
-
-
         /******************************************* END LISTENERS ***********************************************/
     }
 
