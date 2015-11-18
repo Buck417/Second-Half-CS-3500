@@ -34,7 +34,8 @@ namespace View
             Form1 start_game_popup = new Form1(this);
             start_game_popup.ShowDialog(this);
             start_game_popup.FormClosed += play_button_click;
-            */
+             */
+            
 
             StartGame();
 
@@ -62,8 +63,8 @@ namespace View
                         Console.WriteLine("Game over!");
                         return;
                     }
-                    world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
-                    world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
+                   // world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
+                    //world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
 
                     foreach (Cube cube in world.cubes.Values)
                     {
@@ -168,12 +169,12 @@ namespace View
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);
 
-            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - world.xoff, cube.Y - world.yoff, cube.Width * world.Scale, cube.Width * world.Scale));
+            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X-cube.Width, cube.Y-cube.Width, cube.Width, cube.Width));
 
             System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
             System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
 
-            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.X - world.xoff, cube.Y - world.yoff));
+           // e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.X - world.xoff, cube.Y - world.yoff));
 
 
 
