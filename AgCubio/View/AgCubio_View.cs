@@ -50,27 +50,26 @@ namespace View
                 {
                     try
                     {
+                        //Compute the x and y offset, based on where the player cube is and how big it is.
+                        int center_x = this.Width / 2;
+                        int center_y = this.Height / 2;
+                        Cube player_cube = world.GetPlayerCube();
+
+                        //If the player cube isn't in the world anymore, we know it's game over
+                        if (player_cube == null)
+                        {
+                            Console.WriteLine("Game over!");
+                            GameRunning = false;
+                            GameOverForm game_over = new GameOverForm(this, player_mass, player_name);
+                            game_over.ShowDialog(this);
+
+                            return;
+                        }
+                        player_mass = (int)world.GetPlayerMass();
+                        //world.Scale = (this.Width / (player_cube.Width * 10));
+
                         lock (world)
                         {
-                            //Compute the x and y offset, based on where the player cube is and how big it is.
-                            int center_x = this.Width / 2;
-                            int center_y = this.Height / 2;
-                            Cube player_cube = world.GetPlayerCube();
-
-                            //If the player cube isn't in the world anymore, we know it's game over
-                            if (player_cube == null)
-                            {
-                                Console.WriteLine("Game over!");
-                                GameRunning = false;
-                                GameOverForm game_over = new GameOverForm(this, player_mass, player_name);
-                                game_over.ShowDialog(this);
-
-                                return;
-                            }
-                            player_mass = player_cube.Mass;
-                            //world.Scale = (this.Width / (player_cube.Width * 10));
-                            world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
-                            world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
 
                             //Draw the player cube first
                             DrawCube(player_cube, e);
@@ -83,15 +82,15 @@ namespace View
 
                             System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
                             System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("black"));
-                            
-                            e.Graphics.DrawString("Frames per second: " + CalculateFrameRate(), drawFont, nameBrush, new PointF(this.Width - 250, 50));
-                            e.Graphics.DrawString("Player mass: " + (int)player_cube.Mass, drawFont, nameBrush, new PointF(this.Width - 250, 75));
 
-                            //Check to see if the player cube is where we told it to go. If not, send a move request again.
-                            if (player_cube.X != dest_x || player_cube.Y != dest_y)
-                            {
-                                SendMoveRequest(dest_x, dest_y);
-                            }
+                            e.Graphics.DrawString("Frames per second: " + CalculateFrameRate(), drawFont, nameBrush, new PointF(this.Width - 300, 50));
+                            e.Graphics.DrawString("Player mass: " + (int)player_mass, drawFont, nameBrush, new PointF(this.Width - 300, 75));
+                        }
+                        
+                        //Check to see if the player cube is where we told it to go. If not, send a move request again.
+                        if (player_cube.X != dest_x || player_cube.Y != dest_y)
+                        {
+                            SendMoveRequest(dest_x, dest_y);
                         }
                     }
                     catch (Exception ex)
@@ -193,10 +192,10 @@ namespace View
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);
 
-            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - (cube.Width * 3 / 2), cube.Y - (cube.Width * 3 / 2), cube.Width * 3, cube.Width * 3));
+            e.Graphics.FillRectangle(myBrush, new Rectangle((int)(cube.X - (cube.Width * world.Scale / 2)), (int)(cube.Y - (cube.Width * world.Scale / 2)), (int)(cube.Width * world.Scale), (int)(cube.Width * world.Scale)));
 
-            System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
-            System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
+            System.Drawing.Font drawFont = new System.Drawing.Font("Quartz MS", (int)(10 * world.Scale));
+            System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("yellow"));
             StringFormat string_format = new StringFormat();
             string_format.Alignment = StringAlignment.Center;
             string_format.LineAlignment = StringAlignment.Center;
@@ -225,7 +224,7 @@ namespace View
 
         public static int CalculateFrameRate()
         {
-            
+
             if (System.Environment.TickCount - lastTick >= 1000)
             {
                 lastFrameRate = frameRate;

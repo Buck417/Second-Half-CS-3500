@@ -70,6 +70,14 @@ namespace Network_Controller
             }
         }
 
+        private static void CloseGracefully(Socket socket)
+        {
+            Console.WriteLine("Connection lost");
+            //socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
+            return;
+        }
+
         /// <summary>
         /// The ReceiveCallback method is called by the OS when new data arrives. This method should check to see how much data has arrived. If 0, the connection has been closed (presumably by the server). On greater than zero data, this method should call the callback function provided above.
         /// For our purposes, this function should not request more data.It is up to the code in the callback function above to request more data.
@@ -82,14 +90,30 @@ namespace Network_Controller
 
             byte[] buffer = (byte[])state.buffer;
 
-            //Stop receiving this current request
-            int byte_count = socket.EndReceive(ar);
+            //If the connection was forcibly closed on the server's end, handle that
+            if(socket.Connected == false)
+            {
+                CloseGracefully(socket);
+                return;
+            }
+
+            //Try to stop receiving this current request
+            int byte_count = 0;
+            try {
+                byte_count = socket.EndReceive(ar);
+            }
+            catch(Exception e)
+            {
+                //If we couldn't stop the reception, close gracefully
+                CloseGracefully(socket);
+            }
+
 
             if (byte_count == 0)
             {
                 //Connection lost
-                Console.WriteLine("Connection lost");
-                socket.Close();
+                CloseGracefully(socket);
+                return;
             }
             else
             {

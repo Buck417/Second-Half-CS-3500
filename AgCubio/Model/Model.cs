@@ -69,7 +69,7 @@ namespace Model
     /// </summary>
     public class World
     {
-        public int Scale = 1;
+        public double Scale = 2.0;
         public string Player_Name;
         public int Player_UID;
         public double Player_Start_Mass;
@@ -91,6 +91,11 @@ namespace Model
             if (cubes.ContainsKey(Player_UID))
                 return cubes[Player_UID];
             else return null;
+        }
+
+        public double GetPlayerMass()
+        {
+            return cubes[Player_UID].Mass;
         }
 
         public Cube GetCube(int UID)
