@@ -70,10 +70,13 @@ namespace Network_Controller
             }
         }
 
+        /// <summary>
+        /// If anything happens with the socket, close gracefully
+        /// </summary>
+        /// <param name="socket"></param>
         private static void CloseGracefully(Socket socket)
         {
             Console.WriteLine("Connection lost");
-            //socket.Shutdown(SocketShutdown.Both);
             socket.Close();
             return;
         }

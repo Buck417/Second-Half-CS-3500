@@ -10,6 +10,9 @@ using System.Windows.Forms;
 
 namespace View
 {
+    /// <summary>
+    /// This guy gives us our form to show when there's a game over
+    /// </summary>
     public partial class GameOverForm : Form
     {
         private AgCubio_View master_view;

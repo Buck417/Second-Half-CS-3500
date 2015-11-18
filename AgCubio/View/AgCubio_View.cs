@@ -20,11 +20,15 @@ namespace View
         private System.Drawing.SolidBrush myBrush;
         private World world;
         private Socket socket;
-        public string player_name, GameHost = "localhost";
+        public string player_name = "Nobody", GameHost = "localhost";
         private bool GameRunning = false, ServerConnected = false;
         private int dest_x, dest_y;
         private int player_mass;
 
+        /// <summary>
+        /// Upon starting the game, show the initial startup screen
+        /// and initialize the world.
+        /// </summary>
         public AgCubio_View()
         {
             InitializeComponent();
@@ -37,6 +41,14 @@ namespace View
             world = new World();
         }
 
+        /// <summary>
+        /// This is kind of like our event loop, where everything is drawn.
+        /// The world is the key to lock on, where processing cubes and 
+        /// drawing them are done in locked fashion so as to not change
+        /// the underlying data unecessarily.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void AgCubioPaint(object sender, PaintEventArgs e)
         {
             //If the game hasn't started yet, show the inital setup form
@@ -104,7 +116,10 @@ namespace View
         }
 
         /***************************************CALLBACK DELEGATES*****************************************/
-
+        /// <summary>
+        /// Callback for the connection 
+        /// </summary>
+        /// <param name="ar"></param>
         private void ConnectCallback(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
@@ -124,6 +139,10 @@ namespace View
             }
         }
 
+        /// <summary>
+        /// Receive the initial player response
+        /// </summary>
+        /// <param name="ar"></param>
         private void ReceivePlayer(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
@@ -138,6 +157,10 @@ namespace View
             Network.i_want_more_data(ar);
         }
 
+        /// <summary>
+        /// Callback to be sent to the network to receive more data
+        /// </summary>
+        /// <param name="ar"></param>
         private void ReceiveData(IAsyncResult ar)
         {
             //Get them cubes
@@ -156,6 +179,10 @@ namespace View
 
 
         /********************************************* HELPER METHODS *********************************************/
+        /// <summary>
+        /// This takes care of an entire block of JSON, i.e. the world
+        /// </summary>
+        /// <param name="block"></param>
         private void ProcessJsonBlock(string block)
         {
             string[] json_blocks = block.Split('\n');
@@ -174,19 +201,25 @@ namespace View
             }
         }
 
+        /// <summary>
+        /// Abstracts the processing of the cube
+        /// </summary>
+        /// <param name="cube"></param>
         private void ProcessJsonCube(Cube cube)
         {
             lock (world)
             {
                 world.ProcessIncomingCube(cube);
             }
-
-            lock (world)
-            {
-                Invalidate();
-            }
+            
+            Invalidate();
         }
 
+        /// <summary>
+        /// This does the nuts and bolts for drawing the cube
+        /// </summary>
+        /// <param name="cube"></param>
+        /// <param name="e"></param>
         private void DrawCube(Cube cube, PaintEventArgs e)
         {
             Color color = Color.FromArgb(cube.Color);
@@ -205,6 +238,12 @@ namespace View
             //e.Graphics.ScaleTransform(1.5f, 1.5f);
         }
 
+        /// <summary>
+        /// Typically this is first called when the mouse moves. It's a helper method
+        /// for the mouse listener to send a move request to the server.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         private void SendMoveRequest(int x, int y)
         {
             //If the player cube isn't at the place we're sending it to yet, keep sending the move request
@@ -212,6 +251,11 @@ namespace View
             Network.Send(socket, data);
         }
 
+        /// <summary>
+        /// This is a helper method for the spacebar key listener to send a split request
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         private void SendSplitRequest(int x, int y)
         {
             string data = "(split, " + x + ", " + y + ")\n";
@@ -222,7 +266,11 @@ namespace View
         private static int lastFrameRate;
         private static int frameRate;
 
-        public static int CalculateFrameRate()
+        /// <summary>
+        /// This guy calculates the frame rate for our game
+        /// </summary>
+        /// <returns></returns>
+        private static int CalculateFrameRate()
         {
 
             if (System.Environment.TickCount - lastTick >= 1000)
@@ -235,6 +283,10 @@ namespace View
             return lastFrameRate;
         }
 
+        /// <summary>
+        /// Whenever a connection drops, this form shows up, and you get
+        /// to try connecting again.
+        /// </summary>
         private void ShowReConnectForm()
         {
             Form1 form = new Form1(this, true);
@@ -264,6 +316,10 @@ namespace View
             SendMoveRequest(mouse_x, mouse_y);
         }
 
+        /// <summary>
+        /// This is a helper method to "start the game", i.e. to connect to 
+        /// the server and start receiving data.
+        /// </summary>
         public void StartGame()
         {
             //Start by connecting to the server
