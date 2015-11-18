@@ -87,7 +87,7 @@ namespace View
                         timer.Interval = 1000;
                         timer.Tick += TimerTick;
                         int fps = 10;
-                        e.Graphics.DrawString("Frames per second: " + fps, drawFont, nameBrush, new PointF(this.Width - 250, 50));
+                        e.Graphics.DrawString("Frames per second: " + CalculateFrameRate(), drawFont, nameBrush, new PointF(this.Width - 250, 50));
                         e.Graphics.DrawString("Player mass: " + (int)player_cube.Mass, drawFont, nameBrush, new PointF(this.Width - 250, 75));
 
                         //Check to see if the player cube is where we told it to go. If not, send a move request again.
@@ -208,6 +208,23 @@ namespace View
         {
             string data = "(split, " + x + ", " + y + ")\n";
             Network.Send(socket, data);
+        }
+
+        private static int lastTick;
+        private static int lastFrameRate;
+        private static int frameRate;
+
+        public static int CalculateFrameRate()
+        {
+            
+            if (System.Environment.TickCount - lastTick >= 1000)
+            {
+                lastFrameRate = frameRate;
+                frameRate = 0;
+                lastTick = System.Environment.TickCount;
+            }
+            frameRate++;
+            return lastFrameRate;
         }
 
         /******************************************* END HELPER METHODS ******************************************/
