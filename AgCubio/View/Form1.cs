@@ -18,6 +18,7 @@ namespace View
         public Form1(AgCubio_View view, bool restart)
         {
             InitializeComponent();
+            view.GameHost = game_host_box.Text;
             if (restart) connection_error_label.Visible = true;
             else connection_error_label.Visible = false;
             this.view = view;

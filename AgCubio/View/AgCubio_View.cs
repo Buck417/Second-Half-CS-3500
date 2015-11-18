@@ -21,8 +21,8 @@ namespace View
         private World world;
         private Socket socket;
         public string player_name, GameHost = "localhost";
-        private bool GameRunning = false;
-        private int dest_x, dest_y, frame_count = 0;
+        private bool GameRunning = false, ServerConnected = false;
+        private int dest_x, dest_y;
         private int player_mass;
 
         public AgCubio_View()
@@ -46,64 +46,61 @@ namespace View
             }
             else if (GameRunning)
             {
-                try
+                if (ServerConnected)
                 {
-                    lock (world)
+                    try
                     {
-                        //Compute the x and y offset, based on where the player cube is and how big it is.
-                        int center_x = this.Width / 2;
-                        int center_y = this.Height / 2;
-                        Cube player_cube = world.GetPlayerCube();
-
-                        //If the player cube isn't in the world anymore, we know it's game over
-                        if (player_cube == null)
+                        lock (world)
                         {
-                            Console.WriteLine("Game over!");
-                            GameRunning = false;
-                            GameOverForm game_over = new GameOverForm(this, player_mass, player_name);
-                            game_over.ShowDialog(this);
+                            //Compute the x and y offset, based on where the player cube is and how big it is.
+                            int center_x = this.Width / 2;
+                            int center_y = this.Height / 2;
+                            Cube player_cube = world.GetPlayerCube();
 
-                            return;
-                        }
-                        player_mass = player_cube.Mass;
-                        world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
-                        world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
+                            //If the player cube isn't in the world anymore, we know it's game over
+                            if (player_cube == null)
+                            {
+                                Console.WriteLine("Game over!");
+                                GameRunning = false;
+                                GameOverForm game_over = new GameOverForm(this, player_mass, player_name);
+                                game_over.ShowDialog(this);
 
-                        //Draw the player cube first
-                        DrawCube(player_cube, e);
+                                return;
+                            }
+                            player_mass = player_cube.Mass;
+                            //world.Scale = (this.Width / (player_cube.Width * 10));
+                            world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
+                            world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
 
-                        foreach (Cube cube in world.cubes.Values)
-                        {
-                            if (cube == player_cube) continue;
-                            DrawCube(cube, e);
-                        }
+                            //Draw the player cube first
+                            DrawCube(player_cube, e);
 
-                        System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
-                        System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("black"));
+                            foreach (Cube cube in world.cubes.Values)
+                            {
+                                if (cube == player_cube) continue;
+                                DrawCube(cube, e);
+                            }
 
-                        //Update the frame count in a thread-safe way
-                        Interlocked.Increment(ref frame_count);
-                        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-                        timer.Interval = 1000;
-                        timer.Tick += TimerTick;
-                        int fps = 10;
-                        e.Graphics.DrawString("Frames per second: " + CalculateFrameRate(), drawFont, nameBrush, new PointF(this.Width - 250, 50));
-                        e.Graphics.DrawString("Player mass: " + (int)player_cube.Mass, drawFont, nameBrush, new PointF(this.Width - 250, 75));
+                            System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
+                            System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("black"));
+                            
+                            e.Graphics.DrawString("Frames per second: " + CalculateFrameRate(), drawFont, nameBrush, new PointF(this.Width - 250, 50));
+                            e.Graphics.DrawString("Player mass: " + (int)player_cube.Mass, drawFont, nameBrush, new PointF(this.Width - 250, 75));
 
-                        //Check to see if the player cube is where we told it to go. If not, send a move request again.
-                        if (player_cube.X != dest_x || player_cube.Y != dest_y)
-                        {
-                            SendMoveRequest(dest_x, dest_y);
+                            //Check to see if the player cube is where we told it to go. If not, send a move request again.
+                            if (player_cube.X != dest_x || player_cube.Y != dest_y)
+                            {
+                                SendMoveRequest(dest_x, dest_y);
+                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
 
-                    Console.WriteLine(ex.Message);
+                    Invalidate();
                 }
-
-                Invalidate();
             }
         }
 
@@ -115,8 +112,17 @@ namespace View
 
             state.GUI_Callback = new AsyncCallback(ReceivePlayer);
 
-            //Send the player name
-            Network.Send(socket, player_name + '\n');
+            if (state.socket.Connected)
+            {
+                //Send the player name
+                ServerConnected = true;
+                Network.Send(socket, player_name + '\n');
+            }
+            else
+            {
+                ServerConnected = false;
+                Invoke(new Action(ShowReConnectForm));
+            }
         }
 
         private void ReceivePlayer(IAsyncResult ar)
@@ -191,8 +197,11 @@ namespace View
 
             System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
             System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
+            StringFormat string_format = new StringFormat();
+            string_format.Alignment = StringAlignment.Center;
+            string_format.LineAlignment = StringAlignment.Center;
 
-            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.GetCenterX(), cube.GetCenterY()));
+            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.GetCenterX() - (cube.Width / 2), cube.GetCenterY() - (cube.Width / 2)), string_format);
 
             //e.Graphics.ScaleTransform(1.5f, 1.5f);
         }
@@ -227,6 +236,11 @@ namespace View
             return lastFrameRate;
         }
 
+        private void ShowReConnectForm()
+        {
+            Form1 form = new Form1(this, true);
+            form.ShowDialog(this);
+        }
         /******************************************* END HELPER METHODS ******************************************/
 
 
@@ -255,11 +269,6 @@ namespace View
         {
             //Start by connecting to the server
             socket = Network.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
-        }
-
-        private void TimerTick(object o, EventArgs e)
-        {
-            frame_count = 0;
         }
         /******************************************* END LISTENERS ***********************************************/
     }
