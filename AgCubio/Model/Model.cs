@@ -25,7 +25,7 @@ namespace Model
         [JsonProperty]
         public bool Food;
         [JsonProperty]
-        public double Mass;
+        public int Mass;
         public int Width;
         
         [JsonConstructor]
@@ -38,13 +38,19 @@ namespace Model
             this.Color = argb_color;
             this.Name = name;
             this.Food = food;
-            this.Mass = mass;
-            this.Width = (int)(Math.Sqrt(mass));
+            this.Mass = (int)mass;
+            this.Width = (int)(Math.Pow(mass, .53));
         }
 
         public static Cube Create(string json)
         {
-            return JsonConvert.DeserializeObject<Cube>(json);
+            try {
+                return JsonConvert.DeserializeObject<Cube>(json);
+            }
+            catch(Exception e)
+            {
+                return null;
+            }
         }
 
         public int GetCenterX()

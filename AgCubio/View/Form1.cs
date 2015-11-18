@@ -15,15 +15,17 @@ namespace View
         public string PlayerName, Host;
         private AgCubio_View view;
 
-        public Form1(AgCubio_View view)
+        public Form1(AgCubio_View view, bool restart)
         {
             InitializeComponent();
+            if (restart) connection_error_label.Visible = true;
+            else connection_error_label.Visible = false;
             this.view = view;
         }
 
         private void name_box_TextChanged(object sender, EventArgs e)
         {
-            view.PlayerName = name_box.Text;
+            view.player_name = name_box.Text;
         }
 
         private void game_host_box_TextChanged(object sender, EventArgs e)

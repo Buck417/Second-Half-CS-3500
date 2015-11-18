@@ -20,20 +20,20 @@ namespace View
         private System.Drawing.SolidBrush myBrush;
         private World world;
         private Socket socket;
-        public string PlayerName, GameHost;
+        public string player_name, GameHost = "localhost";
         private bool GameRunning = false;
         private int dest_x, dest_y, frame_count = 0;
+        private int player_mass;
 
         public AgCubio_View()
         {
             InitializeComponent();
             //Use this to prevent screen flickering when redrawing the world
             DoubleBuffered = true;
-            
-            Form1 start_game_popup = new Form1(this);
+
+            Form1 start_game_popup = new Form1(this, false);
             start_game_popup.ShowDialog(this);
-            start_game_popup.FormClosed += play_button_click;
-            
+
             world = new World();
         }
 
@@ -60,8 +60,12 @@ namespace View
                         {
                             Console.WriteLine("Game over!");
                             GameRunning = false;
+                            GameOverForm game_over = new GameOverForm(this, player_mass, player_name);
+                            game_over.ShowDialog(this);
+
                             return;
                         }
+                        player_mass = player_cube.Mass;
                         world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
                         world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
 
@@ -85,7 +89,7 @@ namespace View
                         int fps = 10;
                         e.Graphics.DrawString("Frames per second: " + fps, drawFont, nameBrush, new PointF(this.Width - 250, 50));
                         e.Graphics.DrawString("Player mass: " + (int)player_cube.Mass, drawFont, nameBrush, new PointF(this.Width - 250, 75));
-                        
+
                         //Check to see if the player cube is where we told it to go. If not, send a move request again.
                         if (player_cube.X != dest_x || player_cube.Y != dest_y)
                         {
@@ -95,6 +99,7 @@ namespace View
                 }
                 catch (Exception ex)
                 {
+
                     Console.WriteLine(ex.Message);
                 }
 
@@ -107,16 +112,17 @@ namespace View
         private void ConnectCallback(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
+
             state.GUI_Callback = new AsyncCallback(ReceivePlayer);
 
             //Send the player name
-            Network.Send(socket, PlayerName + '\n');
+            Network.Send(socket, player_name + '\n');
         }
 
         private void ReceivePlayer(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
-            Console.WriteLine("Welcome " + PlayerName);
+            Console.WriteLine("Welcome " + player_name);
 
             //Handle the player cube coming in
             string player_json = state.sb.ToString();
@@ -181,7 +187,7 @@ namespace View
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);
 
-            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - (cube.Width*3 / 2), cube.Y - (cube.Width*3 / 2), cube.Width*3, cube.Width*3));
+            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - (cube.Width * 3 / 2), cube.Y - (cube.Width * 3 / 2), cube.Width * 3, cube.Width * 3));
 
             System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
             System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
@@ -226,11 +232,6 @@ namespace View
             int mouse_y = dest_y = e.Y;// - world.yoff;
 
             SendMoveRequest(mouse_x, mouse_y);
-        }
-
-        private void play_button_click(object sender, EventArgs e)
-        {
-            StartGame();
         }
 
         public void StartGame()

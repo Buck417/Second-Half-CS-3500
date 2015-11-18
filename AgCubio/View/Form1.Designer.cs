@@ -33,6 +33,7 @@
             this.name_box = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.game_host_box = new System.Windows.Forms.TextBox();
+            this.connection_error_label = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // play_button
@@ -78,14 +79,26 @@
             this.game_host_box.Name = "game_host_box";
             this.game_host_box.Size = new System.Drawing.Size(100, 20);
             this.game_host_box.TabIndex = 2;
+            this.game_host_box.Text = "localhost";
             this.game_host_box.TextChanged += new System.EventHandler(this.game_host_box_TextChanged);
             this.game_host_box.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.inputKeyPress);
+            // 
+            // connection_error_label
+            // 
+            this.connection_error_label.AutoSize = true;
+            this.connection_error_label.Location = new System.Drawing.Point(62, 43);
+            this.connection_error_label.Name = "connection_error_label";
+            this.connection_error_label.Size = new System.Drawing.Size(131, 13);
+            this.connection_error_label.TabIndex = 4;
+            this.connection_error_label.Text = "Connection error, try again";
+            this.connection_error_label.Visible = false;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 262);
+            this.Controls.Add(this.connection_error_label);
             this.Controls.Add(this.game_host_box);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.name_box);
@@ -105,5 +118,6 @@
         private System.Windows.Forms.TextBox name_box;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox game_host_box;
+        private System.Windows.Forms.Label connection_error_label;
     }
 }
