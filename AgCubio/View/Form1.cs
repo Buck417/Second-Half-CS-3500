@@ -33,7 +33,7 @@ namespace View
 
         private void play_button_Click(object sender, EventArgs e)
         {
-
+            view.StartGame();
             this.Close();
         }
 

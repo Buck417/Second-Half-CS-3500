@@ -27,7 +27,7 @@ namespace Model
         [JsonProperty]
         public double Mass;
         public int Width;
-
+        
         [JsonConstructor]
         public Cube(double loc_x, double loc_y, int argb_color, int uID, int team_id, bool food, string name, double mass)
         {

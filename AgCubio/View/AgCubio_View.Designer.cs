@@ -74,6 +74,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.SystemColors.Window;
             this.ClientSize = new System.Drawing.Size(816, 648);
             this.Controls.Add(this.mass_label_value);
             this.Controls.Add(this.mass_label);
@@ -83,7 +84,6 @@
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "AgCubio_View";
-            this.Load += new System.EventHandler(this.AgCubio_View_Load);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.AgCubioPaint);
             this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.AgCubio_View_KeyPress);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.AgCubio_View_MouseMove);
