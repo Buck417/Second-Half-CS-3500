@@ -40,7 +40,7 @@
             this.play_button.Location = new System.Drawing.Point(110, 144);
             this.play_button.Name = "play_button";
             this.play_button.Size = new System.Drawing.Size(75, 23);
-            this.play_button.TabIndex = 0;
+            this.play_button.TabIndex = 3;
             this.play_button.Text = "Play";
             this.play_button.UseVisualStyleBackColor = true;
             this.play_button.Click += new System.EventHandler(this.play_button_Click);
@@ -59,8 +59,9 @@
             this.name_box.Location = new System.Drawing.Point(125, 83);
             this.name_box.Name = "name_box";
             this.name_box.Size = new System.Drawing.Size(100, 20);
-            this.name_box.TabIndex = 2;
+            this.name_box.TabIndex = 1;
             this.name_box.TextChanged += new System.EventHandler(this.name_box_TextChanged);
+            this.name_box.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.inputKeyPress);
             // 
             // label2
             // 
@@ -78,6 +79,7 @@
             this.game_host_box.Size = new System.Drawing.Size(100, 20);
             this.game_host_box.TabIndex = 2;
             this.game_host_box.TextChanged += new System.EventHandler(this.game_host_box_TextChanged);
+            this.game_host_box.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.inputKeyPress);
             // 
             // Form1
             // 

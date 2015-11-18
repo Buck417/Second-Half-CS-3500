@@ -46,6 +46,16 @@ namespace Model
         {
             return JsonConvert.DeserializeObject<Cube>(json);
         }
+
+        public int GetCenterX()
+        {
+            return X + (Width / 2);
+        }
+
+        public int GetCenterY()
+        {
+            return Y + (Width / 2);
+        }
     }
 
     /// <summary>

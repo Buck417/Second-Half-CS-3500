@@ -20,8 +20,8 @@ namespace View
         private System.Drawing.SolidBrush myBrush;
         private World world;
         private Socket socket;
-        public string PlayerName = "Ryanadsfadsfadsf", GameHost = "localhost";
-        private bool GameRunning = false, GameOver = false;
+        public string PlayerName, GameHost;
+        private bool GameRunning = false;
         private int dest_x, dest_y, frame_count = 0;
 
         public AgCubio_View()
@@ -29,16 +29,11 @@ namespace View
             InitializeComponent();
             //Use this to prevent screen flickering when redrawing the world
             DoubleBuffered = true;
-
-            /*
             
-            */
             Form1 start_game_popup = new Form1(this);
             start_game_popup.ShowDialog(this);
             start_game_popup.FormClosed += play_button_click;
-
-            //StartGame();
-
+            
             world = new World();
         }
 
@@ -90,11 +85,7 @@ namespace View
                         int fps = 10;
                         e.Graphics.DrawString("Frames per second: " + fps, drawFont, nameBrush, new PointF(this.Width - 250, 50));
                         e.Graphics.DrawString("Player mass: " + (int)player_cube.Mass, drawFont, nameBrush, new PointF(this.Width - 250, 75));
-
-                        SetMassLabel(player_cube.Mass.ToString());
-
-                        SetFPSLabel("Hello");
-
+                        
                         //Check to see if the player cube is where we told it to go. If not, send a move request again.
                         if (player_cube.X != dest_x || player_cube.Y != dest_y)
                         {
@@ -190,14 +181,14 @@ namespace View
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);
 
-            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - cube.Width, cube.Y - cube.Width, cube.Width * 5, cube.Width * 5));
+            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - (cube.Width*3 / 2), cube.Y - (cube.Width*3 / 2), cube.Width*3, cube.Width*3));
 
             System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
             System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
 
-            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.X - world.xoff, cube.Y - world.yoff));
+            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.GetCenterX(), cube.GetCenterY()));
 
-            //e.Graphics.ScaleTransform(world.Scale, world.Scale);
+            //e.Graphics.ScaleTransform(1.5f, 1.5f);
         }
 
         private void SendMoveRequest(int x, int y)
