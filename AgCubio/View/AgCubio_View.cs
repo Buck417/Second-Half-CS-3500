@@ -178,10 +178,15 @@ namespace View
 
         private void DrawCube(Cube cube, PaintEventArgs e)
         {
+            //(mouse x +xs-(viewport width/2)) / scale
+            int scale_width = 10;
+            Cube c = world.GetPlayerCube();
+            int vp_width = 10 * c.Width;
+
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);
 
-            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X - (cube.Width*3 / 2), cube.Y - (cube.Width*3 / 2), cube.Width*3, cube.Width*3));
+            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X*scale_width,cube.Y*scale_width, cube.Width*scale_width, cube.Width*scale_width));
 
             System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
             System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
