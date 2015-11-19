@@ -25,7 +25,7 @@ namespace Model
         [JsonProperty]
         public bool Food;
         [JsonProperty]
-        public double Mass;
+        public int Mass;
         public int Width;
         
         [JsonConstructor]
@@ -38,20 +38,41 @@ namespace Model
             this.Color = argb_color;
             this.Name = name;
             this.Food = food;
-            this.Mass = mass;
-            this.Width = (int)(Math.Sqrt(mass));
+            this.Mass = (int)mass;
+            this.Width = (int)(Math.Pow(mass, .53));
         }
 
+        /// <summary>
+        /// Helper method for creating a cube, based on its JSON representation.
+        /// If there's an error with the JSON, write it to the console and return null.
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
         public static Cube Create(string json)
         {
-            return JsonConvert.DeserializeObject<Cube>(json);
+            try {
+                return JsonConvert.DeserializeObject<Cube>(json);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
         }
 
+        /// <summary>
+        /// Helper method for getting the center x position of the cube
+        /// </summary>
+        /// <returns></returns>
         public int GetCenterX()
         {
             return X + (Width / 2);
         }
 
+        /// <summary>
+        /// Helper method for getting the center y position of the cube
+        /// </summary>
+        /// <returns></returns>
         public int GetCenterY()
         {
             return Y + (Width / 2);
@@ -63,7 +84,7 @@ namespace Model
     /// </summary>
     public class World
     {
-        public int Scale = 1;
+        public double Scale = 2.0;
         public string Player_Name;
         public int Player_UID;
         public double Player_Start_Mass;
@@ -71,6 +92,11 @@ namespace Model
 
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
 
+        /// <summary>
+        /// This is specific to adding the player cube so that we can save 
+        /// some of the data about the cube (player mass, name, uid, etc.)
+        /// </summary>
+        /// <param name="json"></param>
         public void AddPlayerCube(string json)
         {
             Cube cube = Cube.Create(json);
@@ -80,6 +106,12 @@ namespace Model
             Player_UID = cube.UID;
         }
 
+        /// <summary>
+        /// Helper method for just returning the player cube only.
+        /// If the player cube isn't in the list of cubes (if it's been destroyed),
+        /// then null is returned.
+        /// </summary>
+        /// <returns></returns>
         public Cube GetPlayerCube()
         {
             if (cubes.ContainsKey(Player_UID))
@@ -87,6 +119,20 @@ namespace Model
             else return null;
         }
 
+        /// <summary>
+        /// Get the mass for the player cube
+        /// </summary>
+        /// <returns></returns>
+        public double GetPlayerMass()
+        {
+            return cubes[Player_UID].Mass;
+        }
+
+        /// <summary>
+        /// Return a cube based on its UID
+        /// </summary>
+        /// <param name="UID"></param>
+        /// <returns></returns>
         public Cube GetCube(int UID)
         {
             if (cubes.ContainsKey(UID))

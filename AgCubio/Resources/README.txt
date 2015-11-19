@@ -18,3 +18,4 @@ larger cube. When the game ends, the client will ask if the player would like to
 
 Not working:
 	Scaling to enlarge the player cube and its world when the cube is small is not functioning at the moment.
+	Also, some of the drawing isn't as up to date as we'd like when the game first starts. There's a bit of a lag.

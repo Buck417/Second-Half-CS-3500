@@ -32,15 +32,23 @@ namespace Network_Controller
         /// <returns></returns>
         public static Socket Connect_To_Server(AsyncCallback callBack, string hostName)
         {
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            try {
+                Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            Preserved_State state = new Preserved_State();
-            state.GUI_Callback = new AsyncCallback(callBack);
-            state.socket = socket;
+                Preserved_State state = new Preserved_State();
+                state.GUI_Callback = new AsyncCallback(callBack);
+                state.socket = socket;
 
-            socket.BeginConnect(hostName, 11000, new AsyncCallback(Connected_to_Server), state);
+                socket.BeginConnect(hostName, 11000, new AsyncCallback(Connected_to_Server), state);
 
-            return socket;
+                return socket;
+            }
+            catch(Exception e)
+            {
+
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -56,7 +64,21 @@ namespace Network_Controller
             state.GUI_Callback(ar);
 
             state.buffer = new byte[BUFFER_SIZE];
-            state.socket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), state);
+            if (state.socket.Connected)
+            {
+                state.socket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), state);
+            }
+        }
+
+        /// <summary>
+        /// If anything happens with the socket, close gracefully
+        /// </summary>
+        /// <param name="socket"></param>
+        private static void CloseGracefully(Socket socket)
+        {
+            Console.WriteLine("Connection lost");
+            socket.Close();
+            return;
         }
 
         /// <summary>
@@ -71,14 +93,30 @@ namespace Network_Controller
 
             byte[] buffer = (byte[])state.buffer;
 
-            //Stop receiving this current request
-            int byte_count = socket.EndReceive(ar);
+            //If the connection was forcibly closed on the server's end, handle that
+            if(socket.Connected == false)
+            {
+                CloseGracefully(socket);
+                return;
+            }
+
+            //Try to stop receiving this current request
+            int byte_count = 0;
+            try {
+                byte_count = socket.EndReceive(ar);
+            }
+            catch(Exception e)
+            {
+                //If we couldn't stop the reception, close gracefully
+                CloseGracefully(socket);
+            }
+
 
             if (byte_count == 0)
             {
                 //Connection lost
-                Console.WriteLine("Connection lost");
-                socket.Close();
+                CloseGracefully(socket);
+                return;
             }
             else
             {
@@ -109,13 +147,13 @@ namespace Network_Controller
         }
 
         /// <summary>
-        /// This function (along with it's helper 'SendCallback') will allow a program to send data over a socket. This function needs to convert the data into bytes and then send them using socket.BeginSend.
+        /// This function (along with its helper 'SendCallback') will allow a program to send data over a socket. This function needs to convert the data into bytes and then send them using socket.BeginSend.
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="data"></param>
         public static void Send(Socket socket, String data)
         {
-            if (socket == null) return;
+            if (socket == null || !socket.Connected) return;
 
             //Convert the string into a byte array
             byte[] byte_data = Encoding.UTF8.GetBytes(data);

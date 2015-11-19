@@ -20,23 +20,35 @@ namespace View
         private System.Drawing.SolidBrush myBrush;
         private World world;
         private Socket socket;
-        public string PlayerName, GameHost;
-        private bool GameRunning = false;
-        private int dest_x, dest_y, frame_count = 0;
+        public string player_name = "Nobody", GameHost = "localhost";
+        private bool GameRunning = false, ServerConnected = false;
+        private int dest_x, dest_y;
+        private int player_mass;
 
+        /// <summary>
+        /// Upon starting the game, show the initial startup screen
+        /// and initialize the world.
+        /// </summary>
         public AgCubio_View()
         {
             InitializeComponent();
             //Use this to prevent screen flickering when redrawing the world
             DoubleBuffered = true;
-            
-            Form1 start_game_popup = new Form1(this);
+
+            Form1 start_game_popup = new Form1(this, false);
             start_game_popup.ShowDialog(this);
-            start_game_popup.FormClosed += play_button_click;
-            
+
             world = new World();
         }
 
+        /// <summary>
+        /// This is kind of like our event loop, where everything is drawn.
+        /// The world is the key to lock on, where processing cubes and 
+        /// drawing them are done in locked fashion so as to not change
+        /// the underlying data unecessarily.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void AgCubioPaint(object sender, PaintEventArgs e)
         {
             //If the game hasn't started yet, show the inital setup form
@@ -46,9 +58,9 @@ namespace View
             }
             else if (GameRunning)
             {
-                try
+                if (ServerConnected)
                 {
-                    lock (world)
+                    try
                     {
                         //Compute the x and y offset, based on where the player cube is and how big it is.
                         int center_x = this.Width / 2;
@@ -60,31 +72,32 @@ namespace View
                         {
                             Console.WriteLine("Game over!");
                             GameRunning = false;
+                            GameOverForm game_over = new GameOverForm(this, player_mass, player_name);
+                            game_over.ShowDialog(this);
+
                             return;
                         }
-                        world.xoff = (player_cube.X + (player_cube.Width / 2)) - center_x;
-                        world.yoff = (player_cube.Y + (player_cube.Width / 2)) - center_y;
+                        player_mass = (int)world.GetPlayerMass();
+                        //world.Scale = (this.Width / (player_cube.Width * 10));
 
-                        //Draw the player cube first
-                        DrawCube(player_cube, e);
-
-                        foreach (Cube cube in world.cubes.Values)
+                        lock (world)
                         {
-                            if (cube == player_cube) continue;
-                            DrawCube(cube, e);
+
+                            //Draw the player cube first
+                            DrawCube(player_cube, e);
+
+                            foreach (Cube cube in world.cubes.Values)
+                            {
+                                if (cube == player_cube) continue;
+                                DrawCube(cube, e);
+                            }
+
+                            System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
+                            System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("black"));
+
+                            e.Graphics.DrawString("Frames per second: " + CalculateFrameRate(), drawFont, nameBrush, new PointF(this.Width - 300, 50));
+                            e.Graphics.DrawString("Player mass: " + (int)player_mass, drawFont, nameBrush, new PointF(this.Width - 300, 75));
                         }
-
-                        System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
-                        System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("black"));
-
-                        //Update the frame count in a thread-safe way
-                        Interlocked.Increment(ref frame_count);
-                        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-                        timer.Interval = 1000;
-                        timer.Tick += TimerTick;
-                        int fps = 10;
-                        e.Graphics.DrawString("Frames per second: " + CalculateFrameRate(), drawFont, nameBrush, new PointF(this.Width - 250, 50));
-                        e.Graphics.DrawString("Player mass: " + (int)player_cube.Mass, drawFont, nameBrush, new PointF(this.Width - 250, 75));
                         
                         //Check to see if the player cube is where we told it to go. If not, send a move request again.
                         if (player_cube.X != dest_x || player_cube.Y != dest_y)
@@ -92,31 +105,48 @@ namespace View
                             SendMoveRequest(dest_x, dest_y);
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
 
-                Invalidate();
+                    Invalidate();
+                }
             }
         }
 
         /***************************************CALLBACK DELEGATES*****************************************/
-
+        /// <summary>
+        /// Callback for the connection 
+        /// </summary>
+        /// <param name="ar"></param>
         private void ConnectCallback(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
+
             state.GUI_Callback = new AsyncCallback(ReceivePlayer);
 
-            //Send the player name
-            Network.Send(socket, PlayerName + '\n');
+            if (state.socket.Connected)
+            {
+                //Send the player name
+                ServerConnected = true;
+                Network.Send(socket, player_name + '\n');
+            }
+            else
+            {
+                ServerConnected = false;
+                Invoke(new Action(ShowReConnectForm));
+            }
         }
 
+        /// <summary>
+        /// Receive the initial player response
+        /// </summary>
+        /// <param name="ar"></param>
         private void ReceivePlayer(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
-            Console.WriteLine("Welcome " + PlayerName);
+            Console.WriteLine("Welcome " + player_name);
 
             //Handle the player cube coming in
             string player_json = state.sb.ToString();
@@ -127,6 +157,10 @@ namespace View
             Network.i_want_more_data(ar);
         }
 
+        /// <summary>
+        /// Callback to be sent to the network to receive more data
+        /// </summary>
+        /// <param name="ar"></param>
         private void ReceiveData(IAsyncResult ar)
         {
             //Get them cubes
@@ -145,6 +179,10 @@ namespace View
 
 
         /********************************************* HELPER METHODS *********************************************/
+        /// <summary>
+        /// This takes care of an entire block of JSON, i.e. the world
+        /// </summary>
+        /// <param name="block"></param>
         private void ProcessJsonBlock(string block)
         {
             string[] json_blocks = block.Split('\n');
@@ -163,39 +201,49 @@ namespace View
             }
         }
 
+        /// <summary>
+        /// Abstracts the processing of the cube
+        /// </summary>
+        /// <param name="cube"></param>
         private void ProcessJsonCube(Cube cube)
         {
             lock (world)
             {
                 world.ProcessIncomingCube(cube);
             }
-
-            lock (world)
-            {
-                Invalidate();
-            }
+            
+            Invalidate();
         }
 
+        /// <summary>
+        /// This does the nuts and bolts for drawing the cube
+        /// </summary>
+        /// <param name="cube"></param>
+        /// <param name="e"></param>
         private void DrawCube(Cube cube, PaintEventArgs e)
         {
-            //(mouse x +xs-(viewport width/2)) / scale
-            int scale_width = 10;
-            Cube c = world.GetPlayerCube();
-            int vp_width = 10 * c.Width;
-
             Color color = Color.FromArgb(cube.Color);
             myBrush = new System.Drawing.SolidBrush(color);
 
-            e.Graphics.FillRectangle(myBrush, new Rectangle(cube.X*scale_width,cube.Y*scale_width, cube.Width*scale_width, cube.Width*scale_width));
+            e.Graphics.FillRectangle(myBrush, new Rectangle((int)(cube.X - (cube.Width * world.Scale / 2)), (int)(cube.Y - (cube.Width * world.Scale / 2)), (int)(cube.Width * world.Scale), (int)(cube.Width * world.Scale)));
 
-            System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
-            System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("white"));
+            System.Drawing.Font drawFont = new System.Drawing.Font("Quartz MS", (int)(10 * world.Scale));
+            System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("yellow"));
+            StringFormat string_format = new StringFormat();
+            string_format.Alignment = StringAlignment.Center;
+            string_format.LineAlignment = StringAlignment.Center;
 
-            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.GetCenterX(), cube.GetCenterY()));
+            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.GetCenterX() - (cube.Width / 2), cube.GetCenterY() - (cube.Width / 2)), string_format);
 
             //e.Graphics.ScaleTransform(1.5f, 1.5f);
         }
 
+        /// <summary>
+        /// Typically this is first called when the mouse moves. It's a helper method
+        /// for the mouse listener to send a move request to the server.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         private void SendMoveRequest(int x, int y)
         {
             //If the player cube isn't at the place we're sending it to yet, keep sending the move request
@@ -203,6 +251,11 @@ namespace View
             Network.Send(socket, data);
         }
 
+        /// <summary>
+        /// This is a helper method for the spacebar key listener to send a split request
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         private void SendSplitRequest(int x, int y)
         {
             string data = "(split, " + x + ", " + y + ")\n";
@@ -213,9 +266,13 @@ namespace View
         private static int lastFrameRate;
         private static int frameRate;
 
-        public static int CalculateFrameRate()
+        /// <summary>
+        /// This guy calculates the frame rate for our game
+        /// </summary>
+        /// <returns></returns>
+        private static int CalculateFrameRate()
         {
-            
+
             if (System.Environment.TickCount - lastTick >= 1000)
             {
                 lastFrameRate = frameRate;
@@ -226,6 +283,15 @@ namespace View
             return lastFrameRate;
         }
 
+        /// <summary>
+        /// Whenever a connection drops, this form shows up, and you get
+        /// to try connecting again.
+        /// </summary>
+        private void ShowReConnectForm()
+        {
+            Form1 form = new Form1(this, true);
+            form.ShowDialog(this);
+        }
         /******************************************* END HELPER METHODS ******************************************/
 
 
@@ -250,20 +316,14 @@ namespace View
             SendMoveRequest(mouse_x, mouse_y);
         }
 
-        private void play_button_click(object sender, EventArgs e)
-        {
-            StartGame();
-        }
-
+        /// <summary>
+        /// This is a helper method to "start the game", i.e. to connect to 
+        /// the server and start receiving data.
+        /// </summary>
         public void StartGame()
         {
             //Start by connecting to the server
             socket = Network.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
-        }
-
-        private void TimerTick(object o, EventArgs e)
-        {
-            frame_count = 0;
         }
         /******************************************* END LISTENERS ***********************************************/
     }
