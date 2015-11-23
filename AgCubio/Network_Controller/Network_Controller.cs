@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -33,7 +34,7 @@ namespace Network_Controller
         public static Socket Connect_To_Server(AsyncCallback callBack, string hostName)
         {
             try {
-                Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                Socket socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
 
                 Preserved_State state = new Preserved_State();
                 state.GUI_Callback = new AsyncCallback(callBack);
@@ -59,6 +60,8 @@ namespace Network_Controller
         static void Connected_to_Server(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
+            
+            state.socket.EndConnect(ar);
 
             //Call the first callback, which resets some info in the state
             state.GUI_Callback(ar);
@@ -175,6 +178,71 @@ namespace Network_Controller
         }
 
         /// <summary>
+        /// This is the heart of the server code. It should ask the OS to listen for a connection and save the callback function with that request. 
+        /// Upon a connection request coming in the OS should invoke the Accept_a_New_Client method (see below).
+        /// 
+        /// Note: while this method is called "Loop", it is not a traditional loop, but an "event loop" (i.e., this method sets up the connection listener, 
+        /// which, when a connection occurs, sets up a new connection listener. for another connection).
+        /// </summary>
+        /// <param name="callback"></param>
+        public static void Server_Awaiting_Client_Loop(AsyncCallback callback)
+        {   
+            //Create socket that can accept both IPv4 and IPv6
+            Socket server_socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+            server_socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+
+            //Try having the socket listen to the port for any IPaddress and accept
+            try
+            {
+                server_socket.Bind(new IPEndPoint(IPAddress.IPv6Any, 11000));
+                server_socket.Listen(100);
+
+
+                Preserved_State state = new Preserved_State();
+                state.GUI_Callback = callback;
+                state.socket = server_socket;
+                Console.WriteLine("Waiting for a connection...");
+
+                server_socket.BeginAccept(new AsyncCallback(Accept_A_New_Client),server_socket);
+
+            }
+
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+
+        /// <summary>
+        /// This code should be invoked by the OS when a connection request comes in. It should:
+        /// 1. Create a new socket
+        /// 2. Call the callback provided by the above method
+        /// 3. Await a new connection request.
+        /// 
+        /// Note: the callback method referenced in the above function should have been transferred to this 
+        /// function via the AsyncResult parameter and should be invoked at this point.
+        /// </summary>
+        /// <param name="ar"></param>
+        public static void Accept_A_New_Client(IAsyncResult ar)
+        {
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+
+            Socket listener = (Socket)ar.AsyncState;
+            Socket handler = listener.EndAccept(ar);
+
+            state.socket = handler;
+            state.GUI_Callback(ar);
+
+            handler.BeginAccept(new AsyncCallback(Accept_A_New_Client), handler);
+
+        }
+
+
+
+
+        /********************************************* HELPER METHODS *********************************************/
+
+        /// <summary>
         /// Helper method to see if the last char is a newline (for our protocol, that's how we know it's finished)
         /// </summary>
         /// <param name="str"></param>
@@ -183,5 +251,7 @@ namespace Network_Controller
         {
             return (str.LastIndexOf('\n')) == (str.Length - 1);
         }
+
+        /********************************************* END HELPER METHODS *****************************************/
     }
 }
