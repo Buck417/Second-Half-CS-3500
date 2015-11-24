@@ -203,7 +203,8 @@ namespace Network_Controller
                 state.socket = server_socket;
                 Console.WriteLine("Waiting for a connection...");
 
-                server_socket.BeginAccept(new AsyncCallback(Accept_A_New_Client),server_socket);
+                server_socket.BeginAccept(new AsyncCallback(Accept_A_New_Client),state);
+                Console.Read();     //Keeps the thread open because it doesn't connect automatically
 
             }
 
@@ -227,10 +228,13 @@ namespace Network_Controller
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
 
-            Socket listener = (Socket)ar.AsyncState;
+            Socket listener = state.socket;
             Socket handler = listener.EndAccept(ar);
 
-            state.socket = handler;
+            Preserved_State state2 = (Preserved_State)ar.AsyncState;
+            listener = handler;
+
+
             state.GUI_Callback(ar);
 
             handler.BeginAccept(new AsyncCallback(Accept_A_New_Client), handler);
