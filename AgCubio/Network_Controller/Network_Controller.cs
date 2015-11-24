@@ -12,7 +12,7 @@ namespace Network_Controller
 
     public class Preserved_State
     {
-        public AsyncCallback callback;
+        public AsyncCallback GUI_Callback;
         public Socket socket = null;
         public byte[] buffer = new byte[Network.BUFFER_SIZE];
         public StringBuilder sb = new StringBuilder();
@@ -37,7 +37,7 @@ namespace Network_Controller
                 Socket socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
 
                 Preserved_State state = new Preserved_State();
-                state.callback = new AsyncCallback(callBack);
+                state.GUI_Callback = new AsyncCallback(callBack);
                 state.socket = socket;
 
                 socket.BeginConnect(hostName, 11000, new AsyncCallback(Connected_to_Server), state);
@@ -64,7 +64,7 @@ namespace Network_Controller
             state.socket.EndConnect(ar);
 
             //Call the first callback, which resets some info in the state
-            state.callback(ar);
+            state.GUI_Callback(ar);
 
             state.buffer = new byte[BUFFER_SIZE];
             if (state.socket.Connected)
@@ -129,7 +129,7 @@ namespace Network_Controller
                 //If the last character is a newline, we're done receiving, so we can call the callback in the GUI
                 if (the_string.LastIsNewline())
                 {
-                    state.callback(ar);
+                    state.GUI_Callback(ar);
                 }
                 //If the last character isn't a newline, we know we're not done receiving yet, so we need to ask for more data (after appending to the string builder
                 else
@@ -199,11 +199,12 @@ namespace Network_Controller
 
 
                 Preserved_State state = new Preserved_State();
-                state.callback = callback;
+                state.GUI_Callback = callback;
                 state.socket = server_socket;
                 Console.WriteLine("Waiting for a connection...");
 
-                server_socket.BeginAccept(new AsyncCallback(Accept_A_New_Client),server_socket);
+                server_socket.BeginAccept(new AsyncCallback(Accept_A_New_Client),state);
+                Console.Read();     //Keeps the thread open because it doesn't connect automatically
 
             }
 
@@ -227,11 +228,14 @@ namespace Network_Controller
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
 
-            Socket listener = (Socket)ar.AsyncState;
+            Socket listener = state.socket;
             Socket handler = listener.EndAccept(ar);
 
-            state.socket = handler;
-            state.callback(ar);
+            Preserved_State state2 = (Preserved_State)ar.AsyncState;
+            listener = handler;
+
+
+            state.GUI_Callback(ar);
 
             handler.BeginAccept(new AsyncCallback(Accept_A_New_Client), handler);
 
