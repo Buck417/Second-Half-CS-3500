@@ -16,7 +16,7 @@ namespace Server
         {
             AgServer server = new AgServer();
             server.world = new World();
-            Network.Server_Awaiting_Client_Loop(new AsyncCallback(Handle_New_Client_Connections));
+            Network.Server_Awaiting_Client_Loop(Handle_New_Client_Connections);
         }
 
         //Start
@@ -27,23 +27,50 @@ namespace Server
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
             state.callback = Receive_Player_Name;
+            Network.i_want_more_data(ar);
         }
 
         //Receive the player name
         static void Receive_Player_Name(IAsyncResult ar)
         {
-
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+            state.callback = HandleData;
+            
+            Network.i_want_more_data(ar);
         }
 
         //Handle data from the client
+        static void HandleData(IAsyncResult ar)
+        {
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+            string str = state.sb.ToString();
 
+        }
+
+        static void ProcessData(string data)
+        {
+            //Move request sent
+            if(data.IndexOf("move") != -1)
+            {
+                ProcessMove(data);
+            }
+            if(data.IndexOf("split") != -1)
+            {
+                ProcessSplit(data);
+            }
+        }
 
         //Update
+        //TODO: Update the world
+        static void ProcessMove(string moveRequest)
+        {
 
+        }
 
+        static void ProcessSplit(string splitRequest)
+        {
 
-
-
+        }
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
 
         /********************************* END HANDLE NETWORK COMMUNICATIONS ********************/

@@ -230,12 +230,11 @@ namespace Network_Controller
 
             Socket listener = state.socket;
             Socket handler = listener.EndAccept(ar);
-
+            
             state.socket = handler;
             state.callback(ar);
 
-            handler.BeginAccept(new AsyncCallback(Accept_A_New_Client), handler);
-
+            Server_Awaiting_Client_Loop(state.callback);
         }
 
 
