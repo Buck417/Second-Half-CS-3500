@@ -77,6 +77,18 @@ namespace Model
         {
             return Y + (Width / 2);
         }
+
+        /// <summary>
+        /// This helper method helps us tell if the cube is a virus
+        /// or not.  Currently, the specification is that the cube is green.
+        /// The 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsVirus()
+        {
+            if (this.Color == World.VIRUS_COLOR) return true;
+            else return false;
+        }
     }
 
     /// <summary>
@@ -88,7 +100,9 @@ namespace Model
         int WIDTH, HEIGHT, HEARTBEATS_PER_SECOND, TOP_SPEED, LOW_SPEED, ATTRITION_RATE, FOOD_VALUE, PLAYER_START_MASS, MAX_FOOD, MINIMUM_SPLIT_MASS, MAXIMUM_SPLIT_DISTANCE, MAXIMUM_SPLITS;
         double ABSORB_DISTANCE_DELTA;
 
-
+        //TODO: Change this to green
+        public readonly static int VIRUS_COLOR = 0;
+        public readonly static int VIRUS_MASS = 500;
 
         public double Scale = 2.0;
         public string Player_Name;
@@ -106,7 +120,7 @@ namespace Model
         public void AddPlayerCube(string json)
         {
             Cube cube = Cube.Create(json);
-            ProcessIncomingCube(cube);
+            ProcessCube(cube);
             Player_Start_Mass = cube.Mass;
             Player_Name = cube.Name;
             Player_UID = cube.UID;
@@ -150,7 +164,7 @@ namespace Model
         /// This takes care of what we need to do with a cube, depending on whether it exists and if it has mass.
         /// </summary>
         /// <param name="cube"></param>
-        public void ProcessIncomingCube(Cube cube)
+        public void ProcessCube(Cube cube)
         {
             bool cubeExists = cubes.ContainsKey(cube.UID);
 

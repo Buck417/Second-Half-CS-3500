@@ -209,7 +209,7 @@ namespace View
         {
             lock (world)
             {
-                world.ProcessIncomingCube(cube);
+                world.ProcessCube(cube);
             }
             
             Invalidate();

@@ -62,6 +62,21 @@ namespace ModelTests
             Cube c = Cube.Create(json);
             Assert.AreEqual(615, c.GetCenterY());
         }
+
+        [TestMethod]
+        public void TestCubeNotVirus()
+        {
+            string json = "{\"loc_x\":500.0,\"loc_y\":600.0,\"argb_color\":-65536,\"uid\":5571,\"team_id\":5571,\"food\":false,\"Name\":\"3500 is love\",\"Mass\":900.0}";
+            Cube c = Cube.Create(json);
+            Assert.AreEqual(false, c.IsVirus());
+        }
+
+        [TestMethod]
+        public void TestCubeIsVirus()
+        {
+            Cube c = new Cube(2, 2, World.VIRUS_COLOR, 2, 2, true, "", 1000);
+            Assert.AreEqual(true, c.IsVirus());
+        }
         /************************************* END CUBE TESTS ****************************************/
 
 
@@ -74,7 +89,7 @@ namespace ModelTests
         {
             World w = new World();
             Cube c = new Cube(0, 0, 3000, 2, 2, false, "hey", 1000);
-            w.ProcessIncomingCube(c);
+            w.ProcessCube(c);
             Assert.AreEqual(c, w.GetCube(2));
         }
 
@@ -110,12 +125,12 @@ namespace ModelTests
         {
             World world = new World();
             Cube c = new Cube(2, 2, 2, 2, 2, false, "hasf", 10);
-            world.ProcessIncomingCube(c);
+            world.ProcessCube(c);
             Assert.AreEqual(2, world.GetCube(2).UID);
 
             //Now delete the cube
             c = new Cube(2, 2, 2, 2, 2, false, "hasf", 0);
-            world.ProcessIncomingCube(c);
+            world.ProcessCube(c);
             Assert.AreEqual(null, world.GetCube(2));
         }
 
@@ -132,9 +147,9 @@ namespace ModelTests
         {
             World w = new World();
             Cube c = new Cube(2, 2, 2, 2, 2, false, "hey", 20);
-            w.ProcessIncomingCube(c);
+            w.ProcessCube(c);
             c = new Cube(2, 2, 2, 2, 2, false, "hey", 30);
-            w.ProcessIncomingCube(c);
+            w.ProcessCube(c);
             Assert.AreEqual(30, w.GetCube(2).Mass);
         }
         /************************************* END WORLD TESTS ***************************************/
