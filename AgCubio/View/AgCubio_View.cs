@@ -124,7 +124,7 @@ namespace View
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
 
-            state.GUI_Callback = new AsyncCallback(ReceivePlayer);
+            state.callback = new AsyncCallback(ReceivePlayer);
 
             if (state.socket.Connected)
             {
@@ -153,7 +153,7 @@ namespace View
             world.AddPlayerCube(player_json);
             GameRunning = true;
 
-            state.GUI_Callback = new AsyncCallback(ReceiveData);
+            state.callback = new AsyncCallback(ReceiveData);
             Network.i_want_more_data(ar);
         }
 

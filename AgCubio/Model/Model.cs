@@ -39,7 +39,7 @@ namespace Model
             this.Name = name;
             this.Food = food;
             this.Mass = (int)mass;
-            this.Width = (int)(Math.Pow(mass, .53));
+            this.Width = (int)(Math.Sqrt(this.Mass));
         }
 
         /// <summary>
@@ -84,6 +84,12 @@ namespace Model
     /// </summary>
     public class World
     {
+        /****************** CONSTANTS FOR SERVER *************************/
+        int WIDTH, HEIGHT, HEARTBEATS_PER_SECOND, TOP_SPEED, LOW_SPEED, ATTRITION_RATE, FOOD_VALUE, PLAYER_START_MASS, MAX_FOOD, MINIMUM_SPLIT_MASS, MAXIMUM_SPLIT_DISTANCE, MAXIMUM_SPLITS;
+        double ABSORB_DISTANCE_DELTA;
+
+
+
         public double Scale = 2.0;
         public string Player_Name;
         public int Player_UID;
