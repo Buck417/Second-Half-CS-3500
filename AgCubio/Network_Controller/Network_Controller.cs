@@ -234,7 +234,7 @@ namespace Network_Controller
             state.socket = handler;
             state.callback(ar);
 
-            Server_Awaiting_Client_Loop(state.callback);
+            listener.BeginAccept(Accept_A_New_Client, state);
         }
 
 
