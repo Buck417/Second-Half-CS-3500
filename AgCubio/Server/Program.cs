@@ -35,6 +35,9 @@ namespace Server
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
             state.callback = HandleData;
+
+            //Send the player name
+            Network.Send(state.socket, "{\"loc_x\":500.0,\"loc_y\":600.0,\"argb_color\":-65536,\"uid\":5571,\"team_id\":5571,\"food\":false,\"Name\":\"" + state.sb.ToString() + "\",\"Mass\":900.0}");
             
             Network.i_want_more_data(ar);
         }
