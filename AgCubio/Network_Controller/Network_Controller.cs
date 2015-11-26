@@ -226,6 +226,7 @@ namespace Network_Controller
         /// <param name="ar"></param>
         public static void Accept_A_New_Client(IAsyncResult ar)
         {
+            Console.Write("A client has connected");
             Preserved_State state = (Preserved_State)ar.AsyncState;
 
             Socket listener = state.socket;
@@ -234,7 +235,8 @@ namespace Network_Controller
             state.socket = handler;
             state.callback(ar);
 
-            Server_Awaiting_Client_Loop(state.callback);
+            listener.BeginAccept(Accept_A_New_Client, state);
+
         }
 
 
