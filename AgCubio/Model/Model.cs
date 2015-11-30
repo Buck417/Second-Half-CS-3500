@@ -93,6 +93,16 @@ namespace Model
         }
 
         /// <summary>
+        /// This returns a "copy" of the cube you're passing in
+        /// </summary>
+        /// <param name="cube"></param>
+        /// <returns></returns>
+        public static Cube Copy(Cube cube)
+        {
+            return new Cube(cube.X, cube.Y, cube.Color, cube.UID, cube.team_id, cube.Food, cube.Name, cube.Mass);
+        }
+
+        /// <summary>
         /// Helper method for getting the center x position of the cube
         /// </summary>
         /// <returns></returns>
@@ -141,6 +151,7 @@ namespace Model
         public int Player_Start_Mass = 1000;
         public int Player_UID;
         public int xoff, yoff;
+        private int split_count = 0;
         
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
 
@@ -314,7 +325,42 @@ namespace Model
         /// </summary>
         public void ProcessCubesInPlayerSpace()
         {
+            Cube player_cube = GetPlayerCube();
+            foreach(Cube cube in cubes.Values)
+            {
+                if (ReferenceEquals(player_cube, cube)) continue;
+                if(CollisionDetected(player_cube, cube))
+                {
+                    //If the cube is a virus, set the player cube mass to 0 (it died)
+                    if(cube.Color == World.VIRUS_COLOR)
+                    {
+                        player_cube.Mass = 0;
+                        break;
+                    }
 
+                    //If the cube is food
+                    if(cube.Food == true)
+                    {
+                        player_cube.Mass += cube.Mass;
+                        cube.Mass = 0;
+                    }
+
+                    //If the cube is another player
+                    if(cube.Food == false)
+                    {
+                        if(cube.Mass > player_cube.Mass)
+                        {
+                            cube.Mass += player_cube.Mass;
+                            player_cube.Mass = 0;
+                        }
+                        else
+                        {
+                            player_cube.Mass += cube.Mass;
+                            cube.Mass = 0;
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -330,8 +376,10 @@ namespace Model
         /// <returns></returns>
         private bool CollisionDetected(Cube player_cube, Cube cube)
         {
+            double overlap = OverlappingArea(player_cube, cube);
+            double delta = overlap / cube.Mass;
 
-            return false;
+            return delta > ABSORB_DISTANCE_DELTA;
         }
 
         /// <summary>
@@ -343,7 +391,34 @@ namespace Model
         /// <returns></returns>
         private double OverlappingArea(Cube cube1, Cube cube2)
         {
-            
+            double left = Math.Max(cube1.Left, cube2.Left);
+            double right = Math.Min(cube1.Right, cube2.Right);
+            double top = Math.Max(cube1.Top, cube2.Top);
+            double bottom = Math.Min(cube1.Bottom, cube2.Bottom);
+
+            double width = Math.Max(0, right - left);
+            double height = Math.Max(0, bottom - top);
+            return width * height;
+        }
+
+        /// <summary>
+        /// If the world has received a "split" request, check to see if it's valid (we haven't reached our max number of splits, for example).
+        /// If it's valid, process the request by splitting the cube into a new cube with the same team ID. If it's not valid, do nothing.
+        /// </summary>
+        /// <param name="cube">The cube to split</param>
+        /// <param name="dest_x">The x location to split towards</param>
+        /// <param name="dest_y">The y location to split towards</param>
+        public void ProcessSplit(Cube cube, int dest_x, int dest_y)
+        {
+            if(split_count < MAXIMUM_SPLITS && cube.Mass >= MINIMUM_SPLIT_MASS)
+            {
+                Cube new_cube = Cube.Copy(cube);
+                new_cube.Mass = cube.Mass /= 2;
+                new_cube.team_id = cube.team_id = cube.UID;
+
+                //Set the new x and y coordinates for the split cubes
+                
+            }
         }
     }
 }
