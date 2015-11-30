@@ -5,17 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Model;
 using Network_Controller;
+using System.Drawing;
+using System.Text.RegularExpressions;
 
 namespace Server
 {
     class AgServer
     {
-        World world;
+        public static World world;
 
         static void Main(string[] args)
         {
             AgServer server = new AgServer();
-            server.world = new World();
+            world = new World();
             Network.Server_Awaiting_Client_Loop(Handle_New_Client_Connections);
         }
 
@@ -35,8 +37,10 @@ namespace Server
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
             state.callback = HandleData;
-            
-            string playerName = state.sb.ToString();
+
+            //Generates the data from the json and adds the player cube to the world
+            string playerName = Regex.Replace(state.sb.ToString().Trim(), @"\n|\t|\r", "");
+            world.AddPlayerCube(playerName);
 
             //Send the player name
             Network.Send(state.socket, "{\"loc_x\":500.0,\"loc_y\":600.0,\"argb_color\":-65536,\"uid\":5571,\"team_id\":5571,\"food\":false,\"Name\":\"" + state.sb.ToString() + "\",\"Mass\":900.0}");
@@ -104,9 +108,37 @@ namespace Server
         /// <returns>If there are any errors, return false. Otherwise, return true.</returns>
         private bool AddFoodCube()
         {
-            bool result = false;
+            //TODO: Determine when to begin adding food cubes for a new world
+            //TODO: Get better values in for the Cube constructor
+            Random random = new Random();
+            int food_count = 0;
 
-            return result;
+            //Check if food should be added
+            if (world.cubes.Count < World.max_food)
+            {
+                //Check if alot of food should be added, like the start of the game
+                if (world.cubes.Count < 10)
+                {
+                    lock (this)
+                    {
+                        while (food_count < 100)
+                        {
+                            Cube food = new Cube((double)random.Next(0, world.width), (double)random.Next(0, world.width), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                            world.cubes.Add(food.team_id, food);
+
+                        }
+                        return true;
+                    }
+                }
+                //If the world needs only a little more food, add here
+                lock (this)
+                {
+                    Cube food = new Cube((double)random.Next(0, world.width), (double)random.Next(0, world.width), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                    world.cubes.Add(food.team_id, food);
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -136,6 +168,8 @@ namespace Server
         {
             return 1;
         }
+
+
         /********************************** END HANDLE GAMEPLAY MECHANICS ***********************/
     }
 }

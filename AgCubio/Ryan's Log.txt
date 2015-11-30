@@ -1,0 +1,26 @@
+Ryan's Log:
+11/30/15
+
+Needed Work:
+Worked on generating food cubes. Need to make sure to update the parameters for the cubes(Team_id and Uid)
+
+Added a width to the world. Need to read from xml file to get the correct width for the world.
+
+In Receive_Player_Name, correctly coverted the json player name from client to player. Need to take that player name and create a proper cube in the world. We
+currently dont have a way of inputting correct values into the parameters. I did add a global variable for player mass. These values must then be sent correctly.
+
+Need to randomly generate team and player id's and keep track of those while the game is played. List?
+
+Need to make adding food cubes random. We dont want cubes being added as soon as one is eaten. But still want cubes added. So from 1-5 seconds.
+
+Need to keep placement of food cubes somewhat organized. Some clumping is good but dont want 90% in top left corner. Some uniform distribution.
+
+
+Things We Should Skip For Now:
+Heartbeats
+Handling multiple clients
+Handling splitting(will involve dictionaries and timing)
+
+
+Notes About How The Game Should Be Played:
+Overlapping should be allowed for food cubes, wont have to worry about where they are randomly placed

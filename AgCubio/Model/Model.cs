@@ -110,6 +110,14 @@ namespace Model
         public double Player_Start_Mass;
         public int xoff, yoff;
 
+        //Width of the world
+        //TODO: Needs to be changed when we read from xml
+        public int width;
+        //Max number of food allowed in the world
+        public readonly static int max_food = 100;
+        //Specific number for starting player mass
+        public readonly static int starting_player_mass = 1000;
+
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
 
         /// <summary>
@@ -158,6 +166,14 @@ namespace Model
             if (cubes.ContainsKey(UID))
                 return cubes[UID];
             else return null;
+        }
+        /// <summary>
+        /// Getter for the width of the world
+        /// </summary>
+        /// <returns></returns>
+        public int GetWidth()
+        {
+            return width;
         }
 
         /// <summary>
