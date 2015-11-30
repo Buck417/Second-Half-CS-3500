@@ -100,8 +100,8 @@ namespace ModelTests
             Assert.AreEqual(499, w.MINIMUM_SPLIT_MASS);
             Assert.AreEqual(6, w.TOP_SPEED);
             Assert.AreEqual(999, w.PLAYER_START_MASS);
-            Assert.AreEqual(999, w.MAX_FOOD);
-            Assert.AreEqual(2, w.ATTRITION_RATE);
+            Assert.AreEqual(499, w.MAX_FOOD);
+            Assert.AreEqual(199, w.ATTRITION_RATE);
             Assert.AreEqual(4, w.FOOD_VALUE);
             Assert.AreEqual(0.33, w.ABSORB_DISTANCE_DELTA);
         }

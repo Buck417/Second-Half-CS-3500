@@ -97,8 +97,8 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, ATTRITION_RATE = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 500, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
-        public readonly double ABSORB_DISTANCE_DELTA = 0.25;
+        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 500, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
+        public readonly double ABSORB_DISTANCE_DELTA = 0.25, ATTRITION_RATE = 1.25;
 
         //TODO: Change this to green
         public readonly static int VIRUS_COLOR = 0;
@@ -136,8 +136,54 @@ namespace Model
                     //Try reading the XML file, and inputting those parameters into our gameplay environment
                     using (System.Xml.XmlReader reader = System.Xml.XmlReader.Create(filename))
                     {
-                        reader.ReadStartElement();
-                        this.WIDTH = 1000;
+                        while (reader.Read())
+                        {
+                            if (reader.IsStartElement())
+                            {
+                                switch (reader.Name)
+                                {
+                                    case "width":
+                                        this.WIDTH = reader.ReadElementContentAsInt();
+                                       break;
+                                    case "height":
+                                        this.HEIGHT = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "max_splits":
+                                        this.MAXIMUM_SPLITS = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "max_split_distance":
+                                        this.MAXIMUM_SPLIT_DISTANCE = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "top_speed":
+                                        this.TOP_SPEED = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "low_speed":
+                                        this.LOW_SPEED = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "attrition_rate":
+                                        this.ATTRITION_RATE = reader.ReadElementContentAsDouble();
+                                        break;
+                                    case "food_value":
+                                        this.FOOD_VALUE = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "player_start_mass":
+                                        this.PLAYER_START_MASS = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "max_food":
+                                        this.MAX_FOOD = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "min_split_mass":
+                                        this.MINIMUM_SPLIT_MASS = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "absorb_constant":
+                                        this.ABSORB_DISTANCE_DELTA = reader.ReadElementContentAsDouble();
+                                        break;
+                                    case "heartbeats_per_second":
+                                        this.HEARTBEATS_PER_SECOND = reader.ReadElementContentAsInt();
+                                        break;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -189,14 +235,6 @@ namespace Model
             if (cubes.ContainsKey(UID))
                 return cubes[UID];
             else return null;
-        }
-        /// <summary>
-        /// Getter for the width of the world
-        /// </summary>
-        /// <returns></returns>
-        public int GetWidth()
-        {
-            return WIDTH;
         }
 
         /// <summary>
