@@ -121,6 +121,27 @@ namespace Model
             if (this.Color == World.VIRUS_COLOR) return true;
             else return false;
         }
+
+        /// <summary>
+        /// Helper for seeing if a cube is a food cube or not
+        /// </summary>
+        /// <returns></returns>
+        public bool IsFood()
+        {
+            if (this.Food == true)
+            {
+                return true;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Helper for returning color of a cube
+        /// </summary>
+        /// <returns></returns>
+        public int GetColor()
+        {
+            return this.Color;
+        }
     }
 
     /// <summary>
@@ -142,7 +163,15 @@ namespace Model
         public int Player_UID;
         public int xoff, yoff;
         
+        //Keeps track of ALL cubes
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
+        //Keeps track of all player cubes
+        public Dictionary<int, Cube> players = new Dictionary<int, Cube>();
+        //Keeps track of all the food cubes 
+        public Dictionary<int, Cube> food_cubes = new Dictionary<int, Cube>();
+        //Keeps track of all the virus cubes
+        public Dictionary<int, Cube> virus_cubes = new Dictionary<int, Cube>();
+
 
         private string gameplay_file = "world_parameters.xml";
         

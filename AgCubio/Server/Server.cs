@@ -8,6 +8,7 @@ using Network_Controller;
 using System.Drawing;
 using System.Text.RegularExpressions;
 
+
 namespace Server
 {
     class AgServer
@@ -124,7 +125,9 @@ namespace Server
                         while (food_count < 100)
                         {
                             Cube food = new Cube((double)random.Next(0, world.WIDTH), (double)random.Next(0, world.WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                            AssignUID(food);
                             world.ProcessCube(food);
+                            food_count++;
 
                         }
                         return true;
@@ -136,6 +139,7 @@ namespace Server
                     lock (this)
                     {
                         Cube food = new Cube((double)random.Next(0, world.WIDTH), (double)random.Next(0, world.WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                        AssignUID(food);
                         world.ProcessCube(food);
                         return true;
                     }
@@ -154,10 +158,10 @@ namespace Server
         private bool AddVirusCube(int x, int y)
         {
             bool result = false;
+            Cube virus = new Cube(x, y, World.VIRUS_COLOR, 0, 0, true, "", World.VIRUS_MASS);
+
+            AssignUID(virus);
             
-            int uid = GetNextUID();
-            int team_id = GetNextUID();
-            Cube virus = new Cube(x, y, World.VIRUS_COLOR, uid, team_id, true, "", World.VIRUS_MASS);
             world.ProcessCube(virus);
 
             return result;
@@ -165,11 +169,58 @@ namespace Server
         
         /// <summary>
         /// This helper method gets us the next user ID we need (make sure it doesn't currently exist!)
+        /// This must be the last method called for cube construction so it isn't added to our dictionaries twice
+        /// This also uses specific dicts for cube types, if this is unneeded, then this method can be changed.
         /// </summary>
         /// <returns></returns>
-        private int GetNextUID()
+        private Cube AssignUID(Cube c)
         {
-            return 1;
+            Random random = new Random();
+            int cube_id = random.Next(0, 65000);
+            //If the cube is a food, generate a unique uid for the cube and add it to food dict.
+            if(c.IsFood()){
+                if (world.food_cubes.ContainsKey(cube_id)){
+                    
+                    int new_cube_id = random.Next(1,65000);
+                    
+                    while(new_cube_id == cube_id){
+                        new_cube_id = random.Next(1,65000);
+                    }
+                    cube_id = new_cube_id;
+                }
+                c.UID = cube_id;
+                world.food_cubes.Add(cube_id, c);
+            }
+            //If the cube is a player, generate a unique uid for the cube and add it to the player dict
+            if(c.Name != ""){
+                if (world.players.ContainsKey(cube_id)){
+                    
+                    int new_cube_id = random.Next(0,65000);
+                    
+                    while(new_cube_id == cube_id){
+                        new_cube_id = random.Next(0,65000);
+                    }
+                    cube_id = new_cube_id;
+                }
+                c.UID = cube_id;
+                world.players.Add(cube_id, c);
+            }
+            //If the cube is a player, generate a unique uid for the cube and add it to the virus dict
+            if(c.GetColor() == World.VIRUS_COLOR){
+                if (world.virus_cubes.ContainsKey(cube_id)){
+                    
+                    int new_cube_id = random.Next(0,65000);
+                    
+                    while(new_cube_id == cube_id){
+                        new_cube_id = random.Next(0,65000);
+                    }
+                    cube_id = new_cube_id;
+                }
+                c.UID = cube_id;
+                world.virus_cubes.Add(cube_id, c);
+            }
+            //Returns the cube with the updated uid
+            return c;
         }
 
 
