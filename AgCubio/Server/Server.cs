@@ -43,7 +43,7 @@ namespace Server
             world.AddPlayerCube(playerName);
 
             //Send the player name
-            Network.Send(state.socket, "{\"loc_x\":500.0,\"loc_y\":600.0,\"argb_color\":-65536,\"uid\":5571,\"team_id\":5571,\"food\":false,\"Name\":\"" + state.sb.ToString() + "\",\"Mass\":900.0}");
+            Network.Send(state.socket, "{\"loc_x\":500.0,\"loc_y\":600.0,\"argb_color\":-65536,\"uid\":5571,\"team_id\":5571,\"food\":false,\"Name\":\"" + playerName + "\",\"Mass\":900.0}");
             
             Network.i_want_more_data(ar);
         }
@@ -116,7 +116,7 @@ namespace Server
             //Check if food should be added
             if (world.cubes.Count < world.MAX_FOOD)
             {
-                //Check if alot of food should be added, like the start of the game
+                //Check if a lot of food should be added, like the start of the game
                 if (world.cubes.Count < 10)
                 {
                     lock (this)
@@ -124,18 +124,21 @@ namespace Server
                         while (food_count < 100)
                         {
                             Cube food = new Cube((double)random.Next(0, world.WIDTH), (double)random.Next(0, world.WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
-                            world.cubes.Add(food.team_id, food);
+                            world.ProcessCube(food);
 
                         }
                         return true;
                     }
                 }
                 //If the world needs only a little more food, add here
-                lock (this)
+                else
                 {
-                    Cube food = new Cube((double)random.Next(0, world.WIDTH), (double)random.Next(0, world.WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
-                    world.cubes.Add(food.team_id, food);
-                    return true;
+                    lock (this)
+                    {
+                        Cube food = new Cube((double)random.Next(0, world.WIDTH), (double)random.Next(0, world.WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                        world.ProcessCube(food);
+                        return true;
+                    }
                 }
             }
             return false;

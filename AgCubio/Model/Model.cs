@@ -42,6 +42,38 @@ namespace Model
             this.Width = (int)(Math.Sqrt(this.Mass));
         }
 
+        public int Left
+        {
+            get
+            {
+                return X;
+            }
+        }
+
+        public int Right
+        {
+            get
+            {
+                return X + Width;
+            }
+        }
+
+        public int Top
+        {
+            get
+            {
+                return Y;
+            }
+        }
+
+        public int Bottom
+        {
+            get
+            {
+                return Y + Width;
+            }
+        }
+
         /// <summary>
         /// Helper method for creating a cube, based on its JSON representation.
         /// If there's an error with the JSON, write it to the console and return null.
@@ -269,6 +301,49 @@ namespace Model
                 }
             }
 
+        }
+
+        /// <summary>
+        /// This helper method helps us to know what to do with the cubes that are within eating distance
+        /// of the player cube, based on the absorb constant. 
+        /// 
+        /// Here are a few of the scenarios that can happen here:
+        /// 1)  If the cube is a virus, the player cube dies and the game is over.
+        /// 2)  If the cube is food, the player cube eats it, thereby increasing the player cube's mass and destroying the food cube.
+        /// 3)  If the cube is another player, the bigger player cube eats the smaller player cube, and the smaller player cube dies 
+        /// </summary>
+        public void ProcessCubesInPlayerSpace()
+        {
+
+        }
+
+        /// <summary>
+        /// This is a helper method that helps us determine if there was a collision with
+        /// a player cube.
+        /// The way this works is we determine the area of the cubes that are overlapping.
+        /// If the area that's overlapping compared to the area of the non-player cube
+        /// is greater than the absorb delta, then there's a collision.
+        /// Otherwise, there's no collision.
+        /// </summary>
+        /// <param name="cube"></param>
+        /// <param name="player_cube"></param>
+        /// <returns></returns>
+        private bool CollisionDetected(Cube player_cube, Cube cube)
+        {
+
+            return false;
+        }
+
+        /// <summary>
+        /// This helper method helps us to determine how much area
+        /// is overlapped between two cubes.
+        /// </summary>
+        /// <param name="cube1"></param>
+        /// <param name="cube2"></param>
+        /// <returns></returns>
+        private double OverlappingArea(Cube cube1, Cube cube2)
+        {
+            
         }
     }
 }
