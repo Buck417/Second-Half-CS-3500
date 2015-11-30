@@ -8,6 +8,57 @@ namespace ModelTests
     public class UnitTest1
     {
         /*************************************** CUBE TESTS ******************************************/
+        [TestMethod]
+        public void TestCubeLeft()
+        {
+            Cube c = new Cube(200, 2, 2, 2, 2, false, "", 2);
+            Assert.AreEqual(200, c.Left);
+        }
+
+        [TestMethod]
+        public void TestCubeRight()
+        {
+            Cube c = new Cube(200, 2, 2, 2, 2, false, "", 9);
+            Assert.AreEqual(c.Right, 203);
+        }
+
+        [TestMethod]
+        public void TestCubeTop()
+        {
+            Cube c = new Cube(0, 100, 2, 2, 2, false, "", 9);
+            Assert.AreEqual(100, c.Top);
+        }
+
+        [TestMethod]
+        public void TestCubeBottom()
+        {
+            Cube c = new Cube(0, 100, 2, 2, 2, false, "", 9);
+            Assert.AreEqual(103, c.Bottom);
+        }
+
+        [TestMethod]
+        public void TestCubeCopy()
+        {
+            Cube a = new Cube(0, 100, 2, 2, 2, false, "Hey", 9);
+            Cube b = Cube.Copy(a);
+            Assert.AreEqual(a.Top, b.Top);
+            Assert.AreEqual(a.Bottom, b.Bottom);
+            Assert.AreEqual(a.Left, b.Left);
+            Assert.AreEqual(a.Right, b.Right);
+            Assert.AreEqual(a.Color, b.Color);
+            Assert.AreEqual(a.Food, b.Food);
+            Assert.AreEqual(a.GetCenterX(), b.GetCenterX());
+            Assert.AreEqual(a.GetCenterY(), b.GetCenterY());
+            Assert.AreEqual(a.IsVirus(), b.IsVirus());
+            Assert.AreEqual(a.Mass, b.Mass);
+            Assert.AreEqual(a.Width, b.Width);
+            Assert.AreEqual(a.Name, b.Name);
+            Assert.AreEqual(a.team_id, b.team_id);
+            Assert.AreEqual(a.UID, b.UID);
+            Assert.AreEqual(a.X, b.X);
+            Assert.AreEqual(a.Y, b.Y);
+        }
+            
         /// <summary>
         /// This makes sure the cube width is calculated correctly
         /// </summary>
@@ -84,6 +135,12 @@ namespace ModelTests
 
 
         /*************************************** WORLD TESTS *****************************************/
+        [TestMethod]
+        public void TestProcessCubesInPlayerSpace()
+        {
+            Assert.Fail();
+        }
+            
         /// <summary>
         /// This tests to make sure the gameplay file can be read and used.
         /// </summary>
