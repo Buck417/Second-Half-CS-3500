@@ -84,6 +84,28 @@ namespace ModelTests
 
 
         /*************************************** WORLD TESTS *****************************************/
+        /// <summary>
+        /// This tests to make sure the gameplay file can be read and used.
+        /// </summary>
+        [TestMethod]
+        public void TestReadGameplayFile()
+        {
+            World w = new World("world_parameters.xml");
+            Assert.AreEqual(999, w.HEIGHT);
+            Assert.AreEqual(999, w.WIDTH);
+            Assert.AreEqual(19, w.HEARTBEATS_PER_SECOND);
+            Assert.AreEqual(2, w.LOW_SPEED);
+            Assert.AreEqual(3, w.MAXIMUM_SPLITS);
+            Assert.AreEqual(49, w.MAXIMUM_SPLIT_DISTANCE);
+            Assert.AreEqual(499, w.MINIMUM_SPLIT_MASS);
+            Assert.AreEqual(6, w.TOP_SPEED);
+            Assert.AreEqual(999, w.PLAYER_START_MASS);
+            Assert.AreEqual(999, w.MAX_FOOD);
+            Assert.AreEqual(2, w.ATTRITION_RATE);
+            Assert.AreEqual(4, w.FOOD_VALUE);
+            Assert.AreEqual(0.33, w.ABSORB_DISTANCE_DELTA);
+        }
+
         [TestMethod]
         public void TestProcessCube()
         {

@@ -97,8 +97,8 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        int WIDTH, HEIGHT, HEARTBEATS_PER_SECOND, TOP_SPEED, LOW_SPEED, ATTRITION_RATE, FOOD_VALUE, PLAYER_START_MASS, MAX_FOOD, MINIMUM_SPLIT_MASS, MAXIMUM_SPLIT_DISTANCE, MAXIMUM_SPLITS;
-        double ABSORB_DISTANCE_DELTA;
+        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, ATTRITION_RATE = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 500, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
+        public readonly double ABSORB_DISTANCE_DELTA = 0.25;
 
         //TODO: Change this to green
         public readonly static int VIRUS_COLOR = 0;
@@ -106,20 +106,43 @@ namespace Model
 
         public double Scale = 2.0;
         public string Player_Name;
+        public int Player_Start_Mass = 1000;
         public int Player_UID;
-        public double Player_Start_Mass;
         public int xoff, yoff;
-
-        //Width of the world
-        //TODO: Needs to be changed when we read from xml
-        public int width;
-        //Max number of food allowed in the world
-        public readonly static int max_food = 100;
-        //Specific number for starting player mass
-        public readonly static int starting_player_mass = 1000;
-
+        
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
 
+        private string gameplay_file = "world_parameters.xml";
+        
+        public World()
+        {
+
+        }
+
+        /// <summary>
+        /// Reads the gameplay parameters file when creating a new world.
+        /// In order for this to work, the gameplay file needs to be called
+        /// "world_parameters.xml" and live in the same place in the filesystem 
+        /// as the server.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public World(string filename)
+        {
+            if (gameplay_file.Equals(filename))
+            {
+                if (System.IO.File.Exists(filename))
+                {
+                    //Try reading the XML file, and inputting those parameters into our gameplay environment
+                    using (System.Xml.XmlReader reader = System.Xml.XmlReader.Create(filename))
+                    {
+                        reader.ReadStartElement();
+                        this.WIDTH = 1000;
+                    }
+                }
+            }
+        }
+        
         /// <summary>
         /// This is specific to adding the player cube so that we can save 
         /// some of the data about the cube (player mass, name, uid, etc.)
@@ -129,7 +152,7 @@ namespace Model
         {
             Cube cube = Cube.Create(json);
             ProcessCube(cube);
-            Player_Start_Mass = cube.Mass;
+            Player_Start_Mass = PLAYER_START_MASS;
             Player_Name = cube.Name;
             Player_UID = cube.UID;
         }
@@ -173,7 +196,7 @@ namespace Model
         /// <returns></returns>
         public int GetWidth()
         {
-            return width;
+            return WIDTH;
         }
 
         /// <summary>

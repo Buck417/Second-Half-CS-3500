@@ -114,7 +114,7 @@ namespace Server
             int food_count = 0;
 
             //Check if food should be added
-            if (world.cubes.Count < World.max_food)
+            if (world.cubes.Count < world.MAX_FOOD)
             {
                 //Check if alot of food should be added, like the start of the game
                 if (world.cubes.Count < 10)
@@ -123,7 +123,7 @@ namespace Server
                     {
                         while (food_count < 100)
                         {
-                            Cube food = new Cube((double)random.Next(0, world.width), (double)random.Next(0, world.width), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                            Cube food = new Cube((double)random.Next(0, world.WIDTH), (double)random.Next(0, world.WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
                             world.cubes.Add(food.team_id, food);
 
                         }
@@ -133,7 +133,7 @@ namespace Server
                 //If the world needs only a little more food, add here
                 lock (this)
                 {
-                    Cube food = new Cube((double)random.Next(0, world.width), (double)random.Next(0, world.width), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                    Cube food = new Cube((double)random.Next(0, world.WIDTH), (double)random.Next(0, world.WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
                     world.cubes.Add(food.team_id, food);
                     return true;
                 }
