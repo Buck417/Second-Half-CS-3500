@@ -271,8 +271,11 @@ namespace Model
         {
             Random random = new Random();
             Cube cube = new Cube(RandomPosition(), RandomPosition(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, false, name, PLAYER_START_MASS);
-            cubes.Add(cube.UID, cube);
-            players.Add(cube.UID, cube);
+            AssignUID(cube);
+            if (cubes.ContainsKey(cube.UID)) cubes[cube.UID] = cube;
+            else cubes.Add(cube.UID, cube);
+            if (players.ContainsKey(cube.UID)) players[cube.UID] = cube;
+            else players.Add(cube.UID, cube);
             return cube;
         }
 
@@ -332,7 +335,7 @@ namespace Model
                     {
                         while (food_count < MAX_FOOD)
                         {
-                            Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                            Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
                             food.UID = food_count;
                             //AssignUID(food);
                             ProcessCube(food);
@@ -347,7 +350,7 @@ namespace Model
                 {
                     lock (this)
                     {
-                        Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                        Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
                         AssignUID(food);
                         ProcessCube(food);
                         return true;

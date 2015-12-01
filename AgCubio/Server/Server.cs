@@ -55,7 +55,7 @@ namespace Server
                 Network.Send(state.socket, JsonConvert.SerializeObject(player_cube) + "\n");
                 StringBuilder string_builder = new StringBuilder();
                 
-                foreach (Cube cube in world.food_cubes.Values)
+                foreach (Cube cube in world.cubes.Values)
                 {
                     string_builder.Append(JsonConvert.SerializeObject(cube) + "\n");
                 }
@@ -71,6 +71,7 @@ namespace Server
             string str = state.sb.ToString();
 
             ProcessData(str);
+            Network.i_want_more_data(ar);
         }
 
         static void ProcessData(string data)

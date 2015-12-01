@@ -231,14 +231,12 @@ namespace Network_Controller
 
             Socket listener = state.socket;
             Socket handler = listener.EndAccept(ar);
-
-            Preserved_State state2 = new Preserved_State();
-            state2.socket = handler;
             
             state.socket = handler;
             state.callback(ar);
 
-            //Server_Awaiting_Client_Loop(state.callback);
+            //Listen for more connections
+            state.socket = listener;
             listener.BeginAccept(Accept_A_New_Client, state);
         }
 
