@@ -124,7 +124,7 @@ namespace View
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
 
-            state.callback = new AsyncCallback(ReceivePlayer);
+            state.callback = ReceivePlayer(ar);
 
             if (state.socket.Connected)
             {

@@ -161,7 +161,7 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 50, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
+        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 200, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
         public readonly double ABSORB_DISTANCE_DELTA = 0.25, ATTRITION_RATE = 1.25;
 
         //TODO: Change this to green
