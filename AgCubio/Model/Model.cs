@@ -161,7 +161,7 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 500, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
+        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 50, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
         public readonly double ABSORB_DISTANCE_DELTA = 0.25, ATTRITION_RATE = 1.25;
 
         //TODO: Change this to green
@@ -315,7 +315,7 @@ namespace Model
         /// as long as it's not green - those are for viruses only.
         /// </summary>
         /// <returns>If there are any errors, return false. Otherwise, return true.</returns>
-        private bool AddFoodCube()
+        public bool AddFoodCube()
         {
             //TODO: Determine when to begin adding food cubes for a new world
             //TODO: Get better values in for the Cube constructor
@@ -326,14 +326,15 @@ namespace Model
             if (cubes.Count < MAX_FOOD)
             {
                 //Check if a lot of food should be added, like the start of the game
-                if (cubes.Count < 10)
+                if (food_cubes.Count == 0)
                 {
                     lock (this)
                     {
-                        while (food_count < 100)
+                        while (food_count < MAX_FOOD)
                         {
                             Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
-                            AssignUID(food);
+                            food.UID = food_count;
+                            //AssignUID(food);
                             ProcessCube(food);
                             food_count++;
 

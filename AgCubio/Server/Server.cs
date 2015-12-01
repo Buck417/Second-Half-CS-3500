@@ -44,6 +44,9 @@ namespace Server
             //Generates the data from the json and adds the player cube to the world
             string player_name = Regex.Replace(state.sb.ToString().Trim(), @"\n|\t|\r", "");
             Cube player_cube = world.AddPlayerCube(player_name);
+            while (world.AddFoodCube())
+            {
+            }
 
             //Sends the player cube and starting food cubes to the client
             lock (world)
@@ -56,6 +59,7 @@ namespace Server
                 {
                     string_builder.Append(JsonConvert.SerializeObject(cube) + "\n");
                 }
+                Network.Send(state.socket, string_builder.ToString());
             }
             Network.i_want_more_data(ar);
         }
