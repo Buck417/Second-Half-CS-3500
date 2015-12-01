@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Drawing;
 
 namespace Model
 {
@@ -262,17 +263,17 @@ namespace Model
         }
         
         /// <summary>
-        /// This is specific to adding the player cube so that we can save 
-        /// some of the data about the cube (player mass, name, uid, etc.)
+        /// Creates a player cube from the name and adds that cube to the world dictionaries.
         /// </summary>
         /// <param name="json"></param>
-        public void AddPlayerCube(string json)
+        /// <returns>The player cube</returns>
+        public Cube AddPlayerCube(string name)
         {
-            Cube cube = Cube.Create(json);
-            ProcessCube(cube);
-            Player_Start_Mass = PLAYER_START_MASS;
-            Player_Name = cube.Name;
-            Player_UID = cube.UID;
+            Random random = new Random();
+            Cube cube = new Cube(RandomPosition(), RandomPosition(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, false, name, PLAYER_START_MASS);
+            cubes.Add(cube.UID, cube);
+            players.Add(cube.UID, cube);
+            return cube;
         }
 
         /// <summary>
@@ -307,6 +308,147 @@ namespace Model
             if (cubes.ContainsKey(UID))
                 return cubes[UID];
             else return null;
+        }
+
+        /// <summary>
+        /// Adds a food cube to the world. The cube color will be random,
+        /// as long as it's not green - those are for viruses only.
+        /// </summary>
+        /// <returns>If there are any errors, return false. Otherwise, return true.</returns>
+        private bool AddFoodCube()
+        {
+            //TODO: Determine when to begin adding food cubes for a new world
+            //TODO: Get better values in for the Cube constructor
+            Random random = new Random();
+            int food_count = 0;
+
+            //Check if food should be added
+            if (cubes.Count < MAX_FOOD)
+            {
+                //Check if a lot of food should be added, like the start of the game
+                if (cubes.Count < 10)
+                {
+                    lock (this)
+                    {
+                        while (food_count < 100)
+                        {
+                            Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                            AssignUID(food);
+                            ProcessCube(food);
+                            food_count++;
+
+                        }
+                        return true;
+                    }
+                }
+                //If the world needs only a little more food, add here
+                else
+                {
+                    lock (this)
+                    {
+                        Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", 1.0);
+                        AssignUID(food);
+                        ProcessCube(food);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// This helper method gets us the next user ID we need (make sure it doesn't currently exist!)
+        /// This must be the last method called for cube construction so it isn't added to our dictionaries twice
+        /// This also uses specific dicts for cube types, if this is unneeded, then this method can be changed.
+        /// </summary>
+        /// <returns></returns>
+        private Cube AssignUID(Cube c)
+        {
+            Random random = new Random();
+            int cube_id = random.Next(0, 65000);
+            //If the cube is a food, generate a unique uid for the cube and add it to food dict.
+            if (c.IsFood())
+            {
+                if (food_cubes.ContainsKey(cube_id))
+                {
+
+                    int new_cube_id = random.Next(1, 65000);
+
+                    while (new_cube_id == cube_id)
+                    {
+                        new_cube_id = random.Next(1, 65000);
+                    }
+                    cube_id = new_cube_id;
+                }
+                c.UID = cube_id;
+                food_cubes.Add(cube_id, c);
+            }
+            //If the cube is a player, generate a unique uid for the cube and add it to the player dict
+            if (c.Name != "")
+            {
+                if (players.ContainsKey(cube_id))
+                {
+
+                    int new_cube_id = random.Next(0, 65000);
+
+                    while (new_cube_id == cube_id)
+                    {
+                        new_cube_id = random.Next(0, 65000);
+                    }
+                    cube_id = new_cube_id;
+                }
+                c.UID = cube_id;
+                players.Add(cube_id, c);
+            }
+            //If the cube is a player, generate a unique uid for the cube and add it to the virus dict
+            if (c.GetColor() == World.VIRUS_COLOR)
+            {
+                if (virus_cubes.ContainsKey(cube_id))
+                {
+
+                    int new_cube_id = random.Next(0, 65000);
+
+                    while (new_cube_id == cube_id)
+                    {
+                        new_cube_id = random.Next(0, 65000);
+                    }
+                    cube_id = new_cube_id;
+                }
+                c.UID = cube_id;
+                virus_cubes.Add(cube_id, c);
+            }
+            //Returns the cube with the updated uid
+            return c;
+        }
+
+        /// <summary>
+        /// Generates a random position for cubes
+        /// </summary>
+        /// <returns></returns>
+        public int RandomPosition()
+        {
+            Random random = new Random();
+            return random.Next(WIDTH);
+        }
+
+
+        /// <summary>
+        /// Adds a virus cube to the world. The cube color will be green, and if
+        /// any player cube touches it, the player cube will explode and die.
+        /// </summary>
+        /// <param name="x">The x coordinate of the new virus</param>
+        /// <param name="y">The y coordinate of the new virus</param>
+        /// <returns></returns>
+        public bool AddVirusCube(int x, int y)
+        {
+            bool result = false;
+            Cube virus = new Cube(RandomPosition(), RandomPosition(), VIRUS_COLOR, 0, 0, true, "", VIRUS_MASS);
+
+            AssignUID(virus);
+
+            ProcessCube(virus);
+
+            return result;
         }
 
         /// <summary>
@@ -449,5 +591,7 @@ namespace Model
                 
             }
         }
+
+        
     }
 }
