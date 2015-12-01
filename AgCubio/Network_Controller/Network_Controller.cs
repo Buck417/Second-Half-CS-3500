@@ -165,8 +165,13 @@ namespace Network_Controller
             //Convert the string into a byte array
             byte[] byte_data = Encoding.UTF8.GetBytes(data);
             byte[] buffer = new byte[BUFFER_SIZE];
-
-            socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), socket);
+            try {
+                socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), socket);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
 
         /// <summary>

@@ -272,6 +272,7 @@ namespace Model
             Random random = new Random();
             Cube cube = new Cube(RandomPosition(), RandomPosition(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, false, name, PLAYER_START_MASS);
             AssignUID(cube);
+            Player_UID = cube.UID;
             if (cubes.ContainsKey(cube.UID)) cubes[cube.UID] = cube;
             else cubes.Add(cube.UID, cube);
             if (players.ContainsKey(cube.UID)) players[cube.UID] = cube;
