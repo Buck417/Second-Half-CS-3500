@@ -517,7 +517,7 @@ namespace Model
                     //If the cube is food
                     if(cube.Food == true)
                     {
-                        player_cube.Mass += cube.Mass;
+                        player_cube.Mass += cube.Mass * 10;
                         cube.Mass = 0;
                     }
 
