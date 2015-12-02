@@ -343,8 +343,6 @@ namespace Model
         /// Adds a virus cube to the world. The cube color will be green, and if
         /// any player cube touches it, the player cube will explode and die.
         /// </summary>
-        /// <param name="x">The x coordinate of the new virus</param>
-        /// <param name="y">The y coordinate of the new virus</param>
         /// <returns></returns>
         public void AddVirusCube()
         {
@@ -410,7 +408,7 @@ namespace Model
                 return player;
             }
             double pythagorean = (double)Math.Sqrt((distance_x * distance_x) + (distance_y * distance_y));
-            double player_speed = TOP_SPEED - (player.Mass / 1000);
+            double player_speed = TOP_SPEED - (player.Mass / PLAYER_START_MASS);
 
             if (player_speed < LOW_SPEED)
                 player_speed = LOW_SPEED;

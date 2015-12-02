@@ -24,10 +24,8 @@ namespace Server
             world = new World();
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections));
         }
-
-        //Start
-
-
+        
+        /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
         //Handle new client connections
         private static void Handle_New_Client_Connections(Preserved_State state)
         {
@@ -36,16 +34,6 @@ namespace Server
             Network.i_want_more_data(state);
         }
 
-
-
-
-
-
-
-
-
-
-        /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
         //Receive the player name
         private static void Receive_Player_Name(Preserved_State state)
         {
