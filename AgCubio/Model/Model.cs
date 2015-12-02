@@ -29,12 +29,10 @@ namespace Model
         public int Mass;
         public int Width;
         
-        
         [JsonConstructor]
-        public Cube(double loc_x, double loc_y, int argb_color, int team_id, bool food, string name, double mass)
+        public Cube(double loc_x, double loc_y, int argb_color, int uID, int team_id, bool food, string name, double mass)
         {
-            idGenerator++;
-            this.UID = idGenerator;
+            this.UID = uID;
             this.team_id = team_id;
             this.X = (int)loc_x;
             this.Y = (int)loc_y;
@@ -102,7 +100,7 @@ namespace Model
         /// <returns></returns>
         public static Cube Copy(Cube cube)
         {
-            return new Cube(cube.X, cube.Y, cube.Color, cube.team_id, cube.Food, cube.Name, cube.Mass);
+            return new Cube(cube.X, cube.Y, cube.Color, cube.UID, cube.team_id, cube.Food, cube.Name, cube.Mass);
         }
 
         /// <summary>
@@ -163,7 +161,7 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 5, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
+        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 200, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
         public readonly double ABSORB_DISTANCE_DELTA = 0.25, ATTRITION_RATE = 1.25;
 
         //TODO: Change this to green
@@ -176,7 +174,6 @@ namespace Model
         public int Player_UID;
         public int xoff, yoff;
         private int split_count = 0;
-        public int idGenerator = 0;
         
         //Keeps track of ALL cubes
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
@@ -273,8 +270,9 @@ namespace Model
         public Cube AddPlayerCube(string name)
         {
             Random random = new Random();
-            Cube cube = new Cube(RandomPosition(), RandomPosition(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, false, name, PLAYER_START_MASS);
-            //AssignUID(cube);
+            Cube cube = new Cube(RandomPosition(), RandomPosition(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, false, name, PLAYER_START_MASS);
+            AssignUID(cube);
+            Player_UID = cube.UID;
             if (cubes.ContainsKey(cube.UID)) cubes[cube.UID] = cube;
             else cubes.Add(cube.UID, cube);
             if (players.ContainsKey(cube.UID)) players[cube.UID] = cube;
@@ -338,12 +336,11 @@ namespace Model
                     {
                         while (food_count < MAX_FOOD)
                         {
-                            Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, true, "", FOOD_VALUE);
-                            //food.UID = food_count;
+                            Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
+                            food.UID = food_count;
                             //AssignUID(food);
                             ProcessCube(food);
                             food_count++;
-                            food_cubes.Add(food.UID, food);
 
                         }
                         return true;
@@ -354,10 +351,9 @@ namespace Model
                 {
                     lock (this)
                     {
-                        Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, true, "", FOOD_VALUE);
-                        //AssignUID(food);
+                        Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
+                        AssignUID(food);
                         ProcessCube(food);
-                        food_cubes.Add(food.UID, food);
                         return true;
                     }
                 }
@@ -374,65 +370,60 @@ namespace Model
         private Cube AssignUID(Cube c)
         {
             Random random = new Random();
-            object synclock = new object();
-            lock (synclock)
+            int cube_id = random.Next(0, 65000);
+            //If the cube is a food, generate a unique uid for the cube and add it to food dict.
+            if (c.IsFood())
             {
-
-                int cube_id = random.Next(0, 65000);
-                //If the cube is a food, generate a unique uid for the cube and add it to food dict.
-                if (c.IsFood())
+                if (food_cubes.ContainsKey(cube_id))
                 {
-                    if (food_cubes.ContainsKey(cube_id))
+
+                    int new_cube_id = random.Next(1, 65000);
+
+                    while (new_cube_id == cube_id)
                     {
-
-                        int new_cube_id = random.Next(1, 65000);
-
-                        while (new_cube_id == cube_id)
-                        {
-                            new_cube_id = random.Next(1, 65000);
-                        }
-                        cube_id = new_cube_id;
+                        new_cube_id = random.Next(1, 65000);
                     }
-                    c.UID = cube_id;
-                    food_cubes.Add(cube_id, c);
+                    cube_id = new_cube_id;
                 }
-                //If the cube is a player, generate a unique uid for the cube and add it to the player dict
-                if (c.Name != "")
-                {
-                    if (players.ContainsKey(cube_id))
-                    {
-
-                        int new_cube_id = random.Next(0, 65000);
-
-                        while (new_cube_id == cube_id)
-                        {
-                            new_cube_id = random.Next(0, 65000);
-                        }
-                        cube_id = new_cube_id;
-                    }
-                    c.UID = cube_id;
-                    players.Add(cube_id, c);
-                }
-                //If the cube is a player, generate a unique uid for the cube and add it to the virus dict
-                if (c.GetColor() == World.VIRUS_COLOR)
-                {
-                    if (virus_cubes.ContainsKey(cube_id))
-                    {
-
-                        int new_cube_id = random.Next(0, 65000);
-
-                        while (new_cube_id == cube_id)
-                        {
-                            new_cube_id = random.Next(0, 65000);
-                        }
-                        cube_id = new_cube_id;
-                    }
-                    c.UID = cube_id;
-                    virus_cubes.Add(cube_id, c);
-                }
-                //Returns the cube with the updated uid
-                return c;
+                c.UID = cube_id;
+                food_cubes.Add(cube_id, c);
             }
+            //If the cube is a player, generate a unique uid for the cube and add it to the player dict
+            if (c.Name != "")
+            {
+                if (players.ContainsKey(cube_id))
+                {
+
+                    int new_cube_id = random.Next(0, 65000);
+
+                    while (new_cube_id == cube_id)
+                    {
+                        new_cube_id = random.Next(0, 65000);
+                    }
+                    cube_id = new_cube_id;
+                }
+                c.UID = cube_id;
+                players.Add(cube_id, c);
+            }
+            //If the cube is a player, generate a unique uid for the cube and add it to the virus dict
+            if (c.GetColor() == World.VIRUS_COLOR)
+            {
+                if (virus_cubes.ContainsKey(cube_id))
+                {
+
+                    int new_cube_id = random.Next(0, 65000);
+
+                    while (new_cube_id == cube_id)
+                    {
+                        new_cube_id = random.Next(0, 65000);
+                    }
+                    cube_id = new_cube_id;
+                }
+                c.UID = cube_id;
+                virus_cubes.Add(cube_id, c);
+            }
+            //Returns the cube with the updated uid
+            return c;
         }
 
         /// <summary>
@@ -456,7 +447,7 @@ namespace Model
         public bool AddVirusCube(int x, int y)
         {
             bool result = false;
-            Cube virus = new Cube(RandomPosition(), RandomPosition(), VIRUS_COLOR, 0, true, "", VIRUS_MASS);
+            Cube virus = new Cube(RandomPosition(), RandomPosition(), VIRUS_COLOR, 0, 0, true, "", VIRUS_MASS);
 
             AssignUID(virus);
 
@@ -526,7 +517,7 @@ namespace Model
                     //If the cube is food
                     if(cube.Food == true)
                     {
-                        player_cube.Mass += cube.Mass;
+                        player_cube.Mass += cube.Mass * 10;
                         cube.Mass = 0;
                     }
 
