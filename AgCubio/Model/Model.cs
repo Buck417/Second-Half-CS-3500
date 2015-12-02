@@ -494,7 +494,8 @@ namespace Model
             if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
             {
                 Cube player = GetPlayerCube();
-                Player_Speed_Calculator(x, y, player);
+                PlayerSpeedCalculator(x, y, player);
+                WorldsEdgeHandler(player);
 
                 ProcessCube(player);
             }
@@ -509,7 +510,7 @@ namespace Model
         /// <param name="y"></param>
         /// <param name="player"></param>
         /// <returns></returns>
-        private Cube Player_Speed_Calculator(double x, double y, Cube player)
+        private Cube PlayerSpeedCalculator(double x, double y, Cube player)
         {
             double distance_x = x - player.X;
             double distance_y = y - player.Y;
@@ -526,6 +527,31 @@ namespace Model
             player.X = player.X + (distance_x / pythagorean) * player_speed;
             player.Y = player.Y + (distance_y / pythagorean) * player_speed;
             return player;
+        }
+
+        /// <summary>
+        /// Handles drawing cubes at the edge of the world
+        /// </summary>
+        /// <param name="player"></param>
+        private void WorldsEdgeHandler(Cube player)
+        {
+            if (player.X - player.Width / 2 < 0)
+            {
+                player.X = player.Width / 2;
+            }
+
+            if (player.Y - player.Width / 2 < 0)
+            {
+                player.Y = player.Width / 2;
+            }
+            if (player.X + player.Width / 2 > WIDTH)
+            {
+                player.X = WIDTH - player.Width/2;
+            }
+            if (player.Y + player.Width / 2 > HEIGHT)
+            {
+                player.X = HEIGHT - player.Width / 2;
+            }
         }
 
         static void ProcessSplit(string splitRequest)
