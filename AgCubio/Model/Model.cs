@@ -161,7 +161,12 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 200, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
+        public readonly int WIDTH = 1000, HEIGHT = 1000, 
+            HEARTBEATS_PER_SECOND = 20, 
+            TOP_SPEED = 5, LOW_SPEED = 1, 
+            FOOD_VALUE = 500, PLAYER_START_MASS = 1000, 
+            MAX_FOOD = 2, MINIMUM_SPLIT_MASS = 200, 
+            MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
         public readonly double ABSORB_DISTANCE_DELTA = 0.25, ATTRITION_RATE = 1.25;
 
         //TODO: Change this to green
@@ -173,7 +178,7 @@ namespace Model
         public int Player_Start_Mass = 1000;
         public int Player_UID;
         public int xoff, yoff;
-        private int split_count = 0;
+        public int split_count = 0;
         
         //Keeps track of ALL cubes
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
@@ -367,7 +372,7 @@ namespace Model
         /// This also uses specific dicts for cube types, if this is unneeded, then this method can be changed.
         /// </summary>
         /// <returns></returns>
-        private Cube AssignUID(Cube c)
+        public Cube AssignUID(Cube c)
         {
             Random random = new Random();
             int cube_id = random.Next(0, 65000);
@@ -571,7 +576,7 @@ namespace Model
             double right = Math.Min(cube1.Right, cube2.Right);
             double top = Math.Max(cube1.Top, cube2.Top);
             double bottom = Math.Min(cube1.Bottom, cube2.Bottom);
-
+            
             double width = Math.Max(0, right - left);
             double height = Math.Max(0, bottom - top);
             return width * height;
