@@ -22,7 +22,7 @@ namespace Network_Controller
     public static class Network
     {
         private static UTF8Encoding encoding = new UTF8Encoding();
-        public static int BUFFER_SIZE = 4096;
+        public static int BUFFER_SIZE = 1024;
 
         /// <summary>
         /// This guy connects to the server.
@@ -181,6 +181,7 @@ namespace Network_Controller
         private static void SendCallBack(IAsyncResult ar)
         {
             Socket socket = (Socket)ar.AsyncState;
+            
 
             //Find out how many bytes were sent
             int bytes = socket.EndSend(ar);
