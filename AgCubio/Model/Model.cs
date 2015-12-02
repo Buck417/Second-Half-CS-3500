@@ -164,30 +164,43 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 500, MINIMUM_SPLIT_MASS = 100, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
+        public readonly int WIDTH = 1000, 
+            HEIGHT = 1000, 
+            HEARTBEATS_PER_SECOND = 20, 
+            TOP_SPEED = 5, 
+            LOW_SPEED = 1, 
+            FOOD_VALUE = 5, 
+            PLAYER_START_MASS = 1000, 
+            MAX_FOOD = 500, 
+            MINIMUM_SPLIT_MASS = 100, 
+            MAXIMUM_SPLIT_DISTANCE = 50, 
+            MAXIMUM_SPLITS = 6;
+
         public readonly double ABSORB_DISTANCE_DELTA = 0.25, ATTRITION_RATE = 1.25;
 
         //TODO: Change this to green
-        public readonly static int VIRUS_COLOR = 0;
+        public readonly static int VIRUS_COLOR = Color.Green.ToArgb();
         public readonly static int VIRUS_MASS = 500;
+        public readonly int VIRUS_COUNT = 2;
+
+        private readonly int MAX_UID = 1000000;
 
         public double Scale = 2.0;
-        public string Player_Name;
-        public int Player_Start_Mass = 1000;
-        public int Player_UID;
-        public int xoff, yoff;
-        private int split_count = 0;
+        private int split_count = 0;       
+        private Random randomX = new Random(1000);
+        private Random randomY = new Random(2500);
+        private Random UIDGenerator = new Random();
         
         //Keeps track of ALL cubes
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
         //Keeps track of all player cubes
-        public Dictionary<int, Cube> players = new Dictionary<int, Cube>();
+        public HashSet<Cube> player_cubes = new HashSet<Cube>();
+        
         //Keeps track of all the food cubes 
         public Dictionary<int, Cube> food_cubes = new Dictionary<int, Cube>();
         //Keeps track of all the virus cubes
         public Dictionary<int, Cube> virus_cubes = new Dictionary<int, Cube>();
-
-
+        
         private string gameplay_file = "world_parameters.xml";
         
         public World()
@@ -264,47 +277,50 @@ namespace Model
                 }
             }
         }
-        
+
+        /// <summary>
+        /// Generates a random position for cubes
+        /// </summary>
+        /// <returns></returns>
+        private int RandomX()
+        {
+            return randomX.Next(WIDTH);
+        }
+
+        private int RandomY()
+        {
+            return randomY.Next(HEIGHT);
+        }
+
         /// <summary>
         /// Creates a player cube from the name and adds that cube to the world dictionaries.
         /// </summary>
-        /// <param name="json"></param>
+        /// <param name="name"></param>
         /// <returns>The player cube</returns>
         public Cube AddPlayerCube(string name)
         {
+            int UID = GetNextUID();
             Random random = new Random();
-            Cube cube = new Cube(RandomPosition(), RandomPosition(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, false, name, PLAYER_START_MASS);
-            AssignUID(cube);
-            Player_UID = cube.UID;
-            if (cubes.ContainsKey(cube.UID)) cubes[cube.UID] = cube;
-            else cubes.Add(cube.UID, cube);
-            if (players.ContainsKey(cube.UID)) players[cube.UID] = cube;
-            else players.Add(cube.UID, cube);
+            Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), UID, 0, false, name, PLAYER_START_MASS);
+            
+            cubes.Add(cube.UID, cube);
+            player_cubes.Add(cube);
             return cube;
         }
-
-        /// <summary>
-        /// Helper method for just returning the player cube only.
-        /// If the player cube isn't in the list of cubes (if it's been destroyed),
-        /// then null is returned.
-        /// </summary>
-        /// <returns></returns>
-        public Cube GetPlayerCube()
+        
+        public int GetNextUID()
         {
-            if (cubes.ContainsKey(Player_UID))
-                return cubes[Player_UID];
-            else return null;
+            int result = UIDGenerator.Next(MAX_UID);
+            if (cubes.ContainsKey(result))
+            {
+                while (cubes.ContainsKey(result))
+                {
+                    result = UIDGenerator.Next(MAX_UID);
+                }
+            }
+            return result;
         }
-
-        /// <summary>
-        /// Get the mass for the player cube
-        /// </summary>
-        /// <returns></returns>
-        public double GetPlayerMass()
-        {
-            return cubes[Player_UID].Mass;
-        }
-
+        
         /// <summary>
         /// Return a cube based on its UID
         /// </summary>
@@ -316,129 +332,12 @@ namespace Model
                 return cubes[UID];
             else return null;
         }
-
-        /// <summary>
-        /// Adds a food cube to the world. The cube color will be random,
-        /// as long as it's not green - those are for viruses only.
-        /// </summary>
-        /// <returns>If there are any errors, return false. Otherwise, return true.</returns>
-        public bool AddFoodCube()
+        
+        public void AddFoodCube()
         {
-            //TODO: Determine when to begin adding food cubes for a new world
-            //TODO: Get better values in for the Cube constructor
-            Random random = new Random();
-            int food_count = 0;
-
-            //Check if food should be added
-            if (cubes.Count < MAX_FOOD)
-            {
-                //Check if a lot of food should be added, like the start of the game
-                if (food_cubes.Count == 0)
-                {
-                    lock (this)
-                    {
-                        while (food_count < MAX_FOOD)
-                        {
-                            Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
-                            food.UID = food_count;
-                            //AssignUID(food);
-                            ProcessCube(food);
-                            food_count++;
-
-                        }
-                        return true;
-                    }
-                }
-                //If the world needs only a little more food, add here
-                else
-                {
-                    lock (this)
-                    {
-                        Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
-                        AssignUID(food);
-                        ProcessCube(food);
-                        return true;
-                    }
-                }
-            }
-            return false;
+            Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), GetNextUID(), 0, true, "", FOOD_VALUE);
+            ProcessCube(food);
         }
-
-        /// <summary>
-        /// This helper method gets us the next user ID we need (make sure it doesn't currently exist!)
-        /// This must be the last method called for cube construction so it isn't added to our dictionaries twice
-        /// This also uses specific dicts for cube types, if this is unneeded, then this method can be changed.
-        /// </summary>
-        /// <returns></returns>
-        private Cube AssignUID(Cube c)
-        {
-            Random random = new Random();
-            int cube_id = random.Next(0, 65000);
-            //If the cube is a food, generate a unique uid for the cube and add it to food dict.
-            if (c.IsFood())
-            {
-                if (food_cubes.ContainsKey(cube_id))
-                {
-
-                    int new_cube_id = random.Next(1, 65000);
-
-                    while (new_cube_id == cube_id)
-                    {
-                        new_cube_id = random.Next(1, 65000);
-                    }
-                    cube_id = new_cube_id;
-                }
-                c.UID = cube_id;
-                food_cubes.Add(cube_id, c);
-            }
-            //If the cube is a player, generate a unique uid for the cube and add it to the player dict
-            if (c.Name != "")
-            {
-                if (players.ContainsKey(cube_id))
-                {
-
-                    int new_cube_id = random.Next(0, 65000);
-
-                    while (new_cube_id == cube_id)
-                    {
-                        new_cube_id = random.Next(0, 65000);
-                    }
-                    cube_id = new_cube_id;
-                }
-                c.UID = cube_id;
-                players.Add(cube_id, c);
-            }
-            //If the cube is a player, generate a unique uid for the cube and add it to the virus dict
-            if (c.GetColor() == World.VIRUS_COLOR)
-            {
-                if (virus_cubes.ContainsKey(cube_id))
-                {
-
-                    int new_cube_id = random.Next(0, 65000);
-
-                    while (new_cube_id == cube_id)
-                    {
-                        new_cube_id = random.Next(0, 65000);
-                    }
-                    cube_id = new_cube_id;
-                }
-                c.UID = cube_id;
-                virus_cubes.Add(cube_id, c);
-            }
-            //Returns the cube with the updated uid
-            return c;
-        }
-
-        /// <summary>
-        /// Generates a random position for cubes
-        /// </summary>
-        /// <returns></returns>
-        public int RandomPosition()
-        {
-            Random random = new Random();
-            return random.Next(WIDTH);
-        }
-
 
         /// <summary>
         /// Adds a virus cube to the world. The cube color will be green, and if
@@ -447,22 +346,15 @@ namespace Model
         /// <param name="x">The x coordinate of the new virus</param>
         /// <param name="y">The y coordinate of the new virus</param>
         /// <returns></returns>
-        public bool AddVirusCube(int x, int y)
+        public void AddVirusCube()
         {
-            bool result = false;
-            Cube virus = new Cube(RandomPosition(), RandomPosition(), VIRUS_COLOR, 0, 0, true, "", VIRUS_MASS);
-
-            AssignUID(virus);
-
+            Cube virus = new Cube(RandomX(), RandomY(), VIRUS_COLOR, GetNextUID(), 0, true, "", VIRUS_MASS);
             ProcessCube(virus);
-
-            return result;
         }
 
         public void ProcessData(string data)
         {
-            object object_lock = new object();
-            lock (object_lock)
+            lock (this)
             {
                 //Move request sent
                 if (data.IndexOf("move") != -1)
@@ -471,9 +363,9 @@ namespace Model
                 }
                 if (data.IndexOf("split") != -1)
                 {
-                    ProcessSplit(data);
+                    //ProcessSplit(data);
                 }
-                ProcessCubesInPlayerSpace();
+                
             }
         }
 
@@ -483,7 +375,6 @@ namespace Model
         /// <param name="moveRequest"></param>
         public void ProcessMove(string moveRequest)
         {
-
             moveRequest = Regex.Replace(moveRequest.Trim(), "[()]", "");
             string[] move = moveRequest.Split('\n');
             if (move.Length < 2) return;
@@ -493,8 +384,8 @@ namespace Model
             string[] positions = moveArgs.Split(',');
             if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
             {
-                Cube player = GetPlayerCube();
-                PlayerSpeedCalculator(x, y, player);
+                Cube player = player_cubes.First();
+                ProcessPlayerMovement(x, y, player);
                 WorldsEdgeHandler(player);
 
                 ProcessCube(player);
@@ -510,7 +401,7 @@ namespace Model
         /// <param name="y"></param>
         /// <param name="player"></param>
         /// <returns></returns>
-        private Cube PlayerSpeedCalculator(double x, double y, Cube player)
+        private Cube ProcessPlayerMovement(double x, double y, Cube player)
         {
             double distance_x = x - player.X;
             double distance_y = y - player.Y;
@@ -553,12 +444,7 @@ namespace Model
                 player.X = HEIGHT - player.Width / 2;
             }
         }
-
-        static void ProcessSplit(string splitRequest)
-        {
-
-        }
-
+        
         /// <summary>
         /// This takes care of what we need to do with a cube, depending on whether it exists and if it has mass.
         /// </summary>
@@ -566,6 +452,9 @@ namespace Model
         public void ProcessCube(Cube cube)
         {
             bool cubeExists = cubes.ContainsKey(cube.UID);
+            bool IsVirus = cube.IsVirus();
+            bool IsFood = cube.Food;
+            bool IsPlayer = !cube.Food && !cube.IsVirus();
 
             if (cubeExists)
             {
@@ -573,12 +462,17 @@ namespace Model
                 if (cube.Mass == 0)
                 {
                     cubes.Remove(cube.UID);
+                    if (IsVirus) virus_cubes.Remove(cube.UID);
+                    else if (IsFood) food_cubes.Remove(cube.UID);
+                    else if (IsPlayer) player_cubes.Remove(cube);
                 }
 
                 //If the mass isn't 0, it means the cube exists, and should be updated. The location may change, size, etc.
                 else
                 {
                     cubes[cube.UID] = cube;
+                    if (IsVirus) virus_cubes[cube.UID] = cube;
+                    else if (IsFood) food_cubes[cube.UID] = cube;
                 }
             }
 
@@ -588,118 +482,13 @@ namespace Model
                 if (cube.Mass > 0)
                 {
                     cubes.Add(cube.UID, cube);
+                    if (IsVirus) virus_cubes.Add(cube.UID, cube);
+                    else if (IsFood) food_cubes.Add(cube.UID, cube);
+                    else if (IsPlayer) player_cubes.Add(cube);
                 }
             }
 
         }
-
-        /// <summary>
-        /// This helper method helps us to know what to do with the cubes that are within eating distance
-        /// of the player cube, based on the absorb constant. 
-        /// 
-        /// Here are a few of the scenarios that can happen here:
-        /// 1)  If the cube is a virus, the player cube dies and the game is over.
-        /// 2)  If the cube is food, the player cube eats it, thereby increasing the player cube's mass and destroying the food cube.
-        /// 3)  If the cube is another player, the bigger player cube eats the smaller player cube, and the smaller player cube dies 
-        /// </summary>
-        public void ProcessCubesInPlayerSpace()
-        {
-            Cube player_cube = GetPlayerCube();
-            foreach(Cube cube in cubes.Values)
-            {
-                if (ReferenceEquals(player_cube, cube)) continue;
-                if(CollisionDetected(player_cube, cube))
-                {
-                    //If the cube is a virus, set the player cube mass to 0 (it died)
-                    if(cube.Color == World.VIRUS_COLOR)
-                    {
-                        player_cube.Mass = 0;
-                        break;
-                    }
-
-                    //If the cube is food
-                    if(cube.Food == true)
-                    {
-                        player_cube.Mass += cube.Mass * 10;
-                        cube.Mass = 0;
-                    }
-
-                    //If the cube is another player
-                    if(cube.Food == false)
-                    {
-                        if(cube.Mass > player_cube.Mass)
-                        {
-                            cube.Mass += player_cube.Mass;
-                            player_cube.Mass = 0;
-                        }
-                        else
-                        {
-                            player_cube.Mass += cube.Mass;
-                            cube.Mass = 0;
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// This is a helper method that helps us determine if there was a collision with
-        /// a player cube.
-        /// The way this works is we determine the area of the cubes that are overlapping.
-        /// If the area that's overlapping compared to the area of the non-player cube
-        /// is greater than the absorb delta, then there's a collision.
-        /// Otherwise, there's no collision.
-        /// </summary>
-        /// <param name="cube"></param>
-        /// <param name="player_cube"></param>
-        /// <returns></returns>
-        private bool CollisionDetected(Cube player_cube, Cube cube)
-        {
-            double overlap = OverlappingArea(player_cube, cube);
-            double delta = overlap / cube.Mass;
-
-            return delta > ABSORB_DISTANCE_DELTA;
-        }
-
-        /// <summary>
-        /// This helper method helps us to determine how much area
-        /// is overlapped between two cubes.
-        /// </summary>
-        /// <param name="cube1"></param>
-        /// <param name="cube2"></param>
-        /// <returns></returns>
-        private double OverlappingArea(Cube cube1, Cube cube2)
-        {
-            double left = Math.Max(cube1.Left, cube2.Left);
-            double right = Math.Min(cube1.Right, cube2.Right);
-            double top = Math.Max(cube1.Top, cube2.Top);
-            double bottom = Math.Min(cube1.Bottom, cube2.Bottom);
-
-            double width = Math.Max(0, right - left);
-            double height = Math.Max(0, bottom - top);
-            return width * height;
-        }
-
-        /// <summary>
-        /// If the world has received a "split" request, check to see if it's valid (we haven't reached our max number of splits, for example).
-        /// If it's valid, process the request by splitting the cube into a new cube with the same team ID. If it's not valid, do nothing.
-        /// </summary>
-        /// <param name="cube">The cube to split</param>
-        /// <param name="dest_x">The x location to split towards</param>
-        /// <param name="dest_y">The y location to split towards</param>
-        public void ProcessSplit(Cube cube, int dest_x, int dest_y)
-        {
-            if(split_count < MAXIMUM_SPLITS && cube.Mass >= MINIMUM_SPLIT_MASS)
-            {
-                Cube new_cube = Cube.Copy(cube);
-                new_cube.Mass = cube.Mass /= 2;
-                new_cube.team_id = cube.team_id = cube.UID;
-
-                //Set the new x and y coordinates for the split cubes
-                
-            }
-        }
-
         
     }
 }
