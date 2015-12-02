@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Drawing;
+using System.Text.RegularExpressions;
 
 namespace Model
 {
@@ -20,7 +21,9 @@ namespace Model
         [JsonProperty]
         public int team_id;
         [JsonProperty]
-        public int X, Y, Color;
+        public double X, Y;
+        [JsonProperty]
+        public int Color;
         [JsonProperty]
         public string Name;
         [JsonProperty]
@@ -43,7 +46,7 @@ namespace Model
             this.Width = (int)(Math.Sqrt(this.Mass));
         }
 
-        public int Left
+        public double Left
         {
             get
             {
@@ -51,7 +54,7 @@ namespace Model
             }
         }
 
-        public int Right
+        public double Right
         {
             get
             {
@@ -59,7 +62,7 @@ namespace Model
             }
         }
 
-        public int Top
+        public double Top
         {
             get
             {
@@ -67,7 +70,7 @@ namespace Model
             }
         }
 
-        public int Bottom
+        public double Bottom
         {
             get
             {
@@ -107,7 +110,7 @@ namespace Model
         /// Helper method for getting the center x position of the cube
         /// </summary>
         /// <returns></returns>
-        public int GetCenterX()
+        public double GetCenterX()
         {
             return X + (Width / 2);
         }
@@ -116,7 +119,7 @@ namespace Model
         /// Helper method for getting the center y position of the cube
         /// </summary>
         /// <returns></returns>
-        public int GetCenterY()
+        public double GetCenterY()
         {
             return Y + (Width / 2);
         }
@@ -161,7 +164,7 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 200, MINIMUM_SPLIT_MASS = 200, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
+        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 500, MINIMUM_SPLIT_MASS = 100, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
         public readonly double ABSORB_DISTANCE_DELTA = 0.25, ATTRITION_RATE = 1.25;
 
         //TODO: Change this to green
@@ -454,6 +457,80 @@ namespace Model
             ProcessCube(virus);
 
             return result;
+        }
+
+        public void ProcessData(string data)
+        {
+            object object_lock = new object();
+            lock (object_lock)
+            {
+                //Move request sent
+                if (data.IndexOf("move") != -1)
+                {
+                    ProcessMove(data);
+                }
+                if (data.IndexOf("split") != -1)
+                {
+                    ProcessSplit(data);
+                }
+                ProcessCubesInPlayerSpace();
+            }
+        }
+
+        /// <summary>
+        /// Looks at the string and determines the location x, y where the cube wants to move
+        /// </summary>
+        /// <param name="moveRequest"></param>
+        public void ProcessMove(string moveRequest)
+        {
+
+            moveRequest = Regex.Replace(moveRequest.Trim(), "[()]", "");
+            string[] move = moveRequest.Split('\n');
+            if (move.Length < 2) return;
+            string moveArgs = move[move.Length - 1];
+
+            double x, y;
+            string[] positions = moveArgs.Split(',');
+            if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
+            {
+                Cube player = GetPlayerCube();
+                Player_Speed_Calculator(x, y, player);
+
+                ProcessCube(player);
+            }
+        }
+
+        /// <summary>
+        /// Handles generating a location for the cube to be drawn at next, giving the impression
+        /// that it is moving to its next point at a certain speed, which decreases when the mass
+        /// of the player cube is increased.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="player"></param>
+        /// <returns></returns>
+        private Cube Player_Speed_Calculator(double x, double y, Cube player)
+        {
+            double distance_x = x - player.X;
+            double distance_y = y - player.Y;
+            if (Math.Abs(distance_x) < 5 && Math.Abs(distance_y) < 5)
+            {
+                return player;
+            }
+            double pythagorean = (double)Math.Sqrt((distance_x * distance_x) + (distance_y * distance_y));
+            double player_speed = TOP_SPEED - (player.Mass / 1000);
+
+            if (player_speed < LOW_SPEED)
+                player_speed = LOW_SPEED;
+
+            player.X = player.X + (distance_x / pythagorean) * player_speed;
+            player.Y = player.Y + (distance_y / pythagorean) * player_speed;
+            return player;
+        }
+
+        static void ProcessSplit(string splitRequest)
+        {
+
         }
 
         /// <summary>

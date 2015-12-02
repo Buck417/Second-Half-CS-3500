@@ -56,8 +56,12 @@ namespace Server
             }
             Network.i_want_more_data(state);
         }
-
-        static void SendWorld(Preserved_State state)
+        
+        /// <summary>
+        /// Creates initial state of the world to be sent to the client
+        /// </summary>
+        /// <param name="state"></param>
+        private static void SendWorld(Preserved_State state)
         {
             StringBuilder string_builder = new StringBuilder();
             lock (world) {
@@ -75,29 +79,14 @@ namespace Server
             //Preserved_State state = (Preserved_State)ar.AsyncState;
             string str = state.sb.ToString();
             
-            ProcessData(str);
+            world.ProcessData(str);
             //Update the world and send it back
             SendWorld(state);
 
             Network.i_want_more_data(state);
         }
 
-        static void ProcessData(string data)
-        {
-            lock (world)
-            {
-                //Move request sent
-                if (data.IndexOf("move") != -1)
-                {
-                    ProcessMove(data);
-                }
-                if (data.IndexOf("split") != -1)
-                {
-                    ProcessSplit(data);
-                }
-                world.ProcessCubesInPlayerSpace();
-            }
-        }
+        
         
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
 
@@ -107,29 +96,7 @@ namespace Server
 
 
         /************************************ HANDLE GAMEPLAY MECHANICS *************************/
-        static void ProcessMove(string moveRequest)
-        {
-
-            moveRequest = Regex.Replace(moveRequest.Trim(), "[()]", "");
-            string[] move = moveRequest.Split('\n');
-            if (move.Length < 2) return;
-            string moveArgs = move[move.Length - 1];
-
-            int x, y;
-            string[] positions = moveArgs.Split(',');
-            if (int.TryParse(positions[1], out x) && int.TryParse(positions[2], out y))
-            {
-                Cube player = world.GetPlayerCube();
-                player.X = x;
-                player.Y = y;
-                world.ProcessCube(player);
-            }
-        }
-
-        static void ProcessSplit(string splitRequest)
-        {
-
-        }
+       
 
 
 
