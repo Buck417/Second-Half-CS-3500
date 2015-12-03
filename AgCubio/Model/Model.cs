@@ -179,7 +179,7 @@ namespace Model
             FOOD_VALUE = 5,
             PLAYER_START_MASS = 1000,
             MAX_FOOD = 500,
-            MINIMUM_ATTRITION_MASS = 700,
+            MINIMUM_ATTRITION_MASS = 200,
             MIN_FAST_ATTRITION_MASS = 1100,
             MINIMUM_SPLIT_MASS = 100,
             MAXIMUM_SPLIT_DISTANCE = 50,
