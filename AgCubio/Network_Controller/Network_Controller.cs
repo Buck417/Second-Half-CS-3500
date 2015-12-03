@@ -17,6 +17,7 @@ namespace Network_Controller
         public Socket socket = null;
         public byte[] buffer = new byte[Network.BUFFER_SIZE];
         public StringBuilder sb = new StringBuilder();
+        public int UID = 0;
     }
 
     public static class Network
