@@ -401,20 +401,15 @@ namespace Model
         /// <returns></returns>
         private Cube ProcessPlayerMovement(double x, double y, Cube player)
         {
-            double distance_x = x - player.X;
-            double distance_y = y - player.Y;
-            if (Math.Abs(distance_x) < 5 && Math.Abs(distance_y) < 5)
-            {
-                return player;
-            }
-            double pythagorean = (double)Math.Sqrt((distance_x * distance_x) + (distance_y * distance_y));
-            double player_speed = TOP_SPEED - (player.Mass / PLAYER_START_MASS);
+            double speed = TOP_SPEED;
+            double rate = ((speed / ((double)HEARTBEATS_PER_SECOND)) * ((double)PLAYER_START_MASS / (double)player.Mass)) / 5.0;
+            if (player.X != x) player.X += (int)(rate * (x - player.X));
+            if (player.Y != y) player.Y += (int)(rate * (y - player.Y));
+            
+            if (speed < LOW_SPEED)
+                speed = LOW_SPEED;
 
-            if (player_speed < LOW_SPEED)
-                player_speed = LOW_SPEED;
-
-            player.X = player.X + (distance_x / pythagorean) * player_speed;
-            player.Y = player.Y + (distance_y / pythagorean) * player_speed;
+            ProcessCube(player);
             return player;
         }
 
@@ -424,22 +419,22 @@ namespace Model
         /// <param name="player"></param>
         private void WorldsEdgeHandler(Cube player)
         {
-            if (player.X - player.Width / 2 < 0)
+            if (player.X < 0)
             {
-                player.X = player.Width / 2;
+                player.X = 0;
             }
 
-            if (player.Y - player.Width / 2 < 0)
+            if (player.Y < 0)
             {
-                player.Y = player.Width / 2;
+                player.Y = 0;
             }
-            if (player.X + player.Width / 2 > WIDTH)
+            if (player.X + player.Width > WIDTH)
             {
-                player.X = WIDTH - player.Width/2;
+                player.X = WIDTH - player.Width;
             }
-            if (player.Y + player.Width / 2 > HEIGHT)
+            if (player.Y + player.Width > HEIGHT)
             {
-                player.X = HEIGHT - player.Width / 2;
+                player.X = HEIGHT - player.Width;
             }
         }
         
@@ -488,5 +483,14 @@ namespace Model
 
         }
         
+        /// <summary>
+        /// This is the main method for updating the world, which is done every
+        /// heartbeat. Check the players against the food cubes, and see if
+        /// any of them need to be removed/changed.
+        /// </summary>
+        public void Update()
+        {
+
+        }
     }
 }

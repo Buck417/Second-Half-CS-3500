@@ -8,8 +8,7 @@ using Network_Controller;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-
-
+using System.Timers;
 
 namespace Server
 {
@@ -18,13 +17,25 @@ namespace Server
         public volatile static World world;
         private volatile static System.Net.Sockets.Socket dataSocket;
 
+        private static Timer heartbeatTimer = new Timer();
+
         public static void Main(string[] args)
         {
             AgServer server = new AgServer();
             world = new World();
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections));
         }
-        
+
+        private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            lock (world)
+            {
+                world.AddFoodCube();
+                world.Update();
+                SendWorld();
+            }
+        }
+
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
         //Handle new client connections
         private static void Handle_New_Client_Connections(Preserved_State state)
@@ -32,6 +43,10 @@ namespace Server
             dataSocket = state.socket;
             state.callback = new Action<Preserved_State>(Receive_Player_Name);
             Network.i_want_more_data(state);
+
+            heartbeatTimer.Interval = 1000 / world.HEARTBEATS_PER_SECOND;
+            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+            heartbeatTimer.Start();
         }
 
         //Receive the player name
@@ -78,8 +93,6 @@ namespace Server
             string str = state.sb.ToString();
 
             world.ProcessData(str);
-            //Update the world and send it back
-            SendWorld();
 
             Network.i_want_more_data(state);
         }
