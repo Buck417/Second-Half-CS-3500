@@ -33,13 +33,14 @@ namespace Server
 
             heartbeatTimer.Stop();
 
-            world.AddFoodCube();
             world.ProcessAttrition();
             StringBuilder string_builder = new StringBuilder();
             LinkedList<Cube> cubes_eaten = world.FoodConsumed();
             lock (world)
             {
-                
+                //world.AddFoodCube();
+
+                Network.Send(dataSocket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
           
                 foreach (Cube cube in cubes_eaten)
                 {
