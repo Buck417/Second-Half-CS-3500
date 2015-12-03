@@ -181,10 +181,16 @@ namespace Network_Controller
         private static void SendCallBack(IAsyncResult ar)
         {
             Socket socket = (Socket)ar.AsyncState;
-            
+
 
             //Find out how many bytes were sent
-            int bytes = socket.EndSend(ar);
+            try {
+                int bytes = socket.EndSend(ar);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
 
         /// <summary>

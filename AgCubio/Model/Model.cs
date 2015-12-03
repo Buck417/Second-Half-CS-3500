@@ -29,9 +29,9 @@ namespace Model
         [JsonProperty]
         public bool Food;
         [JsonProperty]
-        public int Mass;
+        public double Mass;
         public int Width;
-        
+
         [JsonConstructor]
         public Cube(double loc_x, double loc_y, int argb_color, int uID, int team_id, bool food, string name, double mass)
         {
@@ -86,10 +86,11 @@ namespace Model
         /// <returns></returns>
         public static Cube Create(string json)
         {
-            try {
+            try
+            {
                 return JsonConvert.DeserializeObject<Cube>(json);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 return null;
@@ -148,6 +149,12 @@ namespace Model
             }
             return false;
         }
+
+        public bool IsPlayer()
+        {
+            return this.Food == false && !IsVirus();
+        }
+
         /// <summary>
         /// Helper for returning color of a cube
         /// </summary>
@@ -164,19 +171,23 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        public readonly int WIDTH = 1000, 
-            HEIGHT = 1000, 
-            HEARTBEATS_PER_SECOND = 20, 
-            TOP_SPEED = 5, 
-            LOW_SPEED = 1, 
-            FOOD_VALUE = 5, 
-            PLAYER_START_MASS = 1000, 
-            MAX_FOOD = 500, 
-            MINIMUM_SPLIT_MASS = 100, 
-            MAXIMUM_SPLIT_DISTANCE = 50, 
+        public readonly int WIDTH = 1000,
+            HEIGHT = 1000,
+            HEARTBEATS_PER_SECOND = 20,
+            TOP_SPEED = 5,
+            LOW_SPEED = 1,
+            FOOD_VALUE = 5,
+            PLAYER_START_MASS = 1000,
+            MAX_FOOD = 500,
+            MINIMUM_ATTRITION_MASS = 700,
+            MIN_FAST_ATTRITION_MASS = 1100,
+            MINIMUM_SPLIT_MASS = 100,
+            MAXIMUM_SPLIT_DISTANCE = 50,
             MAXIMUM_SPLITS = 6;
 
-        public readonly double ABSORB_DISTANCE_DELTA = 0.25, ATTRITION_RATE = 1.25;
+        public readonly double ABSORB_DISTANCE_DELTA = 0.25,
+            ATTRITION_RATE = 1.25,
+            FAST_ATTRITION_RATE = 2.5;
 
         //TODO: Change this to green
         public readonly static int VIRUS_COLOR = Color.Green.ToArgb();
@@ -186,23 +197,23 @@ namespace Model
         private readonly int MAX_UID = 1000000;
 
         public double Scale = 2.0;
-        private int split_count = 0;       
+        private int split_count = 0;
         private Random randomX = new Random(1000);
         private Random randomY = new Random(2500);
         private Random UIDGenerator = new Random();
-        
+
         //Keeps track of ALL cubes
         public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
         //Keeps track of all player cubes
         public HashSet<Cube> player_cubes = new HashSet<Cube>();
-        
+
         //Keeps track of all the food cubes 
         public Dictionary<int, Cube> food_cubes = new Dictionary<int, Cube>();
         //Keeps track of all the virus cubes
         public Dictionary<int, Cube> virus_cubes = new Dictionary<int, Cube>();
-        
+
         private string gameplay_file = "world_parameters.xml";
-        
+
         public World()
         {
 
@@ -233,7 +244,7 @@ namespace Model
                                 {
                                     case "width":
                                         this.WIDTH = reader.ReadElementContentAsInt();
-                                       break;
+                                        break;
                                     case "height":
                                         this.HEIGHT = reader.ReadElementContentAsInt();
                                         break;
@@ -263,6 +274,15 @@ namespace Model
                                         break;
                                     case "min_split_mass":
                                         this.MINIMUM_SPLIT_MASS = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "min_attrition_mass":
+                                        this.MINIMUM_ATTRITION_MASS = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "min_fast_attrition":
+                                        this.MIN_FAST_ATTRITION_MASS = reader.ReadElementContentAsInt();
+                                        break;
+                                    case "fast_attrition_rate":
+                                        this.FAST_ATTRITION_RATE = reader.ReadElementContentAsDouble();
                                         break;
                                     case "absorb_constant":
                                         this.ABSORB_DISTANCE_DELTA = reader.ReadElementContentAsDouble();
@@ -302,12 +322,12 @@ namespace Model
             int UID = GetNextUID();
             Random random = new Random();
             Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), UID, 0, false, name, PLAYER_START_MASS);
-            
+
             cubes.Add(cube.UID, cube);
             player_cubes.Add(cube);
             return cube;
         }
-        
+
         public int GetNextUID()
         {
             int result = UIDGenerator.Next(MAX_UID);
@@ -320,7 +340,7 @@ namespace Model
             }
             return result;
         }
-        
+
         /// <summary>
         /// Return a cube based on its UID
         /// </summary>
@@ -332,7 +352,7 @@ namespace Model
                 return cubes[UID];
             else return null;
         }
-        
+
         public void AddFoodCube()
         {
             Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), GetNextUID(), 0, true, "", FOOD_VALUE);
@@ -352,19 +372,16 @@ namespace Model
 
         public void ProcessData(string data)
         {
-            lock (this)
+            //Move request sent
+            if (data.IndexOf("move") != -1)
             {
-                //Move request sent
-                if (data.IndexOf("move") != -1)
-                {
-                    ProcessMove(data);
-                }
-                if (data.IndexOf("split") != -1)
-                {
-                    //ProcessSplit(data);
-                }
-                
+                ProcessMove(data);
             }
+            if (data.IndexOf("split") != -1)
+            {
+                //ProcessSplit(data);
+            }
+
         }
 
         /// <summary>
@@ -405,7 +422,7 @@ namespace Model
             double rate = ((speed / ((double)HEARTBEATS_PER_SECOND)) * ((double)PLAYER_START_MASS / (double)player.Mass)) / 5.0;
             if (player.X != x) player.X += (int)(rate * (x - player.X));
             if (player.Y != y) player.Y += (int)(rate * (y - player.Y));
-            
+
             if (speed < LOW_SPEED)
                 speed = LOW_SPEED;
 
@@ -437,7 +454,7 @@ namespace Model
                 player.X = HEIGHT - player.Width;
             }
         }
-        
+
         /// <summary>
         /// This takes care of what we need to do with a cube, depending on whether it exists and if it has mass.
         /// </summary>
@@ -482,7 +499,26 @@ namespace Model
             }
 
         }
-        
+
+        /// <summary>
+        /// This is where we process the attrition - each player cube decreases in size
+        /// by a certain amount for every heartbeat.
+        /// </summary>
+        public void ProcessAttrition()
+        {
+            foreach (Cube c in player_cubes)
+            {
+                //If the cube's mass is between the minimum attrition mass and less than the minimum mass for the fast attrition rate, do the slow attrition rate
+                if (c.Mass > MINIMUM_ATTRITION_MASS && c.Mass < MIN_FAST_ATTRITION_MASS)
+                    c.Mass -= ATTRITION_RATE;
+                //If the cube's mass is greater than the minimum mass for fast attrition, use that rate.
+                else if (c.Mass > MIN_FAST_ATTRITION_MASS)
+                    c.Mass -= FAST_ATTRITION_RATE;
+
+                //Otherwise, don't change the mass - because it'll be below the minimum attrition mass
+            }
+        }
+
         /// <summary>
         /// This is the main method for updating the world, which is done every
         /// heartbeat. Check the players against the food cubes, and see if
@@ -490,7 +526,49 @@ namespace Model
         /// </summary>
         public void Update()
         {
+            foreach (Cube player in player_cubes)
+            {
+                foreach (Cube cube in cubes.Values)
+                {
+                    if (AreOverlapping(player, cube))
+                    {
+                        if (cube.IsFood())
+                        {
+                            player.Mass += cube.Mass;
+                            cube.Mass = 0;
+                            ProcessCube(player);
+                            ProcessCube(cube);
+                        }
+                        else if (cube.IsVirus())
+                        {
+                            player.Mass = 0;
+                            ProcessCube(player);
+                        }
+                        else if (cube.IsPlayer())
+                        {
+                            if (player.Mass > cube.Mass)
+                            {
+                                player.Mass += cube.Mass;
+                                cube.Mass = 0;
+                                ProcessCube(player);
+                                ProcessCube(cube);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
+        private bool AreOverlapping(Cube cube1, Cube cube2)
+        {
+            int left = (int)Math.Max(cube1.Left, cube2.Left);
+            int right = (int)Math.Min(cube1.Right, cube2.Right);
+            int top = (int)Math.Max(cube1.Top, cube2.Top);
+            int bottom = (int)Math.Min(cube1.Bottom, cube2.Bottom);
+            int width = right - left;
+            int height = top - bottom;
+
+            return width > 0 && height > 0;
         }
     }
 }

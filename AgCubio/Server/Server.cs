@@ -28,12 +28,15 @@ namespace Server
 
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
+            heartbeatTimer.Stop();
             lock (world)
             {
                 world.AddFoodCube();
+                world.ProcessAttrition();
                 world.Update();
                 SendWorld();
             }
+            heartbeatTimer.Start();
         }
 
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
@@ -60,17 +63,18 @@ namespace Server
             PopulateWorld();
 
             //Sends the player cube and starting food cubes to the client
-            lock (world)
-            {
-                SendPlayer(player);
-                SendWorld();
-            }
+            SendPlayer(player);
+            SendWorld();
+
             Network.i_want_more_data(state);
         }
 
         private static void SendPlayer(Cube player)
         {
-            Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
+            lock (world)
+            {
+                Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
+            }
         }
 
         private static void SendWorld()
@@ -84,6 +88,7 @@ namespace Server
                 }
                 Network.Send(dataSocket, string_builder.ToString());
             }
+
         }
 
         //Handle data from the client
@@ -91,8 +96,10 @@ namespace Server
         {
             //Preserved_State state = (Preserved_State)ar.AsyncState;
             string str = state.sb.ToString();
-
-            world.ProcessData(str);
+            lock (world)
+            {
+                world.ProcessData(str);
+            }
 
             Network.i_want_more_data(state);
         }
@@ -104,11 +111,11 @@ namespace Server
         /************************************ HANDLE GAMEPLAY MECHANICS *************************/
         private static void PopulateWorld()
         {
-            for(int i = 0; i < world.MAX_FOOD; i++)
+            for (int i = 0; i < world.MAX_FOOD; i++)
             {
                 world.AddFoodCube();
             }
-            for(int i = 0; i < world.VIRUS_COUNT; i++)
+            for (int i = 0; i < world.VIRUS_COUNT; i++)
             {
                 world.AddVirusCube();
             }
