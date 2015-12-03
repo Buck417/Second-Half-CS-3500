@@ -173,7 +173,7 @@ namespace Model
         /****************** CONSTANTS FOR SERVER *************************/
         public readonly int WIDTH = 1000,
             HEIGHT = 1000,
-            HEARTBEATS_PER_SECOND = 20,
+            HEARTBEATS_PER_SECOND = 30,
             TOP_SPEED = 5,
             LOW_SPEED = 1,
             FOOD_VALUE = 5,
@@ -213,6 +213,9 @@ namespace Model
         public Dictionary<int, Cube> virus_cubes = new Dictionary<int, Cube>();
 
         private string gameplay_file = "world_parameters.xml";
+
+        static readonly object locker = new object();
+
 
         public World()
         {
@@ -359,8 +362,14 @@ namespace Model
 
         public void AddFoodCube()
         {
-            Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), GetNextUID(), 0, true, "", FOOD_VALUE);
-            ProcessCube(food);
+            lock (this)
+            {
+                if (food_cubes.Keys.Count < MAX_FOOD)
+                {
+                    Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), GetNextUID(), 0, true, "", FOOD_VALUE);
+                    ProcessCube(food);
+                }
+            }
         }
 
         /// <summary>
@@ -511,16 +520,19 @@ namespace Model
         /// </summary>
         public void ProcessAttrition()
         {
-            foreach (Cube c in player_cubes)
+            lock (this)
             {
-                //If the cube's mass is between the minimum attrition mass and less than the minimum mass for the fast attrition rate, do the slow attrition rate
-                if (c.Mass > MINIMUM_ATTRITION_MASS && c.Mass < MIN_FAST_ATTRITION_MASS)
-                    c.Mass -= ATTRITION_RATE;
-                //If the cube's mass is greater than the minimum mass for fast attrition, use that rate.
-                else if (c.Mass > MIN_FAST_ATTRITION_MASS)
-                    c.Mass -= FAST_ATTRITION_RATE;
+                foreach (Cube c in player_cubes)
+                {
+                    //If the cube's mass is between the minimum attrition mass and less than the minimum mass for the fast attrition rate, do the slow attrition rate
+                    if (c.Mass > MINIMUM_ATTRITION_MASS && c.Mass < MIN_FAST_ATTRITION_MASS)
+                        c.Mass -= ATTRITION_RATE;
+                    //If the cube's mass is greater than the minimum mass for fast attrition, use that rate.
+                    else if (c.Mass > MIN_FAST_ATTRITION_MASS)
+                        c.Mass -= FAST_ATTRITION_RATE;
 
-                //Otherwise, don't change the mass - because it'll be below the minimum attrition mass
+                    //Otherwise, don't change the mass - because it'll be below the minimum attrition mass
+                }
             }
         }
 
@@ -531,37 +543,41 @@ namespace Model
         /// </summary>
         public void Update()
         {
+            lock (this) { 
                 foreach (Cube player in player_cubes)
                 {
-                    foreach (Cube cube in cubes.Values)
+                    lock (locker)
                     {
-                        if (AreOverlapping(player, cube))
+                        foreach (Cube cube in cubes.Values)
                         {
-                            if (cube.IsFood())
+                            if (AreOverlapping(player, cube))
                             {
-                                player.Mass += cube.Mass;
-                                cube.Mass = 0;
-                                ProcessCube(player);
-                                ProcessCube(cube);
-                            }
-                            else if (cube.IsVirus())
-                            {
-                                player.Mass = 0;
-                                ProcessCube(player);
-                            }
-                            else if (cube.IsPlayer())
-                            {
-                                if (player.Mass > cube.Mass)
+                                if (cube.IsFood())
                                 {
                                     player.Mass += cube.Mass;
                                     cube.Mass = 0;
                                     ProcessCube(player);
                                     ProcessCube(cube);
                                 }
-                            }
+                                else if (cube.IsVirus())
+                                {
+                                    player.Mass = 0;
+                                    ProcessCube(player);
+                                }
+                                else if (cube.IsPlayer())
+                                {
+                                    if (player.Mass > cube.Mass)
+                                    {
+                                        player.Mass += cube.Mass;
+                                        cube.Mass = 0;
+                                        ProcessCube(player);
+                                        ProcessCube(cube);
+                                    }
+                                }
 
+                            }
                         }
-                    
+                    }
 
                 }
             }
