@@ -423,16 +423,17 @@ namespace Model
         //    else return null;
         //}
 
-        public void AddFoodCube()
+        public Cube AddFoodCube()
         {
 
             if (food_cubes.Keys.Count < MAX_FOOD)
             {
                 Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
                 GetNextUID(food);
-                ProcessCube(food);
+                food_cubes.Add(food.UID, food);
+                return food;
             }
-
+            return null;
         }
 
         /// <summary>
