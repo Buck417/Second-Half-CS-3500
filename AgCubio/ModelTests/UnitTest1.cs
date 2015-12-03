@@ -225,6 +225,9 @@ namespace ModelTests
             Assert.AreEqual(199, w.ATTRITION_RATE);
             Assert.AreEqual(4, w.FOOD_VALUE);
             Assert.AreEqual(0.33, w.ABSORB_DISTANCE_DELTA);
+            Assert.AreEqual(200, w.MINIMUM_ATTRITION_MASS);
+            Assert.AreEqual(1100, w.MIN_FAST_ATTRITION_MASS);
+            Assert.AreEqual(2.5, w.FAST_ATTRITION_RATE);
         }
 
         [TestMethod]
@@ -252,11 +255,10 @@ namespace ModelTests
             Cube player = w.AddPlayerCube("Richie");
             double startX, startY;
             startX = startY = player.X = player.Y = 100;
-            string moveRequest = "(move, 544, 433)\n";
+            string moveRequest = "(move, 544, 433)\n(move, 544, 433)\n";
             w.ProcessData(moveRequest);
             Assert.AreNotEqual(startX, player.X);
         }
-
         
         [TestMethod]
         public void TestAddPlayerCube()

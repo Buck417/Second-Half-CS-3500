@@ -154,15 +154,6 @@ namespace Model
         {
             return this.Food == false && !IsVirus();
         }
-
-        /// <summary>
-        /// Helper for returning color of a cube
-        /// </summary>
-        /// <returns></returns>
-        public int GetColor()
-        {
-            return this.Color;
-        }
     }
 
     /// <summary>
@@ -189,7 +180,6 @@ namespace Model
             ATTRITION_RATE = 1.25,
             FAST_ATTRITION_RATE = 2.5;
 
-        //TODO: Change this to green
         public readonly static int VIRUS_COLOR = Color.Green.ToArgb();
         public readonly static int VIRUS_MASS = 500;
         public readonly int VIRUS_COUNT = 2;
@@ -405,8 +395,11 @@ namespace Model
         {
             moveRequest = Regex.Replace(moveRequest.Trim(), "[()]", "");
             string[] move = moveRequest.Split('\n');
-            if (move.Length < 2) return;
-            string moveArgs = move[move.Length - 1];
+            string moveArgs;
+            if (move.Length >= 2)
+                moveArgs = move[move.Length - 1];
+            else
+                moveArgs = move[0];
 
             double x, y;
             string[] positions = moveArgs.Split(',');

@@ -19,27 +19,31 @@ namespace Server
         static readonly object locker = new object();
 
         private static Timer heartbeatTimer = new Timer();
+        private static bool GameRunning = false;
 
         public static void Main(string[] args)
         {
             AgServer server = new AgServer();
             world = new World();
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections));
+            heartbeatTimer.Interval = 1000 / world.HEARTBEATS_PER_SECOND;
+            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+            heartbeatTimer.Start();
         }
 
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-           
+            if (GameRunning)
+            {
                 heartbeatTimer.Stop();
 
-                    world.AddFoodCube();
-                    world.ProcessAttrition();
-                    //world.Update();
-                    SendWorld();
+                world.AddFoodCube();
+                world.ProcessAttrition();
+                //world.Update();
+                SendWorld();
 
-                    heartbeatTimer.Start();
-                
-            
+                heartbeatTimer.Start();
+            }
         }
 
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
@@ -50,9 +54,7 @@ namespace Server
             state.callback = new Action<Preserved_State>(Receive_Player_Name);
             Network.i_want_more_data(state);
 
-            heartbeatTimer.Interval = 1000 / world.HEARTBEATS_PER_SECOND;
-            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
-            heartbeatTimer.Start();
+            GameRunning = true;
         }
 
         //Receive the player name
@@ -73,7 +75,6 @@ namespace Server
                 SendWorld();
             }
             
-
             Network.i_want_more_data(state);
         }
 
@@ -87,7 +88,8 @@ namespace Server
 
         private static void SendWorld()
         {
-            lock (world) { 
+            lock (world)
+            {
                 StringBuilder string_builder = new StringBuilder();
 
                 foreach (Cube cube in world.cubes.Values)
