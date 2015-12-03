@@ -16,9 +16,10 @@ namespace Server
     {
         public volatile static World world;
         private volatile static System.Net.Sockets.Socket dataSocket;
-        static readonly object locker = new object();
 
         private static Timer heartbeatTimer = new Timer();
+
+        public static int player_uid;
 
         public static void Main(string[] args)
         {
@@ -29,17 +30,36 @@ namespace Server
 
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-           
-                heartbeatTimer.Stop();
 
-                    world.AddFoodCube();
-                    world.ProcessAttrition();
-                    //world.Update();
-                    SendWorld();
+            heartbeatTimer.Stop();
 
-                    heartbeatTimer.Start();
+            world.AddFoodCube();
+            world.ProcessAttrition();
+            StringBuilder string_builder = new StringBuilder();
+            LinkedList<Cube> cubes_eaten = world.FoodConsumed();
+            lock (world)
+            {
                 
+          
+                foreach (Cube cube in cubes_eaten)
+                {
+                    Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+                }
+
+                foreach (Cube cube in world.player_cubes.Values)
+                {
+                    Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+                }
+
+
+                //world.Update();
+            }
             
+            //SendWorld();
+
+            heartbeatTimer.Start();
+
+
         }
 
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
@@ -62,56 +82,72 @@ namespace Server
             state.callback = new Action<Preserved_State>(HandleData);
             string playerName = state.sb.ToString();
 
-            lock (locker)
+
+            Cube player = world.AddPlayerCube(playerName);
+            player_uid = player.UID;
+
+            PopulateWorld();
+
+            //Sends the player cube and starting food cubes to the client
+            lock(world)
             {
-                Cube player = world.AddPlayerCube(playerName);
-
-                PopulateWorld();
-
-                //Sends the player cube and starting food cubes to the client
-                SendPlayer(player);
-                SendWorld();
+                SendInitialData(player);
             }
-            
-
             Network.i_want_more_data(state);
         }
 
-        private static void SendPlayer(Cube player)
+        private static void SendInitialData(Cube player)
         {
             lock (world)
             {
                 Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
-            }
-        }
-
-        private static void SendWorld()
-        {
-            lock (world) { 
-                StringBuilder string_builder = new StringBuilder();
-
-                foreach (Cube cube in world.cubes.Values)
+                StringBuilder builder = new StringBuilder();
+                foreach (Cube cube in world.food_cubes.Values)
                 {
-                    string_builder.Append(JsonConvert.SerializeObject(cube) + "\n");
+                    builder.Append(JsonConvert.SerializeObject(cube) + "\n");
                 }
-                Network.Send(dataSocket, string_builder.ToString());
+                Network.Send(dataSocket, builder.ToString());
+
             }
         }
+
+        //private static void SendPlayer(Cube player)
+        //{
+
+        //    Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
+
+        //}
+
+        //private static void SendWorld(Preserved_State state)
+        //{
+
+        //    StringBuilder string_builder = new StringBuilder();
+
+        //    foreach (Cube cube in world.cubes.Values)
+        //    {
+        //        Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+        //    }
+
+
+        //}
 
         //Handle data from the client
         static void HandleData(Preserved_State state)
         {
             //Preserved_State state = (Preserved_State)ar.AsyncState;
             string str = state.sb.ToString();
+
             lock (world)
             {
-                world.ProcessData(str);
-                //SendWorld();
-                //heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
-
+                world.ProcessData(str, player_uid);
             }
+            //SendWorld(state);
+            //heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+
+
 
             state.sb.Clear();
+            System.Threading.Thread.Sleep(1000 / world.HEARTBEATS_PER_SECOND);
             Network.i_want_more_data(state);
         }
         /********************************* END HANDLE NETWORK COMMUNICATIONS ********************/
@@ -122,17 +158,17 @@ namespace Server
         /************************************ HANDLE GAMEPLAY MECHANICS *************************/
         private static void PopulateWorld()
         {
-            lock (world)
+
+
+            for (int i = 0; i < world.MAX_FOOD; i++)
             {
-                for (int i = 0; i < world.MAX_FOOD; i++)
-                {
-                    world.AddFoodCube();
-                }
-                for (int i = 0; i < world.VIRUS_COUNT; i++)
-                {
-                    world.AddVirusCube();
-                }
+                world.AddFoodCube();
             }
+            //for (int i = 0; i < world.VIRUS_COUNT; i++)
+            //{
+            //    world.AddVirusCube();
+            //}
+
         }
 
 

@@ -163,6 +163,39 @@ namespace Model
         {
             return this.Color;
         }
+
+        /// <summary>
+        /// Equals method to compare two cubes
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public bool Equals(Cube c)
+        {
+            return (this.UID == c.UID);
+        }
+
+        /// <summary>
+        /// Equals method to see if an object is a cube
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (((Cube)obj) == null)
+            {
+                return false;
+            }
+            return (this.UID == ((Cube)obj).UID);
+        }
+
+        /// <summary>
+        /// Overrides hashcode to return uid as the hashcode
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return this.UID;
+        }
     }
 
     /// <summary>
@@ -178,7 +211,7 @@ namespace Model
             LOW_SPEED = 1,
             FOOD_VALUE = 5,
             PLAYER_START_MASS = 1000,
-            MAX_FOOD = 500,
+            MAX_FOOD = 5000,
             MINIMUM_ATTRITION_MASS = 700,
             MIN_FAST_ATTRITION_MASS = 1100,
             MINIMUM_SPLIT_MASS = 100,
@@ -203,9 +236,9 @@ namespace Model
         private Random UIDGenerator = new Random();
 
         //Keeps track of ALL cubes
-        public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
+        //public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
         //Keeps track of all player cubes
-        public HashSet<Cube> player_cubes = new HashSet<Cube>();
+        public Dictionary<int, Cube> player_cubes = new Dictionary<int, Cube>();
 
         //Keeps track of all the food cubes 
         public Dictionary<int, Cube> food_cubes = new Dictionary<int, Cube>();
@@ -321,31 +354,42 @@ namespace Model
         /// <param name="name"></param>
         /// <returns>The player cube</returns>
         public Cube AddPlayerCube(string name)
-        {
-            lock (this)
-            {
-
-                int UID = GetNextUID();
+        {               
                 Random random = new Random();
-                Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), UID, 0, false, name, PLAYER_START_MASS);
-
-                cubes.Add(cube.UID, cube);
-                player_cubes.Add(cube);
+                Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, false, name, PLAYER_START_MASS);
+                GetNextUID(cube);
+                //cubes.Add(cube.UID, cube);
+                player_cubes.Add(cube.UID, cube);
                 return cube;
-            }
+            
         }
 
-        public int GetNextUID()
+        public void GetNextUID(Cube c)
         {
             int result = UIDGenerator.Next(MAX_UID);
-            if (cubes.ContainsKey(result))
+            if (c.IsPlayer())
             {
-                while (cubes.ContainsKey(result))
+                if (player_cubes.ContainsKey(result))
                 {
-                    result = UIDGenerator.Next(MAX_UID);
+                    while (player_cubes.ContainsKey(result))
+                    {
+                        result = UIDGenerator.Next(MAX_UID);
+                    }
                 }
             }
-            return result;
+            c.UID = result;
+            if (c.IsFood())
+            {
+                if (food_cubes.ContainsKey(result))
+                {
+                    while (food_cubes.ContainsKey(result))
+                    {
+                        result = UIDGenerator.Next(MAX_UID);
+                    }
+                }
+            }
+            c.UID = result;
+
         }
 
         /// <summary>
@@ -353,23 +397,23 @@ namespace Model
         /// </summary>
         /// <param name="UID"></param>
         /// <returns></returns>
-        public Cube GetCube(int UID)
-        {
-            if (cubes.ContainsKey(UID))
-                return cubes[UID];
-            else return null;
-        }
+        //public Cube GetCube(int UID)
+        //{
+        //    if (cubes.ContainsKey(UID))
+        //        return cubes[UID];
+        //    else return null;
+        //}
 
         public void AddFoodCube()
         {
-            lock (this)
-            {
+
                 if (food_cubes.Keys.Count < MAX_FOOD)
                 {
-                    Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), GetNextUID(), 0, true, "", FOOD_VALUE);
+                    Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
+                    GetNextUID(food);
                     ProcessCube(food);
                 }
-            }
+            
         }
 
         /// <summary>
@@ -377,18 +421,18 @@ namespace Model
         /// any player cube touches it, the player cube will explode and die.
         /// </summary>
         /// <returns></returns>
-        public void AddVirusCube()
-        {
-            Cube virus = new Cube(RandomX(), RandomY(), VIRUS_COLOR, GetNextUID(), 0, true, "", VIRUS_MASS);
-            ProcessCube(virus);
-        }
+        //public void AddVirusCube()
+        //{
+        //    Cube virus = new Cube(RandomX(), RandomY(), VIRUS_COLOR, GetNextUID(), 0, true, "", VIRUS_MASS);
+        //    ProcessCube(virus);
+        //}
 
-        public void ProcessData(string data)
+        public void ProcessData(string data, int player_uid)
         {
             //Move request sent
             if (data.IndexOf("move") != -1)
             {
-                ProcessMove(data);
+                ProcessMove(data, player_uid);
             }
             if (data.IndexOf("split") != -1)
             {
@@ -401,7 +445,7 @@ namespace Model
         /// Looks at the string and determines the location x, y where the cube wants to move
         /// </summary>
         /// <param name="moveRequest"></param>
-        public void ProcessMove(string moveRequest)
+        public void ProcessMove(string moveRequest, int player_uid)
         {
             moveRequest = Regex.Replace(moveRequest.Trim(), "[()]", "");
             string[] move = moveRequest.Split('\n');
@@ -412,7 +456,7 @@ namespace Model
             string[] positions = moveArgs.Split(',');
             if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
             {
-                Cube player = player_cubes.First();
+                Cube player = player_cubes[player_uid];
                 ProcessPlayerMovement(x, y, player);
                 WorldsEdgeHandler(player);
 
@@ -475,7 +519,10 @@ namespace Model
         /// <param name="cube"></param>
         public void ProcessCube(Cube cube)
         {
-            bool cubeExists = cubes.ContainsKey(cube.UID);
+            bool cubeExists = false;
+            if(player_cubes.ContainsKey(cube.UID) || food_cubes.ContainsKey(cube.UID)){
+                cubeExists = true;
+            }
             bool IsVirus = cube.IsVirus();
             bool IsFood = cube.Food;
             bool IsPlayer = !cube.Food && !cube.IsVirus();
@@ -485,16 +532,16 @@ namespace Model
                 //If mass is 0, that means the cube has been eaten/destroyed, and should no longer be shown.
                 if (cube.Mass == 0)
                 {
-                    cubes.Remove(cube.UID);
+                    //cubes.Remove(cube.UID);
                     if (IsVirus) virus_cubes.Remove(cube.UID);
                     else if (IsFood) food_cubes.Remove(cube.UID);
-                    else if (IsPlayer) player_cubes.Remove(cube);
+                    else if (IsPlayer) player_cubes.Remove(cube.UID);
                 }
 
                 //If the mass isn't 0, it means the cube exists, and should be updated. The location may change, size, etc.
                 else
                 {
-                    cubes[cube.UID] = cube;
+                    if(IsPlayer) player_cubes[cube.UID] = cube;
                     if (IsVirus) virus_cubes[cube.UID] = cube;
                     else if (IsFood) food_cubes[cube.UID] = cube;
                 }
@@ -505,10 +552,10 @@ namespace Model
             {
                 if (cube.Mass > 0)
                 {
-                    cubes.Add(cube.UID, cube);
+                    //cubes.Add(cube.UID, cube);
                     if (IsVirus) virus_cubes.Add(cube.UID, cube);
                     else if (IsFood) food_cubes.Add(cube.UID, cube);
-                    else if (IsPlayer) player_cubes.Add(cube);
+                    else if (IsPlayer) player_cubes.Add(cube.UID, cube);
                 }
             }
 
@@ -520,9 +567,8 @@ namespace Model
         /// </summary>
         public void ProcessAttrition()
         {
-            lock (this)
-            {
-                foreach (Cube c in player_cubes)
+
+                foreach (Cube c in player_cubes.Values)
                 {
                     //If the cube's mass is between the minimum attrition mass and less than the minimum mass for the fast attrition rate, do the slow attrition rate
                     if (c.Mass > MINIMUM_ATTRITION_MASS && c.Mass < MIN_FAST_ATTRITION_MASS)
@@ -533,7 +579,38 @@ namespace Model
 
                     //Otherwise, don't change the mass - because it'll be below the minimum attrition mass
                 }
+            
+        }
+
+        public LinkedList<Cube> FoodConsumed()
+        {
+             lock (this)
+            {
+                LinkedList<Cube> eaten_cubes = new LinkedList<Cube>();
+                foreach (Cube player in player_cubes.Values)
+                {
+                    foreach (Cube food in food_cubes.Values)
+                    {
+                        if (AreOverlapping(player, food))
+                        {
+                            eaten_cubes.AddFirst(food);
+                            player.Mass += food.Mass;
+                            food.Mass = 0.0;
+                        }
+                    }
+                    lock (locker)
+                    {
+                        foreach (Cube eaten_cube in eaten_cubes)
+                        {
+                            this.food_cubes.Remove(eaten_cube.UID);
+                            //this.cubes.Remove(cube3.UID);
+                        }
+                    }
             }
+            return eaten_cubes;
+    }
+
+ 
         }
 
         /// <summary>
@@ -543,12 +620,12 @@ namespace Model
         /// </summary>
         public void Update()
         {
-            lock (this) { 
-                foreach (Cube player in player_cubes)
+
+                foreach (Cube player in player_cubes.Values)
                 {
                     lock (locker)
                     {
-                        foreach (Cube cube in cubes.Values)
+                        foreach (Cube cube in food_cubes.Values)
                         {
                             if (AreOverlapping(player, cube))
                             {
@@ -577,7 +654,7 @@ namespace Model
 
                             }
                         }
-                    }
+                    
 
                 }
             }
@@ -585,14 +662,17 @@ namespace Model
 
         private bool AreOverlapping(Cube cube1, Cube cube2)
         {
+            bool test = false;
             int left = (int)Math.Max(cube1.Left, cube2.Left);
             int right = (int)Math.Min(cube1.Right, cube2.Right);
             int top = (int)Math.Max(cube1.Top, cube2.Top);
             int bottom = (int)Math.Min(cube1.Bottom, cube2.Bottom);
             int width = right - left;
             int height = top - bottom;
+            if (width > 0 && height > 0)
+                test = true;
 
-            return width > 0 && height > 0;
+            return (width > 0 && height > 0);
         }
     }
 }
