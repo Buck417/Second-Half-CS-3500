@@ -65,7 +65,7 @@ namespace View
                         //Compute the x and y offset, based on where the player cube is and how big it is.
                         int center_x = this.Width / 2;
                         int center_y = this.Height / 2;
-                        Cube player_cube = world.GetPlayerCube();
+                        Cube player_cube = null;// world.GetPlayerCube();
 
                         //If the player cube isn't in the world anymore, we know it's game over
                         if (player_cube == null)
@@ -77,7 +77,7 @@ namespace View
 
                             return;
                         }
-                        player_mass = (int)world.GetPlayerMass();
+                        player_mass = 0; // (int)world.GetPlayerMass();
                         //world.Scale = (this.Width / (player_cube.Width * 10));
 
                         lock (world)
@@ -124,7 +124,7 @@ namespace View
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
 
-            state.callback = ReceivePlayer(ar);
+            state.callback = null; // ReceivePlayer(ar);
 
             if (state.socket.Connected)
             {
@@ -153,8 +153,8 @@ namespace View
             world.AddPlayerCube(player_json);
             GameRunning = true;
 
-            state.callback = new AsyncCallback(ReceiveData);
-            Network.i_want_more_data(ar);
+            state.callback = null; // new AsyncCallback(ReceiveData);
+           // Network.i_want_more_data(ar);
         }
 
         /// <summary>
@@ -171,7 +171,7 @@ namespace View
             //Clear out what was in the last version of the world so it gets a fresh copy
             state.sb.Clear();
 
-            Network.i_want_more_data(ar);
+           // Network.i_want_more_data(ar);
         }
         /***************************************END CALLBACK DELEGATES*****************************************/
 
@@ -233,7 +233,7 @@ namespace View
             string_format.Alignment = StringAlignment.Center;
             string_format.LineAlignment = StringAlignment.Center;
 
-            e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.GetCenterX() - (cube.Width / 2), cube.GetCenterY() - (cube.Width / 2)), string_format);
+           // e.Graphics.DrawString(cube.Name, drawFont, nameBrush, new PointF(cube.GetCenterX() - (cube.Width / 2), cube.GetCenterY() - (cube.Width / 2)), string_format);
 
             //e.Graphics.ScaleTransform(1.5f, 1.5f);
         }
@@ -323,7 +323,7 @@ namespace View
         public void StartGame()
         {
             //Start by connecting to the server
-            socket = Network.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
+            //socket = Network.Connect_To_Server(new AsyncCallback(ConnectCallback), GameHost);
         }
         /******************************************* END LISTENERS ***********************************************/
     }
