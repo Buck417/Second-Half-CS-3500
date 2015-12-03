@@ -319,13 +319,17 @@ namespace Model
         /// <returns>The player cube</returns>
         public Cube AddPlayerCube(string name)
         {
-            int UID = GetNextUID();
-            Random random = new Random();
-            Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), UID, 0, false, name, PLAYER_START_MASS);
+            lock (this)
+            {
 
-            cubes.Add(cube.UID, cube);
-            player_cubes.Add(cube);
-            return cube;
+                int UID = GetNextUID();
+                Random random = new Random();
+                Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), UID, 0, false, name, PLAYER_START_MASS);
+
+                cubes.Add(cube.UID, cube);
+                player_cubes.Add(cube);
+                return cube;
+            }
         }
 
         public int GetNextUID()
@@ -430,6 +434,7 @@ namespace Model
             return player;
         }
 
+
         /// <summary>
         /// Handles drawing cubes at the edge of the world
         /// </summary>
@@ -526,35 +531,38 @@ namespace Model
         /// </summary>
         public void Update()
         {
-            foreach (Cube player in player_cubes)
-            {
-                foreach (Cube cube in cubes.Values)
+                foreach (Cube player in player_cubes)
                 {
-                    if (AreOverlapping(player, cube))
+                    foreach (Cube cube in cubes.Values)
                     {
-                        if (cube.IsFood())
+                        if (AreOverlapping(player, cube))
                         {
-                            player.Mass += cube.Mass;
-                            cube.Mass = 0;
-                            ProcessCube(player);
-                            ProcessCube(cube);
-                        }
-                        else if (cube.IsVirus())
-                        {
-                            player.Mass = 0;
-                            ProcessCube(player);
-                        }
-                        else if (cube.IsPlayer())
-                        {
-                            if (player.Mass > cube.Mass)
+                            if (cube.IsFood())
                             {
                                 player.Mass += cube.Mass;
                                 cube.Mass = 0;
                                 ProcessCube(player);
                                 ProcessCube(cube);
                             }
+                            else if (cube.IsVirus())
+                            {
+                                player.Mass = 0;
+                                ProcessCube(player);
+                            }
+                            else if (cube.IsPlayer())
+                            {
+                                if (player.Mass > cube.Mass)
+                                {
+                                    player.Mass += cube.Mass;
+                                    cube.Mass = 0;
+                                    ProcessCube(player);
+                                    ProcessCube(cube);
+                                }
+                            }
+
                         }
-                    }
+                    
+
                 }
             }
         }

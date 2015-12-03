@@ -28,14 +28,17 @@ namespace Server
 
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            heartbeatTimer.Stop();
+            lock (world)
+            {
+                heartbeatTimer.Stop();
 
-            world.AddFoodCube();
-            world.ProcessAttrition();
-            world.Update();
-            SendWorld();
+                world.AddFoodCube();
+                world.ProcessAttrition();
+                world.Update();
+                SendWorld();
 
-            heartbeatTimer.Start();
+                heartbeatTimer.Start();
+            }
         }
 
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
@@ -57,6 +60,8 @@ namespace Server
             //Preserved_State state = (Preserved_State)ar.AsyncState;
             state.callback = new Action<Preserved_State>(HandleData);
             string playerName = state.sb.ToString();
+
+            lock(world){
             Cube player = world.AddPlayerCube(playerName);
 
             PopulateWorld();
@@ -64,24 +69,29 @@ namespace Server
             //Sends the player cube and starting food cubes to the client
             SendPlayer(player);
             SendWorld();
+            }
 
             Network.i_want_more_data(state);
         }
 
         private static void SendPlayer(Cube player)
         {
-            Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
+
+                Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
+            
         }
 
         private static void SendWorld()
         {
-            StringBuilder string_builder = new StringBuilder();
 
-            foreach (Cube cube in world.cubes.Values)
-            {
-                string_builder.Append(JsonConvert.SerializeObject(cube) + "\n");
-            }
-            Network.Send(dataSocket, string_builder.ToString());
+                StringBuilder string_builder = new StringBuilder();
+
+                foreach (Cube cube in world.cubes.Values)
+                {
+                    string_builder.Append(JsonConvert.SerializeObject(cube) + "\n");
+                }
+                Network.Send(dataSocket, string_builder.ToString());
+            
         }
 
         //Handle data from the client
@@ -89,8 +99,15 @@ namespace Server
         {
             //Preserved_State state = (Preserved_State)ar.AsyncState;
             string str = state.sb.ToString();
-            world.ProcessData(str);
-            
+            lock (world)
+            {
+                world.ProcessData(str);
+                SendWorld();
+                //heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+
+            }
+
+            state.sb.Clear();
             Network.i_want_more_data(state);
         }
         /********************************* END HANDLE NETWORK COMMUNICATIONS ********************/
