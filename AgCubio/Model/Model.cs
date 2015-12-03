@@ -572,6 +572,15 @@ namespace Model
                 //If mass is 0, that means the cube has been eaten/destroyed, and should no longer be shown.
                 if (cube.Mass == 0)
                 {
+                    if (cube.IsFood())
+                        food_cubes.Remove(cube.UID);
+
+                    if (cube.Name != "")
+                        players.Remove(cube.UID);
+
+                    if (cube.IsVirus())
+                        virus_cubes.Remove(cube.UID);
+
                     cubes.Remove(cube.UID);
                 }
 
@@ -622,6 +631,7 @@ namespace Model
                     {
                         player_cube.Mass += cube.Mass * 10;
                         cube.Mass = 0;
+                        //ProcessCube(cube);
                     }
 
                     //If the cube is another player

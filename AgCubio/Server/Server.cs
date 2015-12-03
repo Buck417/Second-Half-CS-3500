@@ -78,7 +78,9 @@ namespace Server
         {
             //Preserved_State state = (Preserved_State)ar.AsyncState;
             string str = state.sb.ToString();
-            
+                          
+            world.AddFoodCube();
+
             world.ProcessData(str);
             //Update the world and send it back
             SendWorld(state);
