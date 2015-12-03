@@ -37,8 +37,8 @@ namespace Model
         {
             this.UID = uID;
             this.team_id = team_id;
-            this.X = (int)loc_x;
-            this.Y = (int)loc_y;
+            this.X = loc_x;
+            this.Y = loc_y;
             this.Color = argb_color;
             this.Name = name;
             this.Food = food;
@@ -164,7 +164,7 @@ namespace Model
     public class World
     {
         /****************** CONSTANTS FOR SERVER *************************/
-        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 5, PLAYER_START_MASS = 1000, MAX_FOOD = 500, MINIMUM_SPLIT_MASS = 100, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
+        public readonly int WIDTH = 1000, HEIGHT = 1000, HEARTBEATS_PER_SECOND = 20, TOP_SPEED = 5, LOW_SPEED = 1, FOOD_VALUE = 400, PLAYER_START_MASS = 1000, MAX_FOOD = 5, MINIMUM_SPLIT_MASS = 100, MAXIMUM_SPLIT_DISTANCE = 50, MAXIMUM_SPLITS = 6;
         public readonly double ABSORB_DISTANCE_DELTA = 0.25, ATTRITION_RATE = 1.25;
 
         //TODO: Change this to green
@@ -344,6 +344,8 @@ namespace Model
                             //AssignUID(food);
                             ProcessCube(food);
                             food_count++;
+                            food_cubes.Add(food.UID, food);
+
 
                         }
                         return true;
@@ -357,6 +359,8 @@ namespace Model
                         Cube food = new Cube((double)random.Next(0, WIDTH), (double)random.Next(0, WIDTH), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
                         AssignUID(food);
                         ProcessCube(food);
+                        food_cubes.Add(food.UID, food);
+
                         return true;
                     }
                 }
@@ -631,7 +635,7 @@ namespace Model
                     {
                         player_cube.Mass += cube.Mass * 10;
                         cube.Mass = 0;
-                        //ProcessCube(cube);
+                        food_cubes.Remove(cube.UID);
                     }
 
                     //If the cube is another player
@@ -665,10 +669,14 @@ namespace Model
         /// <returns></returns>
         private bool CollisionDetected(Cube player_cube, Cube cube)
         {
+            bool test = false;
             double overlap = OverlappingArea(player_cube, cube);
             double delta = overlap / cube.Mass;
+            if (overlap == 1)
+                return true;
+            return false;
 
-            return delta > ABSORB_DISTANCE_DELTA;
+            //return delta > ABSORB_DISTANCE_DELTA;
         }
 
         /// <summary>
@@ -680,15 +688,22 @@ namespace Model
         /// <returns></returns>
         private double OverlappingArea(Cube cube1, Cube cube2)
         {
-            double left = Math.Max(cube1.Left, cube2.Left);
-            double right = Math.Min(cube1.Right, cube2.Right);
-            double top = Math.Max(cube1.Top, cube2.Top);
-            double bottom = Math.Min(cube1.Bottom, cube2.Bottom);
+            //double left = Math.Max(cube1.Left, cube2.Left);
+            //double right = Math.Min(cube1.Right, cube2.Right);
+            //double top = Math.Max(cube1.Top, cube2.Top);
+            //double bottom = Math.Min(cube1.Bottom, cube2.Bottom);
 
-            double width = Math.Max(0, right - left);
-            double height = Math.Max(0, bottom - top);
-            return width * height;
+
+
+            //double width = Math.Max(0, right - left);
+            //double height = Math.Max(0, bottom - top);
+            //return (width * height);
+
+            if ((((cube1.X - (cube1.Width / 2)) < cube2.X) && ((cube1.X + (cube1.Width / 2)) > cube2.X)) && (((cube1.Y - (cube1.Width / 2)) < cube2.Y) && ((cube1.Y + (cube1.Width / 2)) > cube2.Y)))
+                return 1;
+            return 0;
         }
+        
 
         /// <summary>
         /// If the world has received a "split" request, check to see if it's valid (we haven't reached our max number of splits, for example).
