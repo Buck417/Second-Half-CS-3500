@@ -561,6 +561,7 @@ namespace Model
             if (player_cube.Mass >= MINIMUM_SPLIT_MASS)
             {
                 LinkedList<Cube> split_pieces = new LinkedList<Cube>();
+                LinkedList<Cube> buffer = new LinkedList<Cube>();
 
                 split_pieces.AddFirst(player_cube);
                 split_player.Add(player_cube.team_id, split_pieces);
@@ -576,8 +577,13 @@ namespace Model
                     double distance = Math.Sqrt((x - cube.X) * (x - cube.X) + (y - cube.Y) * (y - cube.Y));
                     double momentum_width = 25;
                     new_cube.set_momentum(((x-cube.X)/distance)*momentum_width, ((y-cube.Y)/distance)*momentum_width, HEARTBEATS_PER_SECOND);
-                    split_pieces.AddFirst(new_cube);
+                    buffer.AddFirst(new_cube);
                     this.player_cubes[new_cube.UID] = new_cube;
+                }
+
+                foreach(Cube c in buffer)
+                {
+                    split_pieces.AddFirst(c);
                 }
             }
         }
