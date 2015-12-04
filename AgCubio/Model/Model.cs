@@ -655,8 +655,6 @@ namespace Model
                 {
                     foreach (Cube cube in food_cubes.Values)
                     {
-                        int oldwidth;
-
                         if (AreOverlapping(player, cube))
                         {
                             if (cube.IsFood())
@@ -704,13 +702,22 @@ namespace Model
                 ProcessCube(c);
             }
         }
-
+        
+        /// <summary>
+        /// See what cubes are overlapping so we can know which food to mark as "eaten".
+        /// Note: We're effectively expanding the player cube in this context so we can absorb
+        /// more food cubes. We were doing this without the expansion before, but weren't getting
+        /// enough of the food cubes absorbed, so we needed to make that update here.
+        /// </summary>
+        /// <param name="cube1"></param>
+        /// <param name="cube2"></param>
+        /// <returns></returns>
         private bool AreOverlapping(Cube cube1, Cube cube2)
         {
-            int left = (int)Math.Max(cube1.Left, cube2.Left);
-            int right = (int)Math.Min(cube1.Right, cube2.Right);
-            int top = (int)Math.Max(cube1.Top, cube2.Top);
-            int bottom = (int)Math.Min(cube1.Bottom, cube2.Bottom);
+            int left = (int)Math.Max(cube1.Left - cube1.Width, cube2.Left);
+            int right = (int)Math.Min(cube1.Right + cube1.Width, cube2.Right);
+            int top = (int)Math.Max(cube1.Top - cube1.Width, cube2.Top);
+            int bottom = (int)Math.Min(cube1.Bottom + cube1.Width, cube2.Bottom);
             int width = right - left;
             int height = bottom - top;
 
