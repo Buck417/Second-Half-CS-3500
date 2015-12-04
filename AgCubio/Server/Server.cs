@@ -38,7 +38,7 @@ namespace Server
         /// <param name="e"></param>
         private static void SplitTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            throw new NotImplementedException();
+            
         }
 
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)

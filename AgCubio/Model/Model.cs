@@ -249,8 +249,8 @@ namespace Model
 
         public double Scale = 2.0;
         private int split_count = 0;
-        private Random randomX = new Random(1000);
-        private Random randomY = new Random(2500);
+        private Random randomX = new Random();
+        private Random randomY = new Random();
         private Random UIDGenerator = new Random();
 
 

@@ -47,7 +47,7 @@ Design decisions:
 	requests are only handled every heartbeat, and no race conditions happen.
 
 Not working: 
-	1.) Multiple clients playing at the same time
-	2.) Splitting
+	1.) Multiple clients playing at the same time (arghhhh)
+	2.) Merging after a split, and making sure split cubes don't overlap
 	3.) Viruses
-	4.) Overlap (about 80% is working, just the small part that isn't, as described above)
+	4.) Overlapping food cubes (about 80% is working, just the small part that isn't, as described above)
