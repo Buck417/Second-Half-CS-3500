@@ -31,10 +31,10 @@ namespace Model
         [JsonProperty]
         public double Mass;
         public int Width;
-        public bool allow_merge;
-        public double momentum_decay;
-        public double momentum_x;
-        public double momentum_y;
+        private bool allow_merge;
+        private double momentum_decay;
+        private double momentum_x;
+        private double momentum_y;
 
 
 
@@ -487,7 +487,7 @@ namespace Model
         /// Looks at the string and determines the location x, y where the cube wants to move
         /// </summary>
         /// <param name="moveRequest"></param>
-        public void ProcessMove(int x, int y, int player_uid)
+        private void ProcessMove(int x, int y, int player_uid)
         {
             Cube player = player_cubes[player_uid];
             ProcessPlayerMovement(x, y, player);
@@ -578,7 +578,6 @@ namespace Model
                     new_cube.set_momentum(((x-cube.X)/distance)*momentum_width, ((y-cube.Y)/distance)*momentum_width, HEARTBEATS_PER_SECOND);
                     split_pieces.AddFirst(new_cube);
                     this.player_cubes[new_cube.UID] = new_cube;
-
                 }
             }
         }
