@@ -476,10 +476,10 @@ namespace Model
             {
                 ProcessMove(x, y, player_uid);
             }
-            else if (type.Equals("split"))
-            {
-                SetupSplitCube(player_uid, x, y);
-            }
+            //else if (type.Equals("split"))
+            //{
+            //    SetupSplitCube(player_uid, x, y);
+            //}
 
         }
 
