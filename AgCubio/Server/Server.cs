@@ -119,16 +119,13 @@ namespace Server
 
         private static void SendInitialData(Cube player)
         {
-            lock (world)
+            Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
+            StringBuilder builder = new StringBuilder();
+            foreach (Cube cube in world.food_cubes.Values)
             {
-                Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
-                StringBuilder builder = new StringBuilder();
-                foreach (Cube cube in world.food_cubes.Values)
-                {
-                    builder.Append(JsonConvert.SerializeObject(cube) + "\n");
-                }
-                Network.Send(dataSocket, builder.ToString());
+                builder.Append(JsonConvert.SerializeObject(cube) + "\n");
             }
+            Network.Send(dataSocket, builder.ToString());
         }
 
         //Handle data from the client
