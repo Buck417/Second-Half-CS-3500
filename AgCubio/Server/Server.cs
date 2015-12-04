@@ -19,8 +19,9 @@ namespace Server
 
         private static Timer heartbeatTimer = new Timer();
         private static Timer splitTimer = new Timer();
-        private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> playerMovementQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
-        
+        private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> moveQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
+        private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> splitQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
+
         public static void Main(string[] args)
         {
             AgServer server = new AgServer();
@@ -47,13 +48,23 @@ namespace Server
             world.ProcessAttrition();
             StringBuilder string_builder = new StringBuilder();
             LinkedList<Cube> cubes_eaten = world.FoodConsumed();
-            Tuple<string, int, int, int> action;
-            if (playerMovementQueue.TryDequeue(out action))
+            Tuple<string, int, int, int> move;
+            if (moveQueue.TryDequeue(out move))
             {
-                string type = action.Item1;
-                int x = action.Item2;
-                int y = action.Item3;
-                int player_uid = action.Item4;
+                string type = move.Item1;
+                int x = move.Item2;
+                int y = move.Item3;
+                int player_uid = move.Item4;
+                world.ProcessData(type, x, y, player_uid);
+            }
+
+            Tuple<string, int, int, int> split;
+            if (splitQueue.TryDequeue(out split))
+            {
+                string type = split.Item1;
+                int x = split.Item2;
+                int y = split.Item3;
+                int player_uid = split.Item4;
                 world.ProcessData(type, x, y, player_uid);
             }
 
@@ -119,7 +130,7 @@ namespace Server
                 Network.Send(dataSocket, builder.ToString());
             }
         }
-        
+
         //Handle data from the client
         static void HandleData(Preserved_State state)
         {
@@ -130,7 +141,15 @@ namespace Server
             int x, y;
             if (TryParseData(movement, out type, out x, out y))
             {
-                playerMovementQueue.Enqueue(new Tuple<string, int, int, int>(type, x, y, player_uid));
+                if (type.Equals("move"))
+                    moveQueue.Enqueue(new Tuple<string, int, int, int>(type, x, y, player_uid));
+                else if (type.Equals("split"))
+                {
+                    //Make sure we can only add one split request to the queue at a time
+                    Tuple<string, int, int, int> existingSplit;
+                    if (!splitQueue.TryPeek(out existingSplit))
+                        splitQueue.Enqueue(new Tuple<string, int, int, int>(type, x, y, player_uid));
+                }
             }
             state.sb.Clear();
             System.Threading.Thread.Sleep(1000 / world.HEARTBEATS_PER_SECOND);
@@ -151,7 +170,8 @@ namespace Server
             type = "";
             x = y = 0;
 
-            try {
+            try
+            {
                 //Check to see if the request was either for move or split
                 if (int.TryParse(parts[1], out x) && int.TryParse(parts[2], out y))
                 {
@@ -162,16 +182,16 @@ namespace Server
                     }
                     else if (parts[0].Equals("split"))
                     {
-                        type = parts[1];
+                        type = parts[0];
                         return true;
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return false;
             }
-            
+
             return false;
         }
         /********************************* END HANDLE NETWORK COMMUNICATIONS ********************/
