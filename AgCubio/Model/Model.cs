@@ -31,12 +31,18 @@ namespace Model
         [JsonProperty]
         public double Mass;
         public int Width;
+        public bool allow_merge;
+        public double momentum_decay;
+        public double momentum_x;
+        public double momentum_y;
+
+
+
 
         [JsonConstructor]
         public Cube(double loc_x, double loc_y, int argb_color, int uID, int team_id, bool food, string name, double mass)
         {
             this.UID = uID;
-            this.team_id = team_id;
             this.X = (int)loc_x;
             this.Y = (int)loc_y;
             this.Color = argb_color;
@@ -44,6 +50,8 @@ namespace Model
             this.Food = food;
             this.Mass = (int)mass;
             this.Width = (int)(Math.Sqrt(this.Mass));
+            this.allow_merge = true;
+            this.team_id = uID;
         }
 
         public double Left
@@ -196,6 +204,15 @@ namespace Model
         {
             return this.UID;
         }
+
+        public void set_momentum(double momentum_x, double momentum_y, int steps)
+        {
+            this.momentum_x = momentum_x;
+            this.momentum_y = momentum_y;
+            this.momentum_decay = steps;
+        }
+
+
     }
 
     /// <summary>
@@ -236,6 +253,7 @@ namespace Model
         private Random randomY = new Random(2500);
         private Random UIDGenerator = new Random();
 
+
         //Keeps track of ALL cubes
         //public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
         //Keeps track of all player cubes
@@ -245,6 +263,9 @@ namespace Model
         public Dictionary<int, Cube> food_cubes = new Dictionary<int, Cube>();
         //Keeps track of all the virus cubes
         public Dictionary<int, Cube> virus_cubes = new Dictionary<int, Cube>();
+        //Keeps track of all split cubes
+        public Dictionary<int, LinkedList<Cube>> split_player = new Dictionary<int, LinkedList<Cube>>();
+
 
         private string gameplay_file = "world_parameters.xml";
 
@@ -362,7 +383,6 @@ namespace Model
             Random random = new Random();
             Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, false, name, PLAYER_START_MASS);
             GetNextUID(cube);
-            //cubes.Add(cube.UID, cube);
             player_cubes.Add(cube.UID, cube);
             return cube;
 
@@ -458,7 +478,7 @@ namespace Model
             }
             else if (type.Equals("split"))
             {
-                //ProcessSplit(data);
+                SetupSplitCube(player_uid, x, y);
             }
 
         }
@@ -524,6 +544,47 @@ namespace Model
                 player.X = HEIGHT - player.Width;
             }
         }
+
+
+        /// <summary>
+        /// Method for taking a cube and splitting it into another cube, with momentum added
+        /// when the cubes split
+        /// TODO: Getting it to merge
+        /// </summary>
+        /// <param name="player_uid"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        private void SetupSplitCube(int player_uid, double x, double y)
+        {
+            
+            Cube player_cube = player_cubes[player_uid];
+            if (player_cube.Mass >= MINIMUM_SPLIT_MASS)
+            {
+                LinkedList<Cube> split_pieces = new LinkedList<Cube>();
+
+                split_pieces.AddFirst(player_cube);
+                split_player.Add(player_cube.team_id, split_pieces);
+
+                LinkedList<Cube> split_up = new LinkedList<Cube>();
+                foreach (Cube cube in split_pieces)
+                {
+                    cube.Mass /= 2;
+                    Cube new_cube = new Cube(cube.X, cube.Y, cube.Color, 0, 0, false, cube.Name, cube.Mass);
+                    GetNextUID(new_cube);
+                    new_cube.team_id = cube.team_id;
+
+                    double distance = Math.Sqrt((x - cube.X) * (x - cube.X) + (y - cube.Y) * (y - cube.Y));
+                    double momentum_width = 25;
+                    new_cube.set_momentum(((x-cube.X)/distance)*momentum_width, ((y-cube.Y)/distance)*momentum_width, HEARTBEATS_PER_SECOND);
+                    split_pieces.AddFirst(new_cube);
+                    this.player_cubes[new_cube.UID] = new_cube;
+
+                }
+            }
+        }
+
+
+
 
         /// <summary>
         /// This takes care of what we need to do with a cube, depending on whether it exists and if it has mass.
