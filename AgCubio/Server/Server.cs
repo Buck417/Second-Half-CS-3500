@@ -38,7 +38,6 @@ namespace Server
             LinkedList<Cube> cubes_eaten = world.FoodConsumed();
             lock (world)
             {
-                //world.AddFoodCube();
 
                 Network.Send(dataSocket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
           
@@ -148,7 +147,7 @@ namespace Server
 
 
             state.sb.Clear();
-            System.Threading.Thread.Sleep(1000 / world.HEARTBEATS_PER_SECOND);
+            System.Threading.Thread.Sleep(300);
             Network.i_want_more_data(state);
         }
         /********************************* END HANDLE NETWORK COMMUNICATIONS ********************/
