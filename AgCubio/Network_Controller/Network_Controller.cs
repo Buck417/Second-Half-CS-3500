@@ -17,7 +17,13 @@ namespace Network_Controller
         public Socket socket = null;
         public byte[] buffer = new byte[Network.BUFFER_SIZE];
         public StringBuilder sb = new StringBuilder();
-        public int UID = 0;
+
+        private int uid;
+        public void SetUID(int _uid)
+        {
+            uid = _uid;
+        }
+        public int UID { get { return uid; } }
     }
 
     public static class Network

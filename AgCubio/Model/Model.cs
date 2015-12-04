@@ -449,14 +449,14 @@ namespace Model
         //    ProcessCube(virus);
         //}
 
-        public void ProcessData(string data, int player_uid)
+        public void ProcessData(string type, int x, int y, int player_uid)
         {
             //Move request sent
-            if (data.IndexOf("move") != -1)
+            if (type.Equals("move"))
             {
-                ProcessMove(data, player_uid);
+                ProcessMove(x, y, player_uid);
             }
-            if (data.IndexOf("split") != -1)
+            else if (type.Equals("split"))
             {
                 //ProcessSplit(data);
             }
@@ -467,23 +467,13 @@ namespace Model
         /// Looks at the string and determines the location x, y where the cube wants to move
         /// </summary>
         /// <param name="moveRequest"></param>
-        public void ProcessMove(string moveRequest, int player_uid)
+        public void ProcessMove(int x, int y, int player_uid)
         {
-            moveRequest = Regex.Replace(moveRequest.Trim(), "[()]", "");
-            string[] move = moveRequest.Split('\n');
-            if (move.Length < 2) return;
-            string moveArgs = move[move.Length - 1];
+            Cube player = player_cubes[player_uid];
+            ProcessPlayerMovement(x, y, player);
+            WorldsEdgeHandler(player);
 
-            double x, y;
-            string[] positions = moveArgs.Split(',');
-            if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
-            {
-                Cube player = player_cubes[player_uid];
-                ProcessPlayerMovement(x, y, player);
-                WorldsEdgeHandler(player);
-
-                ProcessCube(player);
-            }
+            ProcessCube(player);
         }
 
         /// <summary>
@@ -702,7 +692,7 @@ namespace Model
                 ProcessCube(c);
             }
         }
-        
+
         /// <summary>
         /// See what cubes are overlapping so we can know which food to mark as "eaten".
         /// Note: We're effectively expanding the player cube in this context so we can absorb

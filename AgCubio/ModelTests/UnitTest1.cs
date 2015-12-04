@@ -220,6 +220,24 @@ namespace ModelTests
             Assert.AreEqual(2.5, w.FAST_ATTRITION_RATE);
         }
 
+        /// <summary>
+        /// Testing out the movement/split request queue
+        /// </summary>
+        [TestMethod]
+        public void TestTuple()
+        {
+            System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> playerMovementQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
+            Tuple<string, int, int, int> first = new Tuple<string, int, int, int>("move", 200, 300, 234322);
+            playerMovementQueue.Enqueue(first);
+
+            Tuple<string, int, int, int> second;
+            Assert.AreEqual(true, playerMovementQueue.TryPeek(out second));
+            Assert.AreEqual(first.Item1, second.Item1);
+            Assert.AreEqual(first.Item2, second.Item2);
+            Assert.AreEqual(first.Item3, second.Item3);
+            Assert.AreEqual(first.Item4, second.Item4);
+        }
+
         [TestMethod]
         public void TestProcessCube()
         {
@@ -237,7 +255,7 @@ namespace ModelTests
             w.ProcessCube(c);
             Assert.AreEqual(c, w.GetVirusCube(0));
         }
-
+        /*
         [TestMethod]
         public void TestProcessMoveData()
         {
@@ -248,7 +266,7 @@ namespace ModelTests
             string moveRequest = "(move, 544, 433)\n(move, 544, 433)\n";
             w.ProcessData(moveRequest, player.UID);
             Assert.AreNotEqual(startX, player.X);
-        }
+        }*/
         
         [TestMethod]
         public void TestAddPlayerCube()
