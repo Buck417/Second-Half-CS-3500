@@ -18,14 +18,27 @@ namespace Server
         private volatile static System.Net.Sockets.Socket dataSocket;
 
         private static Timer heartbeatTimer = new Timer();
-
+        private static Timer splitTimer = new Timer();
+        
         public static int player_uid;
 
         public static void Main(string[] args)
         {
             AgServer server = new AgServer();
-            world = new World();
+            world = new World("world_parameters.xml");
+            splitTimer.Interval = world.SPLIT_INTERVAL;
+            splitTimer.Elapsed += SplitTimer_Elapsed;
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections));
+        }
+
+        /// <summary>
+        /// Once the split timer finishes, make sure the mass goes back to normal.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void SplitTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -158,9 +171,7 @@ namespace Server
         /************************************ HANDLE GAMEPLAY MECHANICS *************************/
         private static void PopulateWorld()
         {
-
-
-            for (int i = 0; i < world.MAX_FOOD; i++)
+            for (int i = 0; i < world.MAX_FOOD / 2; i++)
             {
                 world.AddFoodCube();
             }

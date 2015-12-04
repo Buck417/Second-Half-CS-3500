@@ -86,7 +86,7 @@ namespace View
                             //Draw the player cube first
                             DrawCube(player_cube, e);
 
-                            foreach (Cube cube in world.cubes.Values)
+                            foreach (Cube cube in world.player_cubes.Values)
                             {
                                 if (cube == player_cube) continue;
                                 DrawCube(cube, e);
