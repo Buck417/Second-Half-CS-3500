@@ -599,34 +599,33 @@ namespace Model
 
         public LinkedList<Cube> FoodConsumed()
         {
-            lock (this)
+
+            LinkedList<Cube> eaten_cubes = new LinkedList<Cube>();
+            foreach (Cube player in player_cubes.Values)
             {
-                LinkedList<Cube> eaten_cubes = new LinkedList<Cube>();
-                foreach (Cube player in player_cubes.Values)
+                foreach (Cube food in food_cubes.Values)
                 {
-                    foreach (Cube food in food_cubes.Values)
+                    if (AreOverlapping(player, food))
                     {
-                        if (AreOverlapping(player, food))
-                        {
-                            eaten_cubes.AddFirst(food);
-                            player.Mass += food.Mass;
-                            food.Mass = 0.0;
-                        }
-                    }
-                    lock (locker)
-                    {
-                        foreach (Cube eaten_cube in eaten_cubes)
-                        {
-                            this.food_cubes.Remove(eaten_cube.UID);
-                            //this.cubes.Remove(cube3.UID);
-                        }
+                        eaten_cubes.AddFirst(food);
+                        player.Mass += food.Mass;
+                        food.Mass = 0.0;
                     }
                 }
-                return eaten_cubes;
+                lock (locker)
+                {
+                    foreach (Cube eaten_cube in eaten_cubes)
+                    {
+                        this.food_cubes.Remove(eaten_cube.UID);
+                        //this.cubes.Remove(cube3.UID);
+                    }
+                }
             }
-
-
+            return eaten_cubes;
         }
+
+
+
 
         /// <summary>
         /// This is the main method for updating the world, which is done every
