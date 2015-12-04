@@ -474,7 +474,15 @@ namespace Model
             //Move request sent
             if (type.Equals("move"))
             {
-                ProcessMove(x, y, player_uid);
+                if(!split_player.ContainsKey(player_uid))
+                    ProcessMove(x, y, player_uid);
+                else
+                {
+                    foreach(Cube cube in split_player[player_uid])
+                    {
+                        ProcessMove(x, y, cube.UID);
+                    }
+                }
             }
             //else if (type.Equals("split"))
             //{
@@ -561,6 +569,7 @@ namespace Model
             if (player_cube.Mass >= MINIMUM_SPLIT_MASS)
             {
                 LinkedList<Cube> split_pieces = new LinkedList<Cube>();
+                LinkedList<Cube> buffer = new LinkedList<Cube>();
 
                 split_pieces.AddFirst(player_cube);
                 split_player.Add(player_cube.team_id, split_pieces);
@@ -576,8 +585,13 @@ namespace Model
                     double distance = Math.Sqrt((x - cube.X) * (x - cube.X) + (y - cube.Y) * (y - cube.Y));
                     double momentum_width = 25;
                     new_cube.set_momentum(((x-cube.X)/distance)*momentum_width, ((y-cube.Y)/distance)*momentum_width, HEARTBEATS_PER_SECOND);
-                    split_pieces.AddFirst(new_cube);
+                    buffer.AddFirst(new_cube);
                     this.player_cubes[new_cube.UID] = new_cube;
+                }
+
+                foreach(Cube c in buffer)
+                {
+                    split_pieces.AddFirst(c);
                 }
             }
         }
@@ -702,36 +716,38 @@ namespace Model
             {
                 lock (locker)
                 {
-                    foreach (Cube cube in food_cubes.Values)
+                    foreach (Cube split in split_player[player.team_id])
                     {
-                        if (AreOverlapping(player, cube))
+                        foreach (Cube cube in food_cubes.Values)
                         {
-                            if (cube.IsFood())
+                            if (AreOverlapping(split, cube))
                             {
-                                player.Mass += cube.Mass;
-                                cube.Mass = 0;
-                                playersToUpdate.Add(player);
-                                foodToUpdate.Add(cube);
-                            }
-                            else if (cube.IsVirus())
-                            {
-                                player.Mass = 0;
-                                playersToUpdate.Add(player);
-                            }
-                            else if (cube.IsPlayer())
-                            {
-                                if (player.Mass > cube.Mass)
+                                if (cube.IsFood())
                                 {
-                                    player.Mass += cube.Mass;
+                                    split.Mass += cube.Mass;
                                     cube.Mass = 0;
-                                    playersToUpdate.Add(player);
+                                    playersToUpdate.Add(split);
                                     foodToUpdate.Add(cube);
                                 }
-                            }
+                                else if (cube.IsVirus())
+                                {
+                                    split.Mass = 0;
+                                    playersToUpdate.Add(split);
+                                }
+                                else if (cube.IsPlayer())
+                                {
+                                    if (split.Mass > cube.Mass)
+                                    {
+                                        split.Mass += cube.Mass;
+                                        cube.Mass = 0;
+                                        playersToUpdate.Add(split);
+                                        foodToUpdate.Add(cube);
+                                    }
+                                }
 
+                            }
                         }
                     }
-
                 }
             }
 
