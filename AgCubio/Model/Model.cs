@@ -471,14 +471,14 @@ namespace Model
         //    ProcessCube(virus);
         //}
 
-        public void ProcessData(string data, int player_uid)
+        public void ProcessData(string type, int x, int y, int player_uid)
         {
             //Move request sent
-            if (data.IndexOf("move") != -1)
+            if (type.Equals("move"))
             {
-                ProcessMove(data, player_uid);
+                ProcessMove(x, y, player_uid);
             }
-            if (data.IndexOf("split") != -1)
+            else if (type.Equals("split"))
             {
                 ProcessSplit(data, player_uid);
             }
@@ -489,23 +489,13 @@ namespace Model
         /// Looks at the string and determines the location x, y where the cube wants to move
         /// </summary>
         /// <param name="moveRequest"></param>
-        public void ProcessMove(string moveRequest, int player_uid)
+        public void ProcessMove(int x, int y, int player_uid)
         {
-            moveRequest = Regex.Replace(moveRequest.Trim(), "[()]", "");
-            string[] move = moveRequest.Split('\n');
-            if (move.Length < 2) return;
-            string moveArgs = move[move.Length - 1];
+            Cube player = player_cubes[player_uid];
+            ProcessPlayerMovement(x, y, player);
+            WorldsEdgeHandler(player);
 
-            double x, y;
-            string[] positions = moveArgs.Split(',');
-            if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
-            {
-                Cube player = player_cubes[player_uid];
-                ProcessPlayerMovement(x, y, player);
-                WorldsEdgeHandler(player);
-
-                ProcessCube(player);
-            }
+            ProcessCube(player);
         }
 
         /// <summary>
@@ -708,8 +698,6 @@ namespace Model
                 {
                     foreach (Cube cube in food_cubes.Values)
                     {
-                        int oldwidth;
-
                         if (AreOverlapping(player, cube))
                         {
                             if (cube.IsFood())
@@ -758,12 +746,21 @@ namespace Model
             }
         }
 
+        /// <summary>
+        /// See what cubes are overlapping so we can know which food to mark as "eaten".
+        /// Note: We're effectively expanding the player cube in this context so we can absorb
+        /// more food cubes. We were doing this without the expansion before, but weren't getting
+        /// enough of the food cubes absorbed, so we needed to make that update here.
+        /// </summary>
+        /// <param name="cube1"></param>
+        /// <param name="cube2"></param>
+        /// <returns></returns>
         private bool AreOverlapping(Cube cube1, Cube cube2)
         {
-            int left = (int)Math.Max(cube1.Left, cube2.Left);
-            int right = (int)Math.Min(cube1.Right, cube2.Right);
-            int top = (int)Math.Max(cube1.Top, cube2.Top);
-            int bottom = (int)Math.Min(cube1.Bottom, cube2.Bottom);
+            int left = (int)Math.Max(cube1.Left - cube1.Width, cube2.Left);
+            int right = (int)Math.Min(cube1.Right + cube1.Width, cube2.Right);
+            int top = (int)Math.Max(cube1.Top - cube1.Width, cube2.Top);
+            int bottom = (int)Math.Min(cube1.Bottom + cube1.Width, cube2.Bottom);
             int width = right - left;
             int height = bottom - top;
 

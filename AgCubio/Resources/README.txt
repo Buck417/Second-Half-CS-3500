@@ -1,9 +1,9 @@
 ﻿Authors: Richie Frost and Ryan Fletcher
 Organization: CS 3500
-Date: November 17th, 2015
+Date: December 3, 2015
 Status: Done
 
-	This is the client application for a computer game called AgCubio. This program talks to a server, receiving data for a player
+	This is the server application for a computer game called AgCubio. This program talks to a server, receiving data for a player
 cube which can be moved across the screen, swallowing up food and smaller player cubes. The player cube can be destroyed by other
 cubes which are larger than it. The player cube is unique in a way that it is controllable with the mouse and displays the player
 name on the player cube.
@@ -16,6 +16,36 @@ all of the food that is capable of being swallowed. The cube will grow while it 
 involved with the cube which shrinks the cube continually. The game will only end once the player cube is swallowed up by a 
 larger cube. When the game ends, the client will ask if the player would like to play again. 
 
-Not working:
-	Scaling to enlarge the player cube and its world when the cube is small is not functioning at the moment.
-	Also, some of the drawing isn't as up to date as we'd like when the game first starts. There's a bit of a lag.
+Design decisions:
+	1.) For the world updating algorithm, we decided to check each player against each food cube, and add those "eaten" cubes to a 
+	buffer that's read after all the player and food cubes are processed. The reason we're doing the buffer is because we couldn't
+	update the collection of cubes we were working on in-line, or there would be a run-time error.
+	2.) When checking to see if a player cube overlaps a food cube, we "artificially" increased the size of the player cube. The
+	reason for this was because even though the math was correct for calculating an overlap, the client still wasn't showing the food
+	being eaten when it was overlapped. So, we artificially changed the overlap size so that the food would look like it was being
+	eaten, even though the client wasn't showing it correctly in the first place. The size of the "overlapping" isn't increasing past
+	a certain point, however, so that's not quite working.
+	3.) We're using IPv6 in our client connections.
+	4.) We're using Jim's client for our testing. Please don't use our client, it doesn't work. We had to change our model significantly,
+	and our networking code had to change, so we decided to stop trying to fix our client and just use Jim's client instead.
+	5.) We added some constants beyond the ones suggested to be read in the XML, namely:
+		SPLIT_INTERVAL: Recognized in the XML as "split_interval", this determines how long the split lasts, in seconds.
+		MINIMUM_ATTRITION_MASS: Recognized in the XML as "min_attrition_mass", this determines the minimum amount of mass a player cube 
+			must have in order to have attrition effects.
+		MINIMUM_FAST_ATTRITION: Recognized in the XML as "min_fast_attrition", this determines the minimum amount of mass a player cube
+			must have in order to have the attrition effect at a faster rate, which is also a constant (see next).
+		FAST_ATTRITION_RATE: Recognized in the XML as "fast_attrition_rate", this determines the rate at which attrition occurs on a player
+			cube that has a mass higher than the MINIMUM_FAST_ATTRITION constant.
+		We also included (and used) the constants suggested in the assignment specifications, such as HEARTBEATS_PER_SECOND, WIDTH, HEIGHT, etc.
+		As suggested, we put these into read-only variables that are read in when we call our second "World" constructor. That constructor
+		takes in a string that's the filename for the world_parameters.xml to be read in, just like the example server used. That XML is parsed
+		in the constructor, and sets the constants right there. If there's a problem reading the XML (the file isn't found, or there's an error
+		thrown while parsing the XML, etc) then the defaults for those constants are used. At compile time, those constants are set already.
+		If the XML is read in successfully, then it overwrites the default values for the gameplay constants.
+	6.) Attrition is done every heartbeat, at the rate that was set in the XML (default is 1.25).
+
+Not working: 
+	1.) Multiple clients playing at the same time
+	2.) Splitting
+	3.) Viruses
+	4.) Overlap (about 80% is working, just the small part that isn't, as described above)
