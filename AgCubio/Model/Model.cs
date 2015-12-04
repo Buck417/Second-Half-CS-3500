@@ -478,10 +478,10 @@ namespace Model
             {
                 ProcessMove(x, y, player_uid);
             }
-            else if (type.Equals("split"))
-            {
-                ProcessSplit(data, player_uid);
-            }
+            //else if (type.Equals("split"))
+            //{
+            //    ProcessSplit(type, player_uid);
+            //}
 
         }
 
@@ -547,24 +547,24 @@ namespace Model
             }
         }
 
-        private void ProcessSplit(String split_request, int player_uid)
-        {
-            LinkedList<Cube> split_players = new LinkedList<Cube>();
+        //private void ProcessSplit(String split_request, int player_uid)
+        //{
+        //    LinkedList<Cube> split_players = new LinkedList<Cube>();
 
-            split_request = Regex.Replace(split_request.Trim(), "[()]", "");
-            string[] split = split_request.Split('\n');
-            Cube splitting_cube = player_cubes[player_uid];
+        //    split_request = Regex.Replace(split_request.Trim(), "[()]", "");
+        //    string[] split = split_request.Split('\n');
+        //    Cube splitting_cube = player_cubes[player_uid];
 
-            string splitArgs = split[split.Length - 1];
+        //    string splitArgs = split[split.Length - 1];
 
-            double x, y;
-            string[] positions = splitArgs.Split(',');
-            if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
-            {
-                if (splitting_cube.Mass > MINIMUM_SPLIT_MASS)
-                    SplitCube(player_uid, x, y);
-            }
-        }
+        //    double x, y;
+        //    string[] positions = splitArgs.Split(',');
+        //    if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
+        //    {
+        //        if (splitting_cube.Mass > MINIMUM_SPLIT_MASS)
+        //            SplitCube(player_uid, x, y);
+        //    }
+        //}
 
         //private void SplitCube(Cube cube, double x, double y)
         //{
