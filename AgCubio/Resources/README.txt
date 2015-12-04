@@ -23,7 +23,8 @@ Design decisions:
 	2.) When checking to see if a player cube overlaps a food cube, we "artificially" increased the size of the player cube. The
 	reason for this was because even though the math was correct for calculating an overlap, the client still wasn't showing the food
 	being eaten when it was overlapped. So, we artificially changed the overlap size so that the food would look like it was being
-	eaten, even though the client wasn't showing it correctly in the first place.
+	eaten, even though the client wasn't showing it correctly in the first place. The size of the "overlapping" isn't increasing past
+	a certain point, however, so that's not quite working.
 	3.) We're using IPv6 in our client connections.
 	4.) We're using Jim's client for our testing. Please don't use our client, it doesn't work. We had to change our model significantly,
 	and our networking code had to change, so we decided to stop trying to fix our client and just use Jim's client instead.
@@ -36,6 +37,15 @@ Design decisions:
 		FAST_ATTRITION_RATE: Recognized in the XML as "fast_attrition_rate", this determines the rate at which attrition occurs on a player
 			cube that has a mass higher than the MINIMUM_FAST_ATTRITION constant.
 		We also included (and used) the constants suggested in the assignment specifications, such as HEARTBEATS_PER_SECOND, WIDTH, HEIGHT, etc.
+		As suggested, we put these into read-only variables that are read in when we call our second "World" constructor. That constructor
+		takes in a string that's the filename for the world_parameters.xml to be read in, just like the example server used. That XML is parsed
+		in the constructor, and sets the constants right there. If there's a problem reading the XML (the file isn't found, or there's an error
+		thrown while parsing the XML, etc) then the defaults for those constants are used. At compile time, those constants are set already.
+		If the XML is read in successfully, then it overwrites the default values for the gameplay constants.
+	6.) Attrition is done every heartbeat, at the rate that was set in the XML (default is 1.25).
 
 Not working: 
-	
+	1.) Multiple clients playing at the same time
+	2.) Splitting
+	3.) Viruses
+	4.) Overlap (about 80% is working, just the small part that isn't, as described above)
