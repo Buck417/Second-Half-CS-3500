@@ -31,6 +31,14 @@ namespace Model
         [JsonProperty]
         public double Mass;
         public int Width;
+        public bool allow_merge;
+        public DateTime merge_allowed_after_time;
+        public double momentum_boost_left;
+        public double momentum_x;
+        public double momentum_y;
+
+
+
 
         [JsonConstructor]
         public Cube(double loc_x, double loc_y, int argb_color, int uID, int team_id, bool food, string name, double mass)
@@ -44,6 +52,7 @@ namespace Model
             this.Food = food;
             this.Mass = (int)mass;
             this.Width = (int)(Math.Sqrt(this.Mass));
+            this.allow_merge = true;
         }
 
         public double Left
@@ -196,6 +205,15 @@ namespace Model
         {
             return this.UID;
         }
+
+        public void set_momentum(double momentum_x, double momentum_y, int steps)
+        {
+            this.momentum_x = momentum_x;
+            this.momentum_y = momentum_y;
+            this.momentum_boost_left = steps;
+        }
+
+
     }
 
     /// <summary>
@@ -236,6 +254,7 @@ namespace Model
         private Random randomY = new Random(2500);
         private Random UIDGenerator = new Random();
 
+
         //Keeps track of ALL cubes
         //public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
         //Keeps track of all player cubes
@@ -245,6 +264,9 @@ namespace Model
         public Dictionary<int, Cube> food_cubes = new Dictionary<int, Cube>();
         //Keeps track of all the virus cubes
         public Dictionary<int, Cube> virus_cubes = new Dictionary<int, Cube>();
+        //Keeps track of all split cubes
+        public Dictionary<long, LinkedList<Cube>> splits = new Dictionary<long, LinkedList<Cube>>();
+
 
         private string gameplay_file = "world_parameters.xml";
 
@@ -458,7 +480,7 @@ namespace Model
             }
             if (data.IndexOf("split") != -1)
             {
-                //ProcessSplit(data);
+                ProcessSplit(data, player_uid);
             }
 
         }
@@ -534,6 +556,37 @@ namespace Model
                 player.X = HEIGHT - player.Width;
             }
         }
+
+        private void ProcessSplit(String split_request, int player_uid)
+        {
+            LinkedList<Cube> split_players = new LinkedList<Cube>();
+
+            split_request = Regex.Replace(split_request.Trim(), "[()]", "");
+            string[] split = split_request.Split('\n');
+            Cube splitting_cube = player_cubes[player_uid];
+
+            string splitArgs = split[split.Length - 1];
+
+            double x, y;
+            string[] positions = splitArgs.Split(',');
+            if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
+            {
+                if (splitting_cube.Mass > MINIMUM_SPLIT_MASS)
+                    SplitCube(player_uid, x, y);
+            }
+        }
+
+        //private void SplitCube(Cube cube, double x, double y)
+        //{
+        //    if(split_cubes.Count == 0){
+        //        cube.team_id = cube.UID;
+        //        cube.Mass /= 2;
+        //        split_cubes.Add(cube.UID, cube);
+
+        //    }
+        //}
+
+
 
         /// <summary>
         /// This takes care of what we need to do with a cube, depending on whether it exists and if it has mass.

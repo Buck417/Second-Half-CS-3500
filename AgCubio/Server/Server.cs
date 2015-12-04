@@ -64,6 +64,8 @@ namespace Server
                     Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
                 }
 
+                
+
 
                 //world.Update();
             }
@@ -160,7 +162,7 @@ namespace Server
 
 
             state.sb.Clear();
-            System.Threading.Thread.Sleep(300);
+            System.Threading.Thread.Sleep(1000/world.HEARTBEATS_PER_SECOND);
             Network.i_want_more_data(state);
         }
         /********************************* END HANDLE NETWORK COMMUNICATIONS ********************/
