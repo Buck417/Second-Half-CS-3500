@@ -155,7 +155,7 @@ namespace Server
 
         /// <summary>
         /// Puts the data into a usable format, and we only use the
-        /// first request in the queue.
+        /// first request in the queue if it's a split.
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
@@ -163,6 +163,19 @@ namespace Server
         {
             string[] parts = data.Split('\n');
             string temp_type = Regex.Replace(parts[0], "[()]", "");
+            
+            //Look for the split, if there is one
+            if (data.Contains("split"))
+            {
+                for (int i = 0; i < parts.Length; i++)
+                {
+                    if (parts[i].Contains("split"))
+                    {
+                        temp_type = Regex.Replace(parts[i], "[()]", "");
+                        break;
+                    }
+                }
+            }
             parts = temp_type.Split(',');
             type = "";
             x = y = 0;
