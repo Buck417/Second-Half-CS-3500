@@ -22,6 +22,8 @@ namespace Server
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> moveQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> splitQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
 
+        private static volatile bool GameRunning = false;
+
         public static void Main(string[] args)
         {
             AgServer server = new AgServer();
@@ -106,7 +108,11 @@ namespace Server
             Cube player = world.AddPlayerCube(playerName);
             state.SetUID(player.UID);
 
-            PopulateWorld();
+            if (!GameRunning)
+            {
+                GameRunning = true;
+                PopulateWorld();
+            }
 
             //Sends the player cube and starting food cubes to the client
             lock (world)
@@ -149,7 +155,7 @@ namespace Server
                 }
             }
             state.sb.Clear();
-            System.Threading.Thread.Sleep(1000 / world.HEARTBEATS_PER_SECOND);
+            //System.Threading.Thread.Sleep(1000 / world.HEARTBEATS_PER_SECOND);
             Network.i_want_more_data(state);
         }
 
