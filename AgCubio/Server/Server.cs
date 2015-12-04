@@ -172,9 +172,7 @@ namespace Server
         /************************************ HANDLE GAMEPLAY MECHANICS *************************/
         private static void PopulateWorld()
         {
-
-
-            for (int i = 0; i < world.MAX_FOOD; i++)
+            for (int i = 0; i < world.MAX_FOOD / 2; i++)
             {
                 world.AddFoodCube();
             }

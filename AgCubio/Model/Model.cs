@@ -400,7 +400,7 @@ namespace Model
         {
             return player_cubes.ContainsKey(UID) ? player_cubes[UID] : null;
         }
-        
+
         public Cube GetFoodCube(int UID)
         {
             return food_cubes.ContainsKey(UID) ? food_cubes[UID] : null;
@@ -425,15 +425,17 @@ namespace Model
 
         public Cube AddFoodCube()
         {
-
-            if (food_cubes.Keys.Count < MAX_FOOD)
+            lock (this)
             {
-                Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
-                GetNextUID(food);
-                food_cubes.Add(food.UID, food);
-                return food;
+                if (food_cubes.Keys.Count < MAX_FOOD)
+                {
+                    Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
+                    GetNextUID(food);
+                    food_cubes.Add(food.UID, food);
+                    return food;
+                }
+                return null;
             }
-            return null;
         }
 
         /// <summary>
@@ -588,17 +590,19 @@ namespace Model
         /// </summary>
         public void ProcessAttrition()
         {
-
-            foreach (Cube c in player_cubes.Values)
+            lock (this)
             {
-                //If the cube's mass is between the minimum attrition mass and less than the minimum mass for the fast attrition rate, do the slow attrition rate
-                if (c.Mass > MINIMUM_ATTRITION_MASS && c.Mass < MIN_FAST_ATTRITION_MASS)
-                    c.Mass -= ATTRITION_RATE;
-                //If the cube's mass is greater than the minimum mass for fast attrition, use that rate.
-                else if (c.Mass > MIN_FAST_ATTRITION_MASS)
-                    c.Mass -= FAST_ATTRITION_RATE;
+                foreach (Cube c in player_cubes.Values)
+                {
+                    //If the cube's mass is between the minimum attrition mass and less than the minimum mass for the fast attrition rate, do the slow attrition rate
+                    if (c.Mass > MINIMUM_ATTRITION_MASS && c.Mass < MIN_FAST_ATTRITION_MASS)
+                        c.Mass -= ATTRITION_RATE;
+                    //If the cube's mass is greater than the minimum mass for fast attrition, use that rate.
+                    else if (c.Mass > MIN_FAST_ATTRITION_MASS)
+                        c.Mass -= FAST_ATTRITION_RATE;
 
-                //Otherwise, don't change the mass - because it'll be below the minimum attrition mass
+                    //Otherwise, don't change the mass - because it'll be below the minimum attrition mass
+                }
             }
 
         }
@@ -644,13 +648,15 @@ namespace Model
             HashSet<Cube> playersToUpdate = new HashSet<Cube>();
             HashSet<Cube> foodToUpdate = new HashSet<Cube>();
             LinkedList<Cube> virusToUpdate = new LinkedList<Cube>();
-            
+
             foreach (Cube player in player_cubes.Values)
             {
                 lock (locker)
                 {
                     foreach (Cube cube in food_cubes.Values)
                     {
+                        int oldwidth;
+
                         if (AreOverlapping(player, cube))
                         {
                             if (cube.IsFood())
@@ -678,22 +684,22 @@ namespace Model
 
                         }
                     }
-                    
+
                 }
             }
 
             //Now, process the change buffers
-            foreach(Cube c in foodToUpdate)
+            foreach (Cube c in foodToUpdate)
             {
                 ProcessCube(c);
             }
 
-            foreach(Cube c in playersToUpdate)
+            foreach (Cube c in playersToUpdate)
             {
                 ProcessCube(c);
             }
 
-            foreach(Cube c in virusToUpdate)
+            foreach (Cube c in virusToUpdate)
             {
                 ProcessCube(c);
             }
