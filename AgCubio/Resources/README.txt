@@ -43,6 +43,8 @@ Design decisions:
 		thrown while parsing the XML, etc) then the defaults for those constants are used. At compile time, those constants are set already.
 		If the XML is read in successfully, then it overwrites the default values for the gameplay constants.
 	6.) Attrition is done every heartbeat, at the rate that was set in the XML (default is 1.25).
+	7.) Move and split requests are queued in a concurrent queue data structure, to be dequeued every heartbeat. That way, move and split
+	requests are only handled every heartbeat, and no race conditions happen.
 
 Not working: 
 	1.) Multiple clients playing at the same time
