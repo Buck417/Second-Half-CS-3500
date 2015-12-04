@@ -264,7 +264,7 @@ namespace Model
         //Keeps track of all the virus cubes
         public Dictionary<int, Cube> virus_cubes = new Dictionary<int, Cube>();
         //Keeps track of all split cubes
-        public Dictionary<int, LinkedList<Cube>> split_player = new Dictionary<int, LinkedList<Cube>>();
+        public Dictionary<int, LinkedList<Cube>> split_players = new Dictionary<int, LinkedList<Cube>>();
 
 
         private string gameplay_file = "world_parameters.xml";
@@ -412,7 +412,7 @@ namespace Model
                     }
                 }
             }
-            c.UID = result;
+            c.UID = c.team_id = result;
 
         }
 
@@ -474,17 +474,17 @@ namespace Model
             //Move request sent
             if (type.Equals("move"))
             {
-                if(!split_player.ContainsKey(player_uid))
+                if(!split_players.ContainsKey(player_uid))
                     ProcessMove(x, y, player_uid);
                 else
                 {
-                    foreach(Cube cube in split_player[player_uid])
+                    foreach(Cube cube in split_players[player_uid])
                     {
                         ProcessMove(x, y, cube.UID);
                     }
                 }
             }
-            else if (type.Equals("split"))
+            else if (type.Equals("split") && split_count < MAXIMUM_SPLITS)
             {
                 SetupSplitCube(player_uid, x, y);
             }
@@ -499,6 +499,7 @@ namespace Model
         {
             Cube player = player_cubes[player_uid];
             ProcessPlayerMovement(x, y, player);
+            SplitOverlapHandler(player_uid);
             WorldsEdgeHandler(player);
 
             ProcessCube(player);
@@ -527,6 +528,22 @@ namespace Model
             return player;
         }
 
+        /// <summary>
+        /// Make sure split cubes don't overlap
+        /// </summary>
+        /// <param name="player_uid"></param>
+        private void SplitOverlapHandler(int player_uid)
+        {
+            //Calculate offset from previous cube
+            if (!split_players.ContainsKey(player_uid))
+            {
+                return;
+            }
+            else
+            {
+
+            }
+        }
 
         /// <summary>
         /// Handles drawing cubes at the edge of the world
@@ -571,8 +588,16 @@ namespace Model
                 LinkedList<Cube> split_pieces = new LinkedList<Cube>();
                 LinkedList<Cube> buffer = new LinkedList<Cube>();
 
-                split_pieces.AddFirst(player_cube);
-                split_player.Add(player_cube.team_id, split_pieces);
+                if (!split_players.ContainsKey(player_cube.team_id))
+                {
+                    split_pieces.AddFirst(player_cube);
+                    split_players.Add(player_cube.team_id, split_pieces);
+                }
+                else
+                {
+                    split_pieces = split_players[player_uid];
+                    split_pieces.AddFirst(player_cube);
+                }
 
                 LinkedList<Cube> split_up = new LinkedList<Cube>();
                 foreach (Cube cube in split_pieces)
@@ -583,7 +608,7 @@ namespace Model
                     new_cube.team_id = cube.team_id;
 
                     double distance = Math.Sqrt((x - cube.X) * (x - cube.X) + (y - cube.Y) * (y - cube.Y));
-                    double momentum_width = 25;
+                    double momentum_width = MAXIMUM_SPLIT_DISTANCE;
                     new_cube.set_momentum(((x-cube.X)/distance)*momentum_width, ((y-cube.Y)/distance)*momentum_width, HEARTBEATS_PER_SECOND);
                     buffer.AddFirst(new_cube);
                     this.player_cubes[new_cube.UID] = new_cube;
@@ -593,6 +618,7 @@ namespace Model
                 {
                     split_pieces.AddFirst(c);
                 }
+                split_count++;
             }
         }
 
@@ -716,7 +742,7 @@ namespace Model
             {
                 lock (locker)
                 {
-                    foreach (Cube split in split_player[player.team_id])
+                    foreach (Cube split in split_players[player.team_id])
                     {
                         foreach (Cube cube in food_cubes.Values)
                         {
