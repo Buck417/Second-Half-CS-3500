@@ -312,17 +312,13 @@ namespace Model
         /// <returns>The player cube</returns>
         public Cube AddPlayerCube(string name)
         {
-            lock (this)
-            {
+            int UID = GetNextUID();
+            Random random = new Random();
+            Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), UID, 0, false, name, PLAYER_START_MASS);
 
-                int UID = GetNextUID();
-                Random random = new Random();
-                Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), UID, 0, false, name, PLAYER_START_MASS);
-
-                cubes.Add(cube.UID, cube);
-                player_cubes.Add(cube);
-                return cube;
-            }
+            //This will add the player cube as well as put it into the generic list of cubes
+            ProcessCube(cube);
+            return cube;
         }
 
         public int GetNextUID()
@@ -352,13 +348,10 @@ namespace Model
 
         public void AddFoodCube()
         {
-            lock (this)
+            if (food_cubes.Keys.Count < MAX_FOOD)
             {
-                if (food_cubes.Keys.Count < MAX_FOOD)
-                {
-                    Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), GetNextUID(), 0, true, "", FOOD_VALUE);
-                    ProcessCube(food);
-                }
+                Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), GetNextUID(), 0, true, "", FOOD_VALUE);
+                ProcessCube(food);
             }
         }
 
@@ -380,7 +373,7 @@ namespace Model
             {
                 ProcessMove(data);
             }
-            if (data.IndexOf("split") != -1)
+            else if (data.IndexOf("split") != -1)
             {
                 //ProcessSplit(data);
             }
@@ -406,7 +399,7 @@ namespace Model
             if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
             {
                 Cube player = player_cubes.First();
-                ProcessPlayerMovement(x, y, player);
+                player = ProcessPlayerMovement(x, y, player);
                 WorldsEdgeHandler(player);
 
                 ProcessCube(player);
@@ -432,7 +425,8 @@ namespace Model
             if (speed < LOW_SPEED)
                 speed = LOW_SPEED;
 
-            ProcessCube(player);
+            //This is already being called when this method returns
+            //ProcessCube(player);
             return player;
         }
 
@@ -468,43 +462,45 @@ namespace Model
         /// <param name="cube"></param>
         public void ProcessCube(Cube cube)
         {
-            bool cubeExists = cubes.ContainsKey(cube.UID);
-            bool IsVirus = cube.IsVirus();
-            bool IsFood = cube.Food;
-            bool IsPlayer = !cube.Food && !cube.IsVirus();
-
-            if (cubeExists)
+            lock (this)
             {
-                //If mass is 0, that means the cube has been eaten/destroyed, and should no longer be shown.
-                if (cube.Mass == 0)
+                bool cubeExists = cubes.ContainsKey(cube.UID);
+                bool IsVirus = cube.IsVirus();
+                bool IsFood = cube.Food;
+                bool IsPlayer = !cube.Food && !cube.IsVirus();
+
+                if (cubeExists)
                 {
-                    cubes.Remove(cube.UID);
-                    if (IsVirus) virus_cubes.Remove(cube.UID);
-                    else if (IsFood) food_cubes.Remove(cube.UID);
-                    else if (IsPlayer) player_cubes.Remove(cube);
+                    //If mass is 0, that means the cube has been eaten/destroyed, and should no longer be shown.
+                    if (cube.Mass == 0)
+                    {
+                        cubes.Remove(cube.UID);
+                        if (IsVirus) virus_cubes.Remove(cube.UID);
+                        else if (IsFood) food_cubes.Remove(cube.UID);
+                        else if (IsPlayer) player_cubes.Remove(cube);
+                    }
+
+                    //If the mass isn't 0, it means the cube exists, and should be updated. The location may change, size, etc.
+                    else
+                    {
+                        cubes[cube.UID] = cube;
+                        if (IsVirus) virus_cubes[cube.UID] = cube;
+                        else if (IsFood) food_cubes[cube.UID] = cube;
+                    }
                 }
 
-                //If the mass isn't 0, it means the cube exists, and should be updated. The location may change, size, etc.
+                //If the cube doesn't exist, only add it if it has a mass.
                 else
                 {
-                    cubes[cube.UID] = cube;
-                    if (IsVirus) virus_cubes[cube.UID] = cube;
-                    else if (IsFood) food_cubes[cube.UID] = cube;
+                    if (cube.Mass > 0)
+                    {
+                        cubes.Add(cube.UID, cube);
+                        if (IsVirus) virus_cubes.Add(cube.UID, cube);
+                        else if (IsFood) food_cubes.Add(cube.UID, cube);
+                        else if (IsPlayer) player_cubes.Add(cube);
+                    }
                 }
             }
-
-            //If the cube doesn't exist, only add it if it has a mass.
-            else
-            {
-                if (cube.Mass > 0)
-                {
-                    cubes.Add(cube.UID, cube);
-                    if (IsVirus) virus_cubes.Add(cube.UID, cube);
-                    else if (IsFood) food_cubes.Add(cube.UID, cube);
-                    else if (IsPlayer) player_cubes.Add(cube);
-                }
-            }
-
         }
 
         /// <summary>
@@ -536,7 +532,7 @@ namespace Model
         /// </summary>
         public void Update()
         {
-            lock (this) { 
+            /*lock (this) { 
                 foreach (Cube player in player_cubes)
                 {
                     lock (locker)
@@ -573,7 +569,7 @@ namespace Model
                     }
 
                 }
-            }
+            }*/
         }
 
         private bool AreOverlapping(Cube cube1, Cube cube2)

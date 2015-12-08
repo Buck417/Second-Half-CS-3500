@@ -36,12 +36,13 @@ namespace Server
             if (GameRunning)
             {
                 heartbeatTimer.Stop();
-
-                world.AddFoodCube();
-                world.ProcessAttrition();
-                //world.Update();
-                SendWorld();
-
+                lock (world)
+                {
+                    world.AddFoodCube();
+                    world.ProcessAttrition();
+                    //world.Update();
+                    SendWorld();
+                }
                 heartbeatTimer.Start();
             }
         }
@@ -64,26 +65,20 @@ namespace Server
             state.callback = new Action<Preserved_State>(HandleData);
             string playerName = state.sb.ToString();
 
-            lock (locker)
-            {
-                Cube player = world.AddPlayerCube(playerName);
+            Cube player = world.AddPlayerCube(playerName);
 
-                PopulateWorld();
+            PopulateWorld();
 
-                //Sends the player cube and starting food cubes to the client
-                SendPlayer(player);
-                SendWorld();
-            }
+            //Sends the player cube and starting food cubes to the client
+            SendPlayer(player);
+            SendWorld();
             
             Network.i_want_more_data(state);
         }
 
         private static void SendPlayer(Cube player)
         {
-            lock (world)
-            {
-                Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
-            }
+            Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
         }
 
         private static void SendWorld()
@@ -105,13 +100,11 @@ namespace Server
         {
             //Preserved_State state = (Preserved_State)ar.AsyncState;
             string str = state.sb.ToString();
-            lock (world)
-            {
-                world.ProcessData(str);
-                //SendWorld();
-                //heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
 
-            }
+            world.ProcessData(str);
+            //SendWorld();
+            //heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+
 
             state.sb.Clear();
             Network.i_want_more_data(state);
@@ -124,16 +117,14 @@ namespace Server
         /************************************ HANDLE GAMEPLAY MECHANICS *************************/
         private static void PopulateWorld()
         {
-            lock (world)
+
+            for (int i = 0; i < world.MAX_FOOD; i++)
             {
-                for (int i = 0; i < world.MAX_FOOD; i++)
-                {
-                    world.AddFoodCube();
-                }
-                for (int i = 0; i < world.VIRUS_COUNT; i++)
-                {
-                    world.AddVirusCube();
-                }
+                world.AddFoodCube();
+            }
+            for (int i = 0; i < world.VIRUS_COUNT; i++)
+            {
+                world.AddVirusCube();
             }
         }
 
