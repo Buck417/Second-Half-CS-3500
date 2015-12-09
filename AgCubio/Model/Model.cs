@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Drawing;
 using System.Text.RegularExpressions;
+using Database_Controller;
 
 namespace Model
 {
@@ -35,6 +36,7 @@ namespace Model
         private double momentum_decay;
         private double momentum_x;
         private double momentum_y;
+        public double max_mass;
 
 
 
@@ -52,6 +54,7 @@ namespace Model
             this.Width = (int)(Math.Sqrt(this.Mass));
             this.allow_merge = true;
             this.team_id = uID;
+            this.max_mass = mass;
         }
 
         public double Left
@@ -648,13 +651,23 @@ namespace Model
                     //cubes.Remove(cube.UID);
                     if (IsVirus) virus_cubes.Remove(cube.UID);
                     else if (IsFood) food_cubes.Remove(cube.UID);
-                    else if (IsPlayer) player_cubes.Remove(cube.UID);
+                    else if (IsPlayer)
+                    {
+                        player_cubes.Remove(cube.UID);
+                    }
                 }
 
                 //If the mass isn't 0, it means the cube exists, and should be updated. The location may change, size, etc.
                 else
                 {
-                    if (IsPlayer) player_cubes[cube.UID] = cube;
+
+                    if (IsPlayer)
+                    {
+                        //If the current mass of the player is the maximum mass the player has attained, set the max_mass to the current mass
+                        if (cube.Mass > cube.max_mass)
+                            cube.max_mass = cube.Mass;
+                        player_cubes[cube.UID] = cube;
+                    }
                     if (IsVirus) virus_cubes[cube.UID] = cube;
                     else if (IsFood) food_cubes[cube.UID] = cube;
                 }
@@ -717,7 +730,6 @@ namespace Model
                     foreach (Cube eaten_cube in eaten_cubes)
                     {
                         this.food_cubes.Remove(eaten_cube.UID);
-                        //this.cubes.Remove(cube3.UID);
                     }
                 }
             }

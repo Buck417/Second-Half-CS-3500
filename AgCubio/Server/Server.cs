@@ -68,6 +68,8 @@ namespace Server
                 world.ProcessData(type, x, y, player_uid);
             }
 
+            //world.Update();
+
             Network.Send(dataSocket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
 
             foreach (Cube cube in cubes_eaten)

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 
+
 namespace Database_Controller
 {
     /// <summary>
@@ -15,6 +16,7 @@ namespace Database_Controller
     public class Database
     {
         private static string connectionString = "server=atr.eng.utah.edu;database=cs3500_rfrost;uid=cs3500_rfrost;password=PSWRD";
+
 
 
         /***************************************************** METHODS FOR INSERTING DATA ****************************************************/
