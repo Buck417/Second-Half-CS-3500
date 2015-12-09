@@ -223,10 +223,7 @@ namespace Network_Controller
             //Create socket that can accept both IPv4 and IPv6
             Socket server_socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
             server_socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-
-            Socket web_socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
-            web_socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-
+            
             //Try having the socket listen to the port for any IPaddress and accept
             try
             {

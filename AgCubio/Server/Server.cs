@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Timers;
+using Database_Controller;
 
 namespace Server
 {
@@ -29,23 +30,14 @@ namespace Server
             splitTimer.Interval = world.SPLIT_INTERVAL;
             splitTimer.Elapsed += SplitTimer_Elapsed;
 
+            //Web server listener
+            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
+
             //AgCubio server stuff
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
 
-            //Web server listener
-            Network.Server_Awaiting_Client_Loop(Handle_Web_Server_Connection, 11100);
         }
-
-        private static void Handle_Web_Server_Connection(Preserved_State state)
-        {
-            
-        }
-
-        private static void Process_Web_Server_Request(Preserved_State state)
-        {
-
-        }
-
+        
         /// <summary>
         /// Once the split timer finishes, make sure the mass goes back to normal.
         /// </summary>
@@ -109,8 +101,61 @@ namespace Server
 
 
         /********************************* HANDLE WEB SERVER COMMUNICATIONS **********************/
+        private static void Handle_Web_Server_Connection(Preserved_State state)
+        {
+            state.callback = Process_Web_Server_Request;
+            Network.i_want_more_data(state);
+        }
 
-        /********************************* HANDLE WEB SERVER COMMUNICATIONS **********************/
+        private static void Process_Web_Server_Request(Preserved_State state)
+        {
+            string http_request = state.sb.ToString();
+            //string[] parts = http_request.Split('\r\n');
+
+            string request = "players";
+            StringBuilder result = new StringBuilder();
+
+            if (request.Equals("players"))
+            {
+                LinkedList<Game> games = Database.GetAllGamesByPlayer(request);
+
+                //Start out by adding the necessary HTML
+                result.Append(Get_HTML_Header());
+
+                //Append the table HTML
+                result.Append("<table>");
+
+                //Go through each game and put it in some useful HTML
+                string game_tpl = "<tr><td>player_name</td><td>max_mass</td>";
+                string row = "";
+                foreach (Game game in games)
+                {
+                    row = game_tpl.Replace("player_name", game.player_name).Replace("max_mass", game.max_mass.ToString());
+                    result.Append(row);
+                }
+
+                //Append the ending table HTML
+                result.Append("</table>");
+
+                //Append the closing HTML tags
+                result.Append(Get_HTML_Footer());
+
+                Network.Send(state.socket, result.ToString());
+                state.socket.Close();
+            }
+        }
+
+
+        private static string Get_HTML_Header()
+        {
+            return "<html><body>";
+        }
+
+        private static string Get_HTML_Footer()
+        {
+            return "</body></html>";
+        }
+        /******************************* END HANDLE WEB SERVER COMMUNICATIONS ********************/
 
 
 

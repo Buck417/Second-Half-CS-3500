@@ -167,7 +167,7 @@ namespace Database_Controller
         /// </summary>
         /// <param name="game_id"></param>
         /// <returns></returns>
-        public LinkedList<Player_Eaten> GetPlayersEaten(int game_id)
+        public static LinkedList<Player_Eaten> GetPlayersEaten(int game_id)
         {
             LinkedList<Player_Eaten> players = new LinkedList<Player_Eaten>();
             using (MySqlConnection conn = new MySqlConnection(connectionString))
