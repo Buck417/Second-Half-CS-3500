@@ -28,7 +28,22 @@ namespace Server
             world = new World("world_parameters.xml");
             splitTimer.Interval = world.SPLIT_INTERVAL;
             splitTimer.Elapsed += SplitTimer_Elapsed;
-            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections));
+
+            //AgCubio server stuff
+            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
+
+            //Web server listener
+            Network.Server_Awaiting_Client_Loop(Handle_Web_Server_Connection, 11100);
+        }
+
+        private static void Handle_Web_Server_Connection(Preserved_State state)
+        {
+            
+        }
+
+        private static void Process_Web_Server_Request(Preserved_State state)
+        {
+
         }
 
         /// <summary>
@@ -84,6 +99,16 @@ namespace Server
 
             heartbeatTimer.Start();
         }
+
+
+
+        /********************************* HANDLE WEB SERVER COMMUNICATIONS **********************/
+
+        /********************************* HANDLE WEB SERVER COMMUNICATIONS **********************/
+
+
+
+
 
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
         //Handle new client connections
