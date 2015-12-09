@@ -31,12 +31,18 @@ namespace Model
         [JsonProperty]
         public double Mass;
         public int Width;
+        private bool allow_merge;
+        private double momentum_decay;
+        private double momentum_x;
+        private double momentum_y;
+
+
+
 
         [JsonConstructor]
         public Cube(double loc_x, double loc_y, int argb_color, int uID, int team_id, bool food, string name, double mass)
         {
             this.UID = uID;
-            this.team_id = team_id;
             this.X = (int)loc_x;
             this.Y = (int)loc_y;
             this.Color = argb_color;
@@ -44,6 +50,8 @@ namespace Model
             this.Food = food;
             this.Mass = (int)mass;
             this.Width = (int)(Math.Sqrt(this.Mass));
+            this.allow_merge = true;
+            this.team_id = uID;
         }
 
         public double Left
@@ -154,6 +162,57 @@ namespace Model
         {
             return this.Food == false && !IsVirus();
         }
+
+        /// <summary>
+        /// Helper for returning color of a cube
+        /// </summary>
+        /// <returns></returns>
+        public int GetColor()
+        {
+            return this.Color;
+        }
+
+        /// <summary>
+        /// Equals method to compare two cubes
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public bool Equals(Cube c)
+        {
+            return (this.UID == c.UID);
+        }
+
+        /// <summary>
+        /// Equals method to see if an object is a cube
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (((Cube)obj) == null)
+            {
+                return false;
+            }
+            return (this.UID == ((Cube)obj).UID);
+        }
+
+        /// <summary>
+        /// Overrides hashcode to return uid as the hashcode
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return this.UID;
+        }
+
+        public void set_momentum(double momentum_x, double momentum_y, int steps)
+        {
+            this.momentum_x = momentum_x;
+            this.momentum_y = momentum_y;
+            this.momentum_decay = steps;
+        }
+
+
     }
 
     /// <summary>
@@ -169,17 +228,19 @@ namespace Model
             LOW_SPEED = 1,
             FOOD_VALUE = 5,
             PLAYER_START_MASS = 1000,
-            MAX_FOOD = 500,
-            MINIMUM_ATTRITION_MASS = 200,
+            MAX_FOOD = 5000,
+            MINIMUM_ATTRITION_MASS = 700,
             MIN_FAST_ATTRITION_MASS = 1100,
             MINIMUM_SPLIT_MASS = 100,
             MAXIMUM_SPLIT_DISTANCE = 50,
-            MAXIMUM_SPLITS = 6;
+            MAXIMUM_SPLITS = 6,
+            SPLIT_INTERVAL = 10;
 
         public readonly double ABSORB_DISTANCE_DELTA = 0.25,
             ATTRITION_RATE = 1.25,
             FAST_ATTRITION_RATE = 2.5;
 
+        //TODO: Change this to green
         public readonly static int VIRUS_COLOR = Color.Green.ToArgb();
         public readonly static int VIRUS_MASS = 500;
         public readonly int VIRUS_COUNT = 2;
@@ -188,19 +249,23 @@ namespace Model
 
         public double Scale = 2.0;
         private int split_count = 0;
-        private Random randomX = new Random(1000);
-        private Random randomY = new Random(2500);
+        private Random randomX = new Random();
+        private Random randomY = new Random();
         private Random UIDGenerator = new Random();
 
+
         //Keeps track of ALL cubes
-        public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
+        //public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
         //Keeps track of all player cubes
-        public HashSet<Cube> player_cubes = new HashSet<Cube>();
+        public Dictionary<int, Cube> player_cubes = new Dictionary<int, Cube>();
 
         //Keeps track of all the food cubes 
         public Dictionary<int, Cube> food_cubes = new Dictionary<int, Cube>();
         //Keeps track of all the virus cubes
         public Dictionary<int, Cube> virus_cubes = new Dictionary<int, Cube>();
+        //Keeps track of all split cubes
+        public Dictionary<int, LinkedList<Cube>> split_players = new Dictionary<int, LinkedList<Cube>>();
+
 
         private string gameplay_file = "world_parameters.xml";
 
@@ -268,6 +333,9 @@ namespace Model
                                     case "min_split_mass":
                                         this.MINIMUM_SPLIT_MASS = reader.ReadElementContentAsInt();
                                         break;
+                                    case "split_interval":
+                                        this.SPLIT_INTERVAL = reader.ReadElementContentAsInt();
+                                        break;
                                     case "min_attrition_mass":
                                         this.MINIMUM_ATTRITION_MASS = reader.ReadElementContentAsInt();
                                         break;
@@ -312,26 +380,55 @@ namespace Model
         /// <returns>The player cube</returns>
         public Cube AddPlayerCube(string name)
         {
-            int UID = GetNextUID();
             Random random = new Random();
-            Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), UID, 0, false, name, PLAYER_START_MASS);
-
-            //This will add the player cube as well as put it into the generic list of cubes
-            ProcessCube(cube);
+            Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, false, name, PLAYER_START_MASS);
+            GetNextUID(cube);
+            player_cubes.Add(cube.UID, cube);
             return cube;
+
         }
 
-        public int GetNextUID()
+        public void GetNextUID(Cube c)
         {
             int result = UIDGenerator.Next(MAX_UID);
-            if (cubes.ContainsKey(result))
+            if (c.IsPlayer())
             {
-                while (cubes.ContainsKey(result))
+                if (player_cubes.ContainsKey(result))
                 {
-                    result = UIDGenerator.Next(MAX_UID);
+                    while (player_cubes.ContainsKey(result))
+                    {
+                        result = UIDGenerator.Next(MAX_UID);
+                    }
                 }
             }
-            return result;
+            c.UID = result;
+            if (c.IsFood())
+            {
+                if (food_cubes.ContainsKey(result))
+                {
+                    while (food_cubes.ContainsKey(result))
+                    {
+                        result = UIDGenerator.Next(MAX_UID);
+                    }
+                }
+            }
+            c.UID = c.team_id = result;
+
+        }
+
+        public Cube GetPlayerCube(int UID)
+        {
+            return player_cubes.ContainsKey(UID) ? player_cubes[UID] : null;
+        }
+
+        public Cube GetFoodCube(int UID)
+        {
+            return food_cubes.ContainsKey(UID) ? food_cubes[UID] : null;
+        }
+
+        public Cube GetVirusCube(int UID)
+        {
+            return virus_cubes.ContainsKey(UID) ? virus_cubes[UID] : null;
         }
 
         /// <summary>
@@ -339,19 +436,25 @@ namespace Model
         /// </summary>
         /// <param name="UID"></param>
         /// <returns></returns>
-        public Cube GetCube(int UID)
-        {
-            if (cubes.ContainsKey(UID))
-                return cubes[UID];
-            else return null;
-        }
+        //public Cube GetCube(int UID)
+        //{
+        //    if (cubes.ContainsKey(UID))
+        //        return cubes[UID];
+        //    else return null;
+        //}
 
-        public void AddFoodCube()
+        public Cube AddFoodCube()
         {
-            if (food_cubes.Keys.Count < MAX_FOOD)
+            lock (this)
             {
-                Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), GetNextUID(), 0, true, "", FOOD_VALUE);
-                ProcessCube(food);
+                if (food_cubes.Keys.Count < MAX_FOOD)
+                {
+                    Cube food = new Cube(RandomX(), RandomY(), Color.FromArgb(randomX.Next(int.MaxValue)).ToArgb(), 0, 0, true, "", FOOD_VALUE);
+                    GetNextUID(food);
+                    food_cubes.Add(food.UID, food);
+                    return food;
+                }
+                return null;
             }
         }
 
@@ -360,22 +463,30 @@ namespace Model
         /// any player cube touches it, the player cube will explode and die.
         /// </summary>
         /// <returns></returns>
-        public void AddVirusCube()
-        {
-            Cube virus = new Cube(RandomX(), RandomY(), VIRUS_COLOR, GetNextUID(), 0, true, "", VIRUS_MASS);
-            ProcessCube(virus);
-        }
+        //public void AddVirusCube()
+        //{
+        //    Cube virus = new Cube(RandomX(), RandomY(), VIRUS_COLOR, GetNextUID(), 0, true, "", VIRUS_MASS);
+        //    ProcessCube(virus);
+        //}
 
-        public void ProcessData(string data)
+        public void ProcessData(string type, int x, int y, int player_uid)
         {
             //Move request sent
-            if (data.IndexOf("move") != -1)
+            if (type.Equals("move"))
             {
-                ProcessMove(data);
+                if (!split_players.ContainsKey(player_uid))
+                    ProcessMove(x, y, player_uid);
+                else
+                {
+                    foreach (Cube cube in split_players[player_uid])
+                    {
+                        ProcessMove(x, y, cube.UID);
+                    }
+                }
             }
-            else if (data.IndexOf("split") != -1)
+            else if (type.Equals("split") && split_count < MAXIMUM_SPLITS)
             {
-                //ProcessSplit(data);
+                SetupSplitCube(player_uid, x, y);
             }
 
         }
@@ -384,26 +495,14 @@ namespace Model
         /// Looks at the string and determines the location x, y where the cube wants to move
         /// </summary>
         /// <param name="moveRequest"></param>
-        public void ProcessMove(string moveRequest)
+        private void ProcessMove(int x, int y, int player_uid)
         {
-            moveRequest = Regex.Replace(moveRequest.Trim(), "[()]", "");
-            string[] move = moveRequest.Split('\n');
-            string moveArgs;
-            if (move.Length >= 2)
-                moveArgs = move[move.Length - 1];
-            else
-                moveArgs = move[0];
+            Cube player = player_cubes[player_uid];
+            ProcessPlayerMovement(x, y, player);
+            SplitOverlapHandler(player_uid);
+            WorldsEdgeHandler(player);
 
-            double x, y;
-            string[] positions = moveArgs.Split(',');
-            if (double.TryParse(positions[1], out x) && double.TryParse(positions[2], out y))
-            {
-                Cube player = player_cubes.First();
-                player = ProcessPlayerMovement(x, y, player);
-                WorldsEdgeHandler(player);
-
-                ProcessCube(player);
-            }
+            ProcessCube(player);
         }
 
         /// <summary>
@@ -425,11 +524,26 @@ namespace Model
             if (speed < LOW_SPEED)
                 speed = LOW_SPEED;
 
-            //This is already being called when this method returns
-            //ProcessCube(player);
+            ProcessCube(player);
             return player;
         }
 
+        /// <summary>
+        /// Make sure split cubes don't overlap
+        /// </summary>
+        /// <param name="player_uid"></param>
+        private void SplitOverlapHandler(int player_uid)
+        {
+            //Calculate offset from previous cube
+            if (!split_players.ContainsKey(player_uid))
+            {
+                return;
+            }
+            else
+            {
+
+            }
+        }
 
         /// <summary>
         /// Handles drawing cubes at the edge of the world
@@ -456,51 +570,108 @@ namespace Model
             }
         }
 
+
+        /// <summary>
+        /// Method for taking a cube and splitting it into another cube, with momentum added
+        /// when the cubes split
+        /// TODO: Getting it to merge
+        /// </summary>
+        /// <param name="player_uid"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        private void SetupSplitCube(int player_uid, double x, double y)
+        {
+
+            Cube player_cube = player_cubes[player_uid];
+            if (player_cube.Mass >= MINIMUM_SPLIT_MASS)
+            {
+                LinkedList<Cube> split_pieces = new LinkedList<Cube>();
+                LinkedList<Cube> buffer = new LinkedList<Cube>();
+
+                if (!split_players.ContainsKey(player_cube.team_id))
+                {
+                    split_pieces.AddFirst(player_cube);
+                    split_players.Add(player_cube.team_id, split_pieces);
+                }
+                else
+                {
+                    split_pieces = split_players[player_uid];
+                    split_pieces.AddFirst(player_cube);
+                }
+
+                LinkedList<Cube> split_up = new LinkedList<Cube>();
+                foreach (Cube cube in split_pieces)
+                {
+                    cube.Mass /= 2;
+                    Cube new_cube = new Cube(cube.X, cube.Y, cube.Color, 0, 0, false, cube.Name, cube.Mass);
+                    GetNextUID(new_cube);
+                    new_cube.team_id = cube.team_id;
+
+                    double distance = Math.Sqrt((x - cube.X) * (x - cube.X) + (y - cube.Y) * (y - cube.Y));
+                    double momentum_width = MAXIMUM_SPLIT_DISTANCE;
+                    new_cube.set_momentum(((x - cube.X) / distance) * momentum_width, ((y - cube.Y) / distance) * momentum_width, HEARTBEATS_PER_SECOND);
+                    buffer.AddFirst(new_cube);
+                    this.player_cubes[new_cube.UID] = new_cube;
+                }
+
+                foreach (Cube c in buffer)
+                {
+                    split_pieces.AddFirst(c);
+                }
+                split_count++;
+            }
+        }
+
+
+
+
         /// <summary>
         /// This takes care of what we need to do with a cube, depending on whether it exists and if it has mass.
         /// </summary>
         /// <param name="cube"></param>
         public void ProcessCube(Cube cube)
         {
-            lock (this)
+            bool cubeExists = false;
+            if (player_cubes.ContainsKey(cube.UID) || food_cubes.ContainsKey(cube.UID))
             {
-                bool cubeExists = cubes.ContainsKey(cube.UID);
-                bool IsVirus = cube.IsVirus();
-                bool IsFood = cube.Food;
-                bool IsPlayer = !cube.Food && !cube.IsVirus();
+                cubeExists = true;
+            }
+            bool IsVirus = cube.IsVirus();
+            bool IsFood = cube.Food;
+            bool IsPlayer = !cube.Food && !cube.IsVirus();
 
-                if (cubeExists)
+            if (cubeExists)
+            {
+                //If mass is 0, that means the cube has been eaten/destroyed, and should no longer be shown.
+                if (cube.Mass == 0)
                 {
-                    //If mass is 0, that means the cube has been eaten/destroyed, and should no longer be shown.
-                    if (cube.Mass == 0)
-                    {
-                        cubes.Remove(cube.UID);
-                        if (IsVirus) virus_cubes.Remove(cube.UID);
-                        else if (IsFood) food_cubes.Remove(cube.UID);
-                        else if (IsPlayer) player_cubes.Remove(cube);
-                    }
-
-                    //If the mass isn't 0, it means the cube exists, and should be updated. The location may change, size, etc.
-                    else
-                    {
-                        cubes[cube.UID] = cube;
-                        if (IsVirus) virus_cubes[cube.UID] = cube;
-                        else if (IsFood) food_cubes[cube.UID] = cube;
-                    }
+                    //cubes.Remove(cube.UID);
+                    if (IsVirus) virus_cubes.Remove(cube.UID);
+                    else if (IsFood) food_cubes.Remove(cube.UID);
+                    else if (IsPlayer) player_cubes.Remove(cube.UID);
                 }
 
-                //If the cube doesn't exist, only add it if it has a mass.
+                //If the mass isn't 0, it means the cube exists, and should be updated. The location may change, size, etc.
                 else
                 {
-                    if (cube.Mass > 0)
-                    {
-                        cubes.Add(cube.UID, cube);
-                        if (IsVirus) virus_cubes.Add(cube.UID, cube);
-                        else if (IsFood) food_cubes.Add(cube.UID, cube);
-                        else if (IsPlayer) player_cubes.Add(cube);
-                    }
+                    if (IsPlayer) player_cubes[cube.UID] = cube;
+                    if (IsVirus) virus_cubes[cube.UID] = cube;
+                    else if (IsFood) food_cubes[cube.UID] = cube;
                 }
             }
+
+            //If the cube doesn't exist, only add it if it has a mass.
+            else
+            {
+                if (cube.Mass > 0)
+                {
+                    //cubes.Add(cube.UID, cube);
+                    if (IsVirus) virus_cubes.Add(cube.UID, cube);
+                    else if (IsFood) food_cubes.Add(cube.UID, cube);
+                    else if (IsPlayer) player_cubes.Add(cube.UID, cube);
+                }
+            }
+
         }
 
         /// <summary>
@@ -511,7 +682,7 @@ namespace Model
         {
             lock (this)
             {
-                foreach (Cube c in player_cubes)
+                foreach (Cube c in player_cubes.Values)
                 {
                     //If the cube's mass is between the minimum attrition mass and less than the minimum mass for the fast attrition rate, do the slow attrition rate
                     if (c.Mass > MINIMUM_ATTRITION_MASS && c.Mass < MIN_FAST_ATTRITION_MASS)
@@ -523,7 +694,38 @@ namespace Model
                     //Otherwise, don't change the mass - because it'll be below the minimum attrition mass
                 }
             }
+
         }
+
+        public LinkedList<Cube> FoodConsumed()
+        {
+
+            LinkedList<Cube> eaten_cubes = new LinkedList<Cube>();
+            foreach (Cube player in player_cubes.Values)
+            {
+                foreach (Cube food in food_cubes.Values)
+                {
+                    if (AreOverlapping(player, food))
+                    {
+                        eaten_cubes.AddFirst(food);
+                        player.Mass += food.Mass;
+                        food.Mass = 0.0;
+                    }
+                }
+                lock (locker)
+                {
+                    foreach (Cube eaten_cube in eaten_cubes)
+                    {
+                        this.food_cubes.Remove(eaten_cube.UID);
+                        //this.cubes.Remove(cube3.UID);
+                    }
+                }
+            }
+            return eaten_cubes;
+        }
+
+
+
 
         /// <summary>
         /// This is the main method for updating the world, which is done every
@@ -532,56 +734,85 @@ namespace Model
         /// </summary>
         public void Update()
         {
-            /*lock (this) { 
-                foreach (Cube player in player_cubes)
+            HashSet<Cube> playersToUpdate = new HashSet<Cube>();
+            HashSet<Cube> foodToUpdate = new HashSet<Cube>();
+            LinkedList<Cube> virusToUpdate = new LinkedList<Cube>();
+
+            foreach (Cube player in player_cubes.Values)
+            {
+                lock (locker)
                 {
-                    lock (locker)
+                    foreach (Cube split in split_players[player.team_id])
                     {
-                        foreach (Cube cube in cubes.Values)
+                        foreach (Cube cube in food_cubes.Values)
                         {
-                            if (AreOverlapping(player, cube))
+                            if (AreOverlapping(split, cube))
                             {
                                 if (cube.IsFood())
                                 {
-                                    player.Mass += cube.Mass;
+                                    split.Mass += cube.Mass;
                                     cube.Mass = 0;
-                                    ProcessCube(player);
-                                    ProcessCube(cube);
+                                    playersToUpdate.Add(split);
+                                    foodToUpdate.Add(cube);
                                 }
                                 else if (cube.IsVirus())
                                 {
-                                    player.Mass = 0;
-                                    ProcessCube(player);
+                                    split.Mass = 0;
+                                    playersToUpdate.Add(split);
                                 }
                                 else if (cube.IsPlayer())
                                 {
-                                    if (player.Mass > cube.Mass)
+                                    if (split.Mass > cube.Mass)
                                     {
-                                        player.Mass += cube.Mass;
+                                        split.Mass += cube.Mass;
                                         cube.Mass = 0;
-                                        ProcessCube(player);
-                                        ProcessCube(cube);
+                                        playersToUpdate.Add(split);
+                                        foodToUpdate.Add(cube);
                                     }
                                 }
 
                             }
                         }
                     }
-
                 }
-            }*/
+            }
+
+            //Now, process the change buffers
+            foreach (Cube c in foodToUpdate)
+            {
+                ProcessCube(c);
+            }
+
+            foreach (Cube c in playersToUpdate)
+            {
+                ProcessCube(c);
+            }
+
+            foreach (Cube c in virusToUpdate)
+            {
+                ProcessCube(c);
+            }
         }
 
+        /// <summary>
+        /// See what cubes are overlapping so we can know which food to mark as "eaten".
+        /// Note: We're effectively expanding the player cube in this context so we can absorb
+        /// more food cubes. We were doing this without the expansion before, but weren't getting
+        /// enough of the food cubes absorbed, so we needed to make that update here.
+        /// </summary>
+        /// <param name="cube1"></param>
+        /// <param name="cube2"></param>
+        /// <returns></returns>
         private bool AreOverlapping(Cube cube1, Cube cube2)
         {
-            int left = (int)Math.Max(cube1.Left, cube2.Left);
-            int right = (int)Math.Min(cube1.Right, cube2.Right);
-            int top = (int)Math.Max(cube1.Top, cube2.Top);
-            int bottom = (int)Math.Min(cube1.Bottom, cube2.Bottom);
+            int left = (int)Math.Max(cube1.Left - cube1.Width, cube2.Left);
+            int right = (int)Math.Min(cube1.Right + cube1.Width, cube2.Right);
+            int top = (int)Math.Max(cube1.Top - cube1.Width, cube2.Top);
+            int bottom = (int)Math.Min(cube1.Bottom + cube1.Width, cube2.Bottom);
             int width = right - left;
-            int height = top - bottom;
+            int height = bottom - top;
 
-            return width > 0 && height > 0;
+            return (width > 0 && height > 0);
         }
     }
 }

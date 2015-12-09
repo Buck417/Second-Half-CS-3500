@@ -16,35 +16,71 @@ namespace Server
     {
         public volatile static World world;
         private volatile static System.Net.Sockets.Socket dataSocket;
-        static readonly object locker = new object();
 
         private static Timer heartbeatTimer = new Timer();
-        private static bool GameRunning = false;
+        private static Timer splitTimer = new Timer();
+        private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> moveQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
+        private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> splitQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
 
         public static void Main(string[] args)
         {
             AgServer server = new AgServer();
-            world = new World();
+            world = new World("world_parameters.xml");
+            splitTimer.Interval = world.SPLIT_INTERVAL;
+            splitTimer.Elapsed += SplitTimer_Elapsed;
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections));
-            heartbeatTimer.Interval = 1000 / world.HEARTBEATS_PER_SECOND;
-            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
-            heartbeatTimer.Start();
+        }
+
+        /// <summary>
+        /// Once the split timer finishes, make sure the mass goes back to normal.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void SplitTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+
         }
 
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (GameRunning)
+            heartbeatTimer.Stop();
+
+            world.ProcessAttrition();
+            StringBuilder string_builder = new StringBuilder();
+            LinkedList<Cube> cubes_eaten = world.FoodConsumed();
+            Tuple<string, int, int, int> move;
+            if (moveQueue.TryDequeue(out move))
             {
-                heartbeatTimer.Stop();
-                lock (world)
-                {
-                    world.AddFoodCube();
-                    world.ProcessAttrition();
-                    //world.Update();
-                    SendWorld();
-                }
-                heartbeatTimer.Start();
+                string type = move.Item1;
+                int x = move.Item2;
+                int y = move.Item3;
+                int player_uid = move.Item4;
+                world.ProcessData(type, x, y, player_uid);
             }
+
+            Tuple<string, int, int, int> split;
+            if (splitQueue.TryDequeue(out split))
+            {
+                string type = split.Item1;
+                int x = split.Item2;
+                int y = split.Item3;
+                int player_uid = split.Item4;
+                world.ProcessData(type, x, y, player_uid);
+            }
+
+            Network.Send(dataSocket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
+
+            foreach (Cube cube in cubes_eaten)
+            {
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+            }
+
+            foreach (Cube cube in world.player_cubes.Values)
+            {
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+            }
+
+            heartbeatTimer.Start();
         }
 
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
@@ -53,9 +89,11 @@ namespace Server
         {
             dataSocket = state.socket;
             state.callback = new Action<Preserved_State>(Receive_Player_Name);
-            Network.i_want_more_data(state);
 
-            GameRunning = true;
+            heartbeatTimer.Interval = 1000 / world.HEARTBEATS_PER_SECOND;
+            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+            heartbeatTimer.Start();
+            Network.i_want_more_data(state);
         }
 
         //Receive the player name
@@ -66,48 +104,105 @@ namespace Server
             string playerName = state.sb.ToString();
 
             Cube player = world.AddPlayerCube(playerName);
+            state.SetUID(player.UID);
 
             PopulateWorld();
 
             //Sends the player cube and starting food cubes to the client
-            SendPlayer(player);
-            SendWorld();
-            
+            lock (world)
+            {
+                SendInitialData(player);
+            }
+            state.sb.Clear();
             Network.i_want_more_data(state);
         }
 
-        private static void SendPlayer(Cube player)
+        private static void SendInitialData(Cube player)
         {
             Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
-        }
-
-        private static void SendWorld()
-        {
-            lock (world)
+            StringBuilder builder = new StringBuilder();
+            foreach (Cube cube in world.food_cubes.Values)
             {
-                StringBuilder string_builder = new StringBuilder();
-
-                foreach (Cube cube in world.cubes.Values)
-                {
-                    string_builder.Append(JsonConvert.SerializeObject(cube) + "\n");
-                }
-                Network.Send(dataSocket, string_builder.ToString());
+                builder.Append(JsonConvert.SerializeObject(cube) + "\n");
             }
+            Network.Send(dataSocket, builder.ToString());
         }
 
         //Handle data from the client
         static void HandleData(Preserved_State state)
         {
-            //Preserved_State state = (Preserved_State)ar.AsyncState;
-            string str = state.sb.ToString();
+            string movement = state.sb.ToString();
+            int player_uid = state.UID;
 
-            world.ProcessData(str);
-            //SendWorld();
-            //heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
-
-
+            string type;
+            int x, y;
+            if (TryParseData(movement, out type, out x, out y))
+            {
+                if (type.Equals("move"))
+                    moveQueue.Enqueue(new Tuple<string, int, int, int>(type, x, y, player_uid));
+                else if (type.Equals("split"))
+                {
+                    //Make sure we can only add one split request to the queue at a time
+                    Tuple<string, int, int, int> existingSplit;
+                    if (!splitQueue.TryPeek(out existingSplit))
+                        splitQueue.Enqueue(new Tuple<string, int, int, int>(type, x, y, player_uid));
+                }
+            }
             state.sb.Clear();
+            System.Threading.Thread.Sleep(1000 / world.HEARTBEATS_PER_SECOND);
             Network.i_want_more_data(state);
+        }
+
+        /// <summary>
+        /// Puts the data into a usable format, and we only use the
+        /// first request in the queue if it's a split.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        static bool TryParseData(string data, out string type, out int x, out int y)
+        {
+            string[] parts = data.Split('\n');
+            string temp_type = Regex.Replace(parts[0], "[()]", "");
+
+            //Look for the split, if there is one
+            if (data.Contains("split"))
+            {
+                for (int i = 0; i < parts.Length; i++)
+                {
+                    if (parts[i].Contains("split"))
+                    {
+                        temp_type = Regex.Replace(parts[i], "[()]", "");
+                        break;
+                    }
+                }
+            }
+            parts = temp_type.Split(',');
+            type = "";
+            x = y = 0;
+
+            try
+            {
+                //Check to see if the request was either for move or split
+                if (int.TryParse(parts[1], out x) && int.TryParse(parts[2], out y))
+                {
+                    if (parts[0].Equals("move"))
+                    {
+                        type = parts[0];
+                        return true;
+                    }
+                    else if (parts[0].Equals("split"))
+                    {
+                        type = parts[0];
+                        return true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+
+            return false;
         }
         /********************************* END HANDLE NETWORK COMMUNICATIONS ********************/
 
@@ -117,19 +212,11 @@ namespace Server
         /************************************ HANDLE GAMEPLAY MECHANICS *************************/
         private static void PopulateWorld()
         {
-
-            for (int i = 0; i < world.MAX_FOOD; i++)
+            for (int i = 0; i < world.MAX_FOOD / 2; i++)
             {
                 world.AddFoodCube();
             }
-            for (int i = 0; i < world.VIRUS_COUNT; i++)
-            {
-                world.AddVirusCube();
-            }
         }
-
-
-
         /********************************** END HANDLE GAMEPLAY MECHANICS ***********************/
     }
 }

@@ -17,6 +17,13 @@ namespace Network_Controller
         public Socket socket = null;
         public byte[] buffer = new byte[Network.BUFFER_SIZE];
         public StringBuilder sb = new StringBuilder();
+
+        private int uid;
+        public void SetUID(int _uid)
+        {
+            uid = _uid;
+        }
+        public int UID { get { return uid; } }
     }
 
     public static class Network
@@ -34,7 +41,8 @@ namespace Network_Controller
         /// <returns></returns>
         public static Socket Connect_To_Server(Action<Preserved_State> callBack, string hostName)
         {
-            try {
+            try
+            {
                 Socket new_socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
 
                 Preserved_State state = new Preserved_State
@@ -48,7 +56,7 @@ namespace Network_Controller
 
                 return new_socket;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
 
             }
@@ -64,7 +72,7 @@ namespace Network_Controller
         static void Connected_to_Server(IAsyncResult ar)
         {
             Preserved_State state = (Preserved_State)ar.AsyncState;
-            
+
             state.socket.EndConnect(ar);
 
             //Call the first callback, which resets some info in the state
@@ -101,7 +109,7 @@ namespace Network_Controller
             byte[] buffer = (byte[])state.buffer;
 
             //If the connection was forcibly closed on the server's end, handle that
-            if(socket.Connected == false)
+            if (socket.Connected == false)
             {
                 CloseGracefully(socket);
                 return;
@@ -109,10 +117,11 @@ namespace Network_Controller
 
             //Try to stop receiving this current request
             int byte_count = 0;
-            try {
+            try
+            {
                 byte_count = socket.EndReceive(ar);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 //If we couldn't stop the reception, close gracefully
                 CloseGracefully(socket);
@@ -149,8 +158,14 @@ namespace Network_Controller
         /// <param name="state"></param>
         public static void i_want_more_data(Preserved_State state)
         {
-            
-            state.socket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), state);
+            try
+            {
+                state.socket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), state);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
 
         /// <summary>
@@ -165,10 +180,11 @@ namespace Network_Controller
             //Convert the string into a byte array
             byte[] byte_data = Encoding.UTF8.GetBytes(data);
             byte[] buffer = new byte[BUFFER_SIZE];
-            try {
+            try
+            {
                 socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), socket);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
@@ -184,10 +200,11 @@ namespace Network_Controller
 
 
             //Find out how many bytes were sent
-            try {
+            try
+            {
                 int bytes = socket.EndSend(ar);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
@@ -202,7 +219,7 @@ namespace Network_Controller
         /// </summary>
         /// <param name="callback"></param>
         public static void Server_Awaiting_Client_Loop(Action<Preserved_State> callback)
-        {   
+        {
             //Create socket that can accept both IPv4 and IPv6
             Socket server_socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
             server_socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
@@ -219,10 +236,10 @@ namespace Network_Controller
                     callback = callback,
                     socket = server_socket,
                 };
-                
+
                 Console.WriteLine("Waiting for a connection...\n");
 
-                server_socket.BeginAccept(new AsyncCallback(Accept_A_New_Client),state);
+                server_socket.BeginAccept(new AsyncCallback(Accept_A_New_Client), state);
                 Console.Read();     //Keeps the thread open because it doesn't connect automatically
 
             }
@@ -260,7 +277,7 @@ namespace Network_Controller
             state.callback(state2);
 
 
-            
+
             listener.BeginAccept(Accept_A_New_Client, state);
         }
 

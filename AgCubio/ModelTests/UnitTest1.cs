@@ -58,7 +58,7 @@ namespace ModelTests
             Assert.AreEqual(a.X, b.X);
             Assert.AreEqual(a.Y, b.Y);
         }
-            
+
         /// <summary>
         /// This makes sure the cube width is calculated correctly
         /// </summary>
@@ -140,8 +140,8 @@ namespace ModelTests
         {
             World w = new World();
             Cube player = w.AddPlayerCube("Richie");
-            w.AddVirusCube();
-            for(int i = 0; i < w.MAX_FOOD; i++)
+            //w.AddVirusCube();
+            for (int i = 0; i < w.MAX_FOOD; i++)
             {
                 w.AddFoodCube();
             }
@@ -179,23 +179,6 @@ namespace ModelTests
         }
 
         [TestMethod]
-        public void TestGetNextUID()
-        {
-            World w = new World();
-            int uid = w.GetNextUID();
-            int uid2 = w.GetNextUID();
-            Assert.AreNotEqual(uid, uid2);
-            w.ProcessCube(new Cube(0, 0, 0, uid, uid, false, "asdf", 10));
-            int uid3 = 0;
-            for (int i = 0; i< 100; i++)
-            {
-                uid3 = w.GetNextUID();
-                Assert.AreNotEqual(uid, uid3);
-                Assert.AreNotEqual(uid2, uid3);
-            }
-        }
-
-        [TestMethod]
         public void TestProcessAttritionBelowMinimumMass()
         {
             World w = new World();
@@ -204,7 +187,14 @@ namespace ModelTests
             w.ProcessAttrition();
             Assert.AreEqual(100, player.Mass);
         }
-            
+
+        [TestMethod]
+        public void TestOverlap()
+        {
+            World w = new World();
+            w.Update();
+        }
+
         /// <summary>
         /// This tests to make sure the gameplay file can be read and used.
         /// </summary>
@@ -230,13 +220,31 @@ namespace ModelTests
             Assert.AreEqual(2.5, w.FAST_ATTRITION_RATE);
         }
 
+        /// <summary>
+        /// Testing out the movement/split request queue
+        /// </summary>
+        [TestMethod]
+        public void TestTuple()
+        {
+            System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> playerMovementQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
+            Tuple<string, int, int, int> first = new Tuple<string, int, int, int>("move", 200, 300, 234322);
+            playerMovementQueue.Enqueue(first);
+
+            Tuple<string, int, int, int> second;
+            Assert.AreEqual(true, playerMovementQueue.TryPeek(out second));
+            Assert.AreEqual(first.Item1, second.Item1);
+            Assert.AreEqual(first.Item2, second.Item2);
+            Assert.AreEqual(first.Item3, second.Item3);
+            Assert.AreEqual(first.Item4, second.Item4);
+        }
+
         [TestMethod]
         public void TestProcessCube()
         {
             World w = new World();
             Cube c = new Cube(0, 0, 3000, 2, 2, false, "hey", 1000);
             w.ProcessCube(c);
-            Assert.AreEqual(c, w.GetCube(2));
+            Assert.AreEqual(c, w.GetPlayerCube(2));
         }
 
         [TestMethod]
@@ -245,9 +253,9 @@ namespace ModelTests
             World w = new World();
             Cube c = new Cube(0, 0, World.VIRUS_COLOR, 0, 0, true, "", 10);
             w.ProcessCube(c);
-            Assert.AreEqual(c, w.GetCube(0));
+            Assert.AreEqual(c, w.GetVirusCube(0));
         }
-
+        /*
         [TestMethod]
         public void TestProcessMoveData()
         {
@@ -256,19 +264,19 @@ namespace ModelTests
             double startX, startY;
             startX = startY = player.X = player.Y = 100;
             string moveRequest = "(move, 544, 433)\n(move, 544, 433)\n";
-            w.ProcessData(moveRequest);
+            w.ProcessData(moveRequest, player.UID);
             Assert.AreNotEqual(startX, player.X);
-        }
-        
+        }*/
+
         [TestMethod]
         public void TestAddPlayerCube()
         {
             World w = new World();
             Cube player = w.AddPlayerCube("Richie");
-            Assert.AreEqual(w.GetCube(player.UID), player);
-            Assert.AreEqual(true, w.player_cubes.Contains(player));
+            Assert.AreEqual(w.GetPlayerCube(player.UID), player);
+            Assert.AreEqual(true, w.player_cubes.ContainsKey(player.UID));
         }
-        
+
         [TestMethod]
         public void TestIsPlayer()
         {
@@ -294,10 +302,9 @@ namespace ModelTests
         public void TestGetCubeDoesntExist()
         {
             World w = new World();
-            Cube c = w.GetCube(200);
+            Cube c = w.GetPlayerCube(200);
             Assert.AreEqual(null, c);
         }
-        
 
         [TestMethod]
         public void TestProcessIncomingCubeZeroMass()
@@ -305,14 +312,14 @@ namespace ModelTests
             World world = new World();
             Cube c = new Cube(2, 2, 2, 2, 2, false, "hasf", 10);
             world.ProcessCube(c);
-            Assert.AreEqual(2, world.GetCube(2).UID);
+            Assert.AreEqual(2, world.GetPlayerCube(2).UID);
 
             //Now delete the cube
             c = new Cube(2, 2, 2, 2, 2, false, "hasf", 0);
             world.ProcessCube(c);
-            Assert.AreEqual(null, world.GetCube(2));
+            Assert.AreEqual(null, world.GetPlayerCube(2));
         }
-        
+
         [TestMethod]
         public void TestProcessIncomingCubeChangedSize()
         {
@@ -321,7 +328,7 @@ namespace ModelTests
             w.ProcessCube(c);
             c = new Cube(2, 2, 2, 2, 2, false, "hey", 30);
             w.ProcessCube(c);
-            Assert.AreEqual(30, w.GetCube(2).Mass);
+            Assert.AreEqual(30, w.GetPlayerCube(2).Mass);
         }
         /************************************* END WORLD TESTS ***************************************/
     }
