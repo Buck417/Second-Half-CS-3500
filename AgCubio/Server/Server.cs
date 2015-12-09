@@ -117,7 +117,7 @@ namespace Server
 
             if (request.Equals("players"))
             {
-                LinkedList<Game> games = Database.GetAllGamesByPlayer(request);
+                LinkedList<Game> games = Database.GetAllGamesByPlayer("Richie");
 
                 //Start out by adding the necessary HTML
                 result.Append(Get_HTML_Header());
