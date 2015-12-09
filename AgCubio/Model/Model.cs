@@ -710,6 +710,11 @@ namespace Model
 
         }
 
+        /// <summary>
+        /// Checks food and player cubes for overlap and sends those food cubes to an eaten
+        /// cubes list where they are disposed. Mass of food cubes added to player cube.
+        /// </summary>
+        /// <returns></returns>
         public LinkedList<Cube> FoodConsumed()
         {
 
@@ -735,6 +740,42 @@ namespace Model
             }
             return eaten_cubes;
         }
+        /// <summary>
+        /// handles eating players when two players overlap
+        /// NOT FINISHED
+        /// Currently checks if two players overlap. Needs to check mass of each and how much overlap there is
+        /// to determine if a player can consume the other player. Will need to store names of every player eaten 
+        /// in a data structure that can be called by the database.
+        /// </summary>
+        /// <returns></returns>
+        public LinkedList<Cube> PlayerConsumed()
+        {
+
+            LinkedList<Cube> eaten_players = new LinkedList<Cube>();
+            foreach (Cube player in player_cubes.Values)
+            {
+                foreach (Cube player2 in player_cubes.Values)
+                {
+                    if (player.Name != player2.Name)
+                    {
+                        if (AreOverlapping(player, player2))
+                        {
+                            eaten_players.AddFirst(player2);
+                            player.Mass += player2.Mass;
+                            player2.Mass = 0.0;
+                        }
+                    }
+                }
+                lock (locker)
+                {
+                    foreach (Cube eaten_player in eaten_players)
+                    {
+                        this.food_cubes.Remove(eaten_player.UID);
+                    }
+                }
+            }
+            return eaten_players;
+        }
 
 
 
@@ -743,6 +784,9 @@ namespace Model
         /// This is the main method for updating the world, which is done every
         /// heartbeat. Check the players against the food cubes, and see if
         /// any of them need to be removed/changed.
+        /// 
+        /// NOT IN USE
+        /// 
         /// </summary>
         public void Update()
         {
