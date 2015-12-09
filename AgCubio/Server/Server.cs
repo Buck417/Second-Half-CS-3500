@@ -63,6 +63,7 @@ namespace Server
             world.ProcessAttrition();
             StringBuilder string_builder = new StringBuilder();
             LinkedList<Cube> cubes_eaten = world.FoodConsumed();
+            LinkedList<Cube> players_eaten = world.PlayersConsumed();
             Tuple<string, int, int, int> move;
             if (moveQueue.TryDequeue(out move))
             {
@@ -88,6 +89,11 @@ namespace Server
             Network.Send(dataSocket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
 
             foreach (Cube cube in cubes_eaten)
+            {
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+            }
+
+            foreach (Cube cube in players_eaten)
             {
                 Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
             }

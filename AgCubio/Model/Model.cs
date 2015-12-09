@@ -257,17 +257,16 @@ namespace Model
         private Random UIDGenerator = new Random();
 
 
-        //Keeps track of ALL cubes
-        //public Dictionary<int, Cube> cubes = new Dictionary<int, Cube>();
         //Keeps track of all player cubes
         public Dictionary<int, Cube> player_cubes = new Dictionary<int, Cube>();
-
         //Keeps track of all the food cubes 
         public Dictionary<int, Cube> food_cubes = new Dictionary<int, Cube>();
         //Keeps track of all the virus cubes
         public Dictionary<int, Cube> virus_cubes = new Dictionary<int, Cube>();
         //Keeps track of all split cubes
         public Dictionary<int, LinkedList<Cube>> split_players = new Dictionary<int, LinkedList<Cube>>();
+        //A list of names for each player cube that they have eaten
+        public Dictionary<int, String> names_of_players_eaten = new Dictionary<int, String>();
 
 
         private string gameplay_file = "world_parameters.xml";
@@ -748,7 +747,7 @@ namespace Model
         /// in a data structure that can be called by the database.
         /// </summary>
         /// <returns></returns>
-        public LinkedList<Cube> PlayerConsumed()
+        public LinkedList<Cube> PlayersConsumed()
         {
 
             LinkedList<Cube> eaten_players = new LinkedList<Cube>();
@@ -760,9 +759,13 @@ namespace Model
                     {
                         if (AreOverlapping(player, player2))
                         {
-                            eaten_players.AddFirst(player2);
-                            player.Mass += player2.Mass;
-                            player2.Mass = 0.0;
+                           if (player.Mass > player2.Mass)
+                            {
+                                eaten_players.AddFirst(player2);
+                                names_of_players_eaten.Add(player.UID, player2.Name);
+                                player.Mass += player2.Mass;
+                                player2.Mass = 0.0;
+                            }                            
                         }
                     }
                 }
@@ -776,9 +779,6 @@ namespace Model
             }
             return eaten_players;
         }
-
-
-
 
         /// <summary>
         /// This is the main method for updating the world, which is done every
