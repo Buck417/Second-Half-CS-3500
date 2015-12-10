@@ -266,7 +266,7 @@ namespace Model
         //Keeps track of all split cubes
         public Dictionary<int, LinkedList<Cube>> split_players = new Dictionary<int, LinkedList<Cube>>();
         //A list of names for each player cube that they have eaten
-        public Dictionary<int, String> names_of_players_eaten = new Dictionary<int, String>();
+        public Dictionary<int, LinkedList<Player_Eaten>> names_of_players_eaten = new Dictionary<int, LinkedList<Player_Eaten>>();
 
 
         private string gameplay_file = "world_parameters.xml";
@@ -749,7 +749,6 @@ namespace Model
         /// <returns></returns>
         public LinkedList<Cube> PlayersConsumed()
         {
-
             LinkedList<Cube> eaten_players = new LinkedList<Cube>();
             foreach (Cube player in player_cubes.Values)
             {
@@ -762,7 +761,11 @@ namespace Model
                            if (player.Mass > player2.Mass)
                             {
                                 eaten_players.AddFirst(player2);
-                                names_of_players_eaten.Add(player.UID, player2.Name);
+                                if (names_of_players_eaten.ContainsKey(player.UID))
+                                {
+
+                                    names_of_players_eaten[player.UID].AddFirst(new Player_Eaten(player.Name));
+                                }
                                 player.Mass += player2.Mass;
                                 player2.Mass = 0.0;
                             }                            
@@ -773,7 +776,7 @@ namespace Model
                 {
                     foreach (Cube eaten_player in eaten_players)
                     {
-                        this.food_cubes.Remove(eaten_player.UID);
+                        this.player_cubes.Remove(eaten_player.UID);
                     }
                 }
             }
