@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Timers;
 using Database_Controller;
+using System.Data;
 
 namespace Server
 {
@@ -37,7 +38,7 @@ namespace Server
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
 
         }
-        
+
         /// <summary>
         /// Once the split timer finishes, make sure the mass goes back to normal.
         /// </summary>
@@ -107,33 +108,100 @@ namespace Server
             Network.i_want_more_data(state);
         }
 
+        /// <summary>
+        /// This is the magic that parses a raw HTTP request, and returns usable data for routing the request.
+        /// </summary>
+        /// <param name="http"></param>
+        /// <param name="method"></param>
+        /// <param name="pathname"></param>
+        /// <param name="parameters"></param>
+        private static bool Try_Parse_Raw_HTTP_Request(string http, out string method, out string pathname, out LinkedList<KeyValuePair<string, string>> parameters)
+        {
+            method = "";
+            pathname = "";
+            parameters = new LinkedList<KeyValuePair<string, string>>();
+
+            try
+            {
+                //First, split the raw HTTP request by line
+                string[] parts = Regex.Split(http, "\r\n");
+
+                //First line is the http method, as well as the pathname
+                string[] request_parts = Regex.Split(parts[0], " ");
+                if (request_parts[0].Equals("GET"))
+                    method = request_parts[0];
+                //Only handle GET requests for now
+                else
+                    return false;
+
+                //The first part of the path is the URI/pathname
+                string[] path_parts = request_parts[1].Split('?');
+                pathname = path_parts[0].Substring(1);
+
+                //See if there are any variable parameters in the request. If there are, add them as a key/value pair to the parameters linked list passed in.
+                if (path_parts.Length > 1)
+                {
+                    foreach (string part in path_parts[1].Split('&'))
+                    {
+                        string[] var = part.Split('=');
+                        parameters.AddLast(new KeyValuePair<string, string>(var[0], var[1]));
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                //Reset the variables passed in
+                method = "";
+                pathname = "";
+                parameters = new LinkedList<KeyValuePair<string, string>>();
+                return false;
+            }
+
+            return true;
+        }
+
         private static void Process_Web_Server_Request(Preserved_State state)
         {
             string http_request = state.sb.ToString();
-            //string[] parts = http_request.Split('\r\n');
+            string uri, method;
+            LinkedList<KeyValuePair<string, string>> parameters;
+            bool validRequest = Try_Parse_Raw_HTTP_Request(http_request, out method, out uri, out parameters);
 
-            string request = "players";
             StringBuilder result = new StringBuilder();
 
-            if (request.Equals("players"))
+            //Start out by adding the necessary HTML
+            result.Append(Get_HTML_Header());
+
+            //Append the table HTML
+            result.Append("<table class='table table-striped table-bordered agcubio'>");
+
+            //Process valid requests
+            try
             {
-                LinkedList<Game> games = Database.GetAllGamesByPlayer("Richie");
-
-                //Start out by adding the necessary HTML
-                result.Append(Get_HTML_Header());
-
-                //Append the table HTML
-                result.Append("<table>");
-
-                //Go through each game and put it in some useful HTML
-                string game_tpl = "<tr><td>player_name</td><td>max_mass</td>";
-                string row = "";
-                foreach (Game game in games)
+                switch (uri)
                 {
-                    row = game_tpl.Replace("player_name", game.player_name).Replace("max_mass", game.max_mass.ToString());
-                    result.Append(row);
-                }
+                    case "scores":
 
+                        break;
+                    case "games":
+                        result.Append(Get_Games_By_Player(parameters));
+                        break;
+                    case "eaten":
+
+                        break;
+                    default:
+                        return;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            //Always make sure to close the socket and form the HTML closing tags properly.
+            finally
+            {
                 //Append the ending table HTML
                 result.Append("</table>");
 
@@ -145,10 +213,88 @@ namespace Server
             }
         }
 
+        /// <summary>
+        /// This returns HTML for all the games by a certain player, to be displayed on the browser.
+        /// Note - this includes the table header as well.
+        /// </summary>
+        /// <param name="player_name"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        private static string Get_Games_By_Player(LinkedList<KeyValuePair<string, string>> parameters)
+        {
+            StringBuilder result = new StringBuilder();
+
+            //Look for the player name in the parameters
+            string player_name = "";
+            foreach(KeyValuePair<string, string> pair in parameters)
+            {
+                if (pair.Key.ToLower().Equals("player"))
+                    player_name = pair.Value;
+            }
+
+            //Add the table header
+            result.Append(Get_Games_Table_Header());
+
+            //Go through each game and put it in some useful HTML
+            string game_tpl = "<tr><td>game_id</td><td>player_name</td><td>max_mass</td>" +
+                "<td>rank</td><td>time_of_death</td><td>time_alive</td><td>cubes_eaten</td></tr>";
+            string row = "";
+            foreach (Game game in Database.GetAllGamesByPlayer(player_name))
+            {
+                row = game_tpl.Replace("game_id", game.game_id.ToString())
+                    .Replace("player_name", game.player_name)
+                    .Replace("max_mass", game.max_mass.ToString())
+                    .Replace("rank", game.rank.ToString())
+                    .Replace("time_of_death", game.time_of_death.ToString())
+                    .Replace("time_alive", game.time_alive.ToString())
+                    .Replace("cubes_eaten", game.cubes_eaten.ToString());
+                result.Append(row);
+            }
+            
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Required as the table header to when a list of games is requested
+        /// </summary>
+        /// <returns></returns>
+        private static string Get_Games_Table_Header()
+        {
+            return "<tr class='header'><td>Game ID</td><td>Player Name</td><td>Max Mass</td><td>Highest Rank</td>" +
+                "<td>Time of Death</td><td>Time Alive</td><td>Number of Cubes Eaten</td></tr>";
+        }
 
         private static string Get_HTML_Header()
         {
-            return "<html><body>";
+            return "<html><head>" +
+                    Get_Styles() +  
+                    "</head>" +
+                "<body>"
+                ;
+        }
+
+        /// <summary>
+        /// This abstracts out the styles we need to format the HTML, to be stored in the header.
+        /// </summary>
+        /// <returns></returns>
+        private static string Get_Styles()
+        {
+            return
+                "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css' integrity='sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7' crossorigin='anonymous'>" +
+                       "<style type='text/css'>" +
+                "table.agcubio { width: 80%; margin-left: auto; margin-right: auto; margin-top: 5%;}" +
+                "tr.header td {" +
+                    "padding: 20px;" +
+                    "font-size: 1.5em;" +
+                    "text-align: center; " +
+                    "font-weight: 'bold'" +
+                  "}" +
+                "td {" +
+                    "padding: 20px;" +
+                    "font-size: 1.3em;" +
+                    "text-align: center; " +
+                  "}" +
+                "</style>";
         }
 
         private static string Get_HTML_Footer()
