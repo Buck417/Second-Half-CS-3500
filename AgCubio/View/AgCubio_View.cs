@@ -85,12 +85,7 @@ namespace View
 
                             //Draw the player cube first
                             DrawCube(player_cube, e);
-
-                            foreach (Cube cube in world.cubes.Values)
-                            {
-                                if (cube == player_cube) continue;
-                                DrawCube(cube, e);
-                            }
+                            
 
                             System.Drawing.Font drawFont = new System.Drawing.Font("Arial", (int)(10 * world.Scale));
                             System.Drawing.SolidBrush nameBrush = new System.Drawing.SolidBrush(Color.FromName("black"));
