@@ -202,7 +202,9 @@ namespace Network_Controller
             //Find out how many bytes were sent
             try
             {
-                int bytes = socket.EndSend(ar);
+                int bytes;
+                if (socket.Connected)
+                bytes = socket.EndSend(ar);
             }
             catch (Exception e)
             {
