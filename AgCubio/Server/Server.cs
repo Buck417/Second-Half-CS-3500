@@ -35,7 +35,7 @@ namespace Server
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
 
             //AgCubio server stuff
-            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
+            //Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
 
         }
 
@@ -172,23 +172,20 @@ namespace Server
 
             //Start out by adding the necessary HTML
             result.Append(Get_HTML_Header());
-
-            //Append the table HTML
-            result.Append("<table class='table table-striped table-bordered agcubio'>");
-
+            
             //Process valid requests
             try
             {
                 switch (uri)
                 {
                     case "scores":
-
+                        result.Append(Get_High_Scores());
                         break;
                     case "games":
                         result.Append(Get_Games_By_Player(parameters));
                         break;
                     case "eaten":
-
+                        result.Append(Get_Eaten_Players(parameters));
                         break;
                     default:
                         return;
@@ -214,6 +211,37 @@ namespace Server
         }
 
         /// <summary>
+        /// Returns a list of the high scores from the database.
+        /// </summary>
+        /// <returns></returns>
+        private static string Get_High_Scores()
+        {
+            StringBuilder result = new StringBuilder();
+
+            //Add the page and table header
+            result.Append("<div class='agcubio'><h1>AgCubio High Scores</h1></div>");
+            result.Append(Get_Games_Table_Header());
+
+            //Go through each game and put it in some useful HTML
+            string game_tpl = "<tr><td><a href='/eaten?id=game_id' title='Click for players eaten during game game_id'>game_id</a></td><td><a href='/games?player=player_name' title='Click for all games by player_name'>player_name</a></td><td>max_mass</td>" +
+                "<td>rank</td><td>time_of_death</td><td>time_alive</td><td>cubes_eaten</td></tr>";
+            string row = "";
+            foreach (Game game in Database.GetHighScores())
+            {
+                row = game_tpl.Replace("game_id", game.game_id.ToString())
+                    .Replace("player_name", game.player_name)
+                    .Replace("max_mass", game.max_mass.ToString())
+                    .Replace("rank", game.rank.ToString())
+                    .Replace("time_of_death", game.time_of_death.ToString())
+                    .Replace("time_alive", game.time_alive.ToString())
+                    .Replace("cubes_eaten", game.cubes_eaten.ToString());
+                result.Append(row);
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
         /// This returns HTML for all the games by a certain player, to be displayed on the browser.
         /// Note - this includes the table header as well.
         /// </summary>
@@ -231,12 +259,14 @@ namespace Server
                 if (pair.Key.ToLower().Equals("player"))
                     player_name = pair.Value;
             }
+            if (player_name.Equals("")) return "";
 
-            //Add the table header
+            //Add the page and table header
+            result.Append("<div class='agcubio'><h1>All Games by " + player_name + "</h1></div>");
             result.Append(Get_Games_Table_Header());
 
             //Go through each game and put it in some useful HTML
-            string game_tpl = "<tr><td>game_id</td><td>player_name</td><td>max_mass</td>" +
+            string game_tpl = "<tr><td><a href='/eaten?id=game_id' title='Click here for all players eaten during game game_id'>game_id</a></td><td>player_name</td><td>max_mass</td>" +
                 "<td>rank</td><td>time_of_death</td><td>time_alive</td><td>cubes_eaten</td></tr>";
             string row = "";
             foreach (Game game in Database.GetAllGamesByPlayer(player_name))
@@ -255,13 +285,54 @@ namespace Server
         }
 
         /// <summary>
+        /// Gets a list of all the eaten players in a game.
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        private static string Get_Eaten_Players(LinkedList<KeyValuePair<string, string>> parameters)
+        {
+            StringBuilder result = new StringBuilder();
+            int game_id = -1;
+            foreach(KeyValuePair<string, string> pair in parameters)
+            {
+                if (pair.Key.Equals("id")) game_id = int.Parse(pair.Value);
+            }
+
+            //If the game id wasn't in the parameters, return a blank string
+            if (game_id == -1) return "";
+
+            //Add the page and table header
+            result.Append("<div class='agcubio'><h1>Players Eaten in Game " + game_id + "</h1></div>");
+            result.Append(Get_Players_Header());
+
+            //Go through each player and put it in some useful HTML
+            string player_tpl = "<tr><td>player_name</td></tr>";
+            string row = "";
+            foreach(Player_Eaten player_eaten in Database.GetPlayersEaten(game_id))
+            {
+                row = player_tpl.Replace("player_name", player_eaten.name);
+                result.Append(row);
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
         /// Required as the table header to when a list of games is requested
         /// </summary>
         /// <returns></returns>
         private static string Get_Games_Table_Header()
         {
-            return "<tr class='header'><td>Game ID</td><td>Player Name</td><td>Max Mass</td><td>Highest Rank</td>" +
+            //Append the table HTML
+            return "<table class='table table-striped table-bordered agcubio'>" +
+                "<tr class='header'><td>Game ID</td><td>Player Name</td><td>Max Mass</td><td>Highest Rank</td>" +
                 "<td>Time of Death</td><td>Time Alive</td><td>Number of Cubes Eaten</td></tr>";
+        }
+
+        private static string Get_Players_Header()
+        {
+            return "<table class='table table-striped table-bordered agcubio'>" +
+                "<tr class='header'><td>Player Name</td></tr>";
         }
 
         private static string Get_HTML_Header()
@@ -282,7 +353,8 @@ namespace Server
             return
                 "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css' integrity='sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7' crossorigin='anonymous'>" +
                        "<style type='text/css'>" +
-                "table.agcubio { width: 80%; margin-left: auto; margin-right: auto; margin-top: 5%;}" +
+                ".agcubio { width: 80%; margin-left: auto; margin-right: auto; margin-top: 5%;}" +
+                "table.agcubio { margin-top:20px; }" +
                 "tr.header td {" +
                     "padding: 20px;" +
                     "font-size: 1.5em;" +

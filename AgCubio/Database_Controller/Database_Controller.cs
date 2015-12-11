@@ -145,9 +145,9 @@ namespace Database_Controller
                         while (reader.Read())
                         {
                             string[] parts = reader["time_of_death"].ToString().Split(' ');
-                            string[] date = parts[0].Split('-');
+                            string[] date = parts[0].Split('/');
                             string[] time = parts[1].Split(':');
-                            DateTime datetime = new DateTime(int.Parse(date[0]), int.Parse(date[1]), int.Parse(date[2]), int.Parse(time[0]), int.Parse(time[1]), int.Parse(time[2]));
+                            DateTime datetime = new DateTime(int.Parse(date[2]), int.Parse(date[1]), int.Parse(date[0]), int.Parse(time[0]), int.Parse(time[1]), int.Parse(time[2]));
                             games.AddLast(new Game(long.Parse(reader["game_id"].ToString()), int.Parse(reader["cubes_eaten"].ToString()), long.Parse(reader["time_alive"].ToString()), int.Parse(reader["max_mass"].ToString()), datetime, reader["player_name"].ToString(), int.Parse(reader["rank"].ToString())));
                         }
                     }
