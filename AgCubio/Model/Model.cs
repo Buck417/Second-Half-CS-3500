@@ -36,7 +36,7 @@ namespace Model
         private double momentum_decay;
         private double momentum_x;
         private double momentum_y;
-        public int max_mass;
+        private int max_mass;
 
 
 
@@ -213,6 +213,15 @@ namespace Model
             this.momentum_x = momentum_x;
             this.momentum_y = momentum_y;
             this.momentum_decay = steps;
+        }
+
+        public int GetMaxMass()
+        {
+            return this.max_mass;
+        }
+        public void SetMaxMass(int max_mass)
+        {
+            this.max_mass = max_mass;
         }
 
 
@@ -394,7 +403,7 @@ namespace Model
             player_cubes.Add(cube.UID, cube);
             //If the player is new to the rankings, insert it into the dict
             if (!rankings.ContainsKey(cube.Name))
-                rankings.Add(cube.Name,cube.max_mass);
+                rankings.Add(cube.Name,cube.GetMaxMass());
             return cube;
 
         }
@@ -685,7 +694,6 @@ namespace Model
             {
                 if (cube.Mass > 0)
                 {
-                    //cubes.Add(cube.UID, cube);
                     if (IsVirus) virus_cubes.Add(cube.UID, cube);
                     else if (IsFood) food_cubes.Add(cube.UID, cube);
                     else if (IsPlayer) player_cubes.Add(cube.UID, cube);
@@ -926,17 +934,17 @@ namespace Model
         /// <param name="cube"></param>
         public void GenerateMaxMass(Cube cube)
         {
-            if (cube.Mass > cube.max_mass)
+            if (cube.Mass > cube.GetMaxMass())
             {
-                cube.max_mass = (int)cube.Mass;
+                cube.SetMaxMass((int)cube.Mass);
                 //Used to track the maximum mass of every player cube
                 if (max_player_mass.ContainsKey(cube.Name))
                 {
-                    max_player_mass[cube.Name] = cube.max_mass;
+                    max_player_mass[cube.Name] = cube.GetMaxMass();
                 }
                 else
                 {
-                    max_player_mass.Add(cube.Name, cube.max_mass);
+                    max_player_mass.Add(cube.Name, cube.GetMaxMass());
                 }
             }
         }

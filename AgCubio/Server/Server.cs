@@ -48,10 +48,8 @@ namespace Server
             StringBuilder string_builder = new StringBuilder();
             LinkedList<Cube> cubes_eaten = world.FoodConsumed();
             LinkedList<Cube> players_eaten = world.PlayersConsumed();
-            //HandleDatabase(players_eaten);
+            HandleDatabase(players_eaten);
             Tuple<string, int, int, int> move;
-            lock (world)
-            {
                 if (moveQueue.TryDequeue(out move))
                 {
                     string type = move.Item1;
@@ -70,7 +68,7 @@ namespace Server
                     int player_uid = split.Item4;
                     world.ProcessData(type, x, y, player_uid);
                 }
-            }
+            
 
             //world.Update();
 
@@ -81,10 +79,10 @@ namespace Server
                 Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
             }
 
-            //foreach (Cube cube in players_eaten)
-            //{
-            //    Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
-            //}
+            foreach (Cube cube in players_eaten)
+            {
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+            }
 
             foreach (Cube cube in world.player_cubes.Values)
             {
@@ -324,10 +322,9 @@ namespace Server
 
             Cube player = world.AddPlayerCube(playerName);
             state.SetUID(player.UID);
-            lock (world)
-            {
-                PopulateWorld();
-            }
+
+            PopulateWorld();
+
 
             //Sends the player cube and starting food cubes to the client
             lock (world)
@@ -455,13 +452,13 @@ namespace Server
             foreach (Cube cube in dead_players)
             {
                 death = DateTime.Now;
-                Database_Controller.Game game1 = new Database_Controller.Game(0, 0, 0, (int)cube.max_mass, death, cube.Name, world.GetRank(cube));
+                Database_Controller.Game game1 = new Database_Controller.Game(0, 0, 0, (int)cube.GetMaxMass(), death, cube.Name, world.GetRank(cube));
                 player_list = world.names_of_players_eaten[cube.UID];
                 Database.AddGameToDB(game1, player_list);
             }
         }
 
-//        
+        
         /********************************** END HANDLE GAMEPLAY MECHANICS ***********************/
     }
 }
