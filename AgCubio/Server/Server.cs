@@ -20,7 +20,7 @@ namespace Server
         private volatile static System.Net.Sockets.Socket dataSocket;
 
         private static Timer heartbeatTimer = new Timer();
-        private static Timer splitTimer = new Timer();
+
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> moveQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> splitQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
 
@@ -28,26 +28,17 @@ namespace Server
         {
             AgServer server = new AgServer();
             world = new World("world_parameters.xml");
-            splitTimer.Interval = world.SPLIT_INTERVAL;
-            splitTimer.Elapsed += SplitTimer_Elapsed;
+
 
             //Web server listener
-            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
+            //Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
 
             //AgCubio server stuff
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
 
         }
 
-        /// <summary>
-        /// Once the split timer finishes, make sure the mass goes back to normal.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private static void SplitTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
 
-        }
 
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -57,25 +48,28 @@ namespace Server
             StringBuilder string_builder = new StringBuilder();
             LinkedList<Cube> cubes_eaten = world.FoodConsumed();
             LinkedList<Cube> players_eaten = world.PlayersConsumed();
-            HandleDatabase(players_eaten);
+            //HandleDatabase(players_eaten);
             Tuple<string, int, int, int> move;
-            if (moveQueue.TryDequeue(out move))
+            lock (world)
             {
-                string type = move.Item1;
-                int x = move.Item2;
-                int y = move.Item3;
-                int player_uid = move.Item4;
-                world.ProcessData(type, x, y, player_uid);
-            }
+                if (moveQueue.TryDequeue(out move))
+                {
+                    string type = move.Item1;
+                    int x = move.Item2;
+                    int y = move.Item3;
+                    int player_uid = move.Item4;
+                    world.ProcessData(type, x, y, player_uid);
+                }
 
-            Tuple<string, int, int, int> split;
-            if (splitQueue.TryDequeue(out split))
-            {
-                string type = split.Item1;
-                int x = split.Item2;
-                int y = split.Item3;
-                int player_uid = split.Item4;
-                world.ProcessData(type, x, y, player_uid);
+                Tuple<string, int, int, int> split;
+                if (splitQueue.TryDequeue(out split))
+                {
+                    string type = split.Item1;
+                    int x = split.Item2;
+                    int y = split.Item3;
+                    int player_uid = split.Item4;
+                    world.ProcessData(type, x, y, player_uid);
+                }
             }
 
             //world.Update();
@@ -87,10 +81,10 @@ namespace Server
                 Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
             }
 
-            foreach (Cube cube in players_eaten)
-            {
-                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
-            }
+            //foreach (Cube cube in players_eaten)
+            //{
+            //    Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+            //}
 
             foreach (Cube cube in world.player_cubes.Values)
             {
@@ -330,8 +324,10 @@ namespace Server
 
             Cube player = world.AddPlayerCube(playerName);
             state.SetUID(player.UID);
-
-            PopulateWorld();
+            lock (world)
+            {
+                PopulateWorld();
+            }
 
             //Sends the player cube and starting food cubes to the client
             lock (world)
