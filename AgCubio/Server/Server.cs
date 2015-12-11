@@ -11,42 +11,34 @@ using Newtonsoft.Json;
 using System.Timers;
 using Database_Controller;
 using System.Data;
-using System.Threading;
-using System.ComponentModel;
 
 namespace Server
 {
-    public class AgServer
+    class AgServer
     {
         public volatile static World world;
-        private static Dictionary<int, Player> players = new Dictionary<int, Player>();
+        private volatile static System.Net.Sockets.Socket dataSocket;
 
-        private const int QUEUE_MAX = 50;
-        private static System.Timers.Timer heartbeatTimer = new System.Timers.Timer();
-        private static System.Timers.Timer splitTimer = new System.Timers.Timer();
+        private static Timer heartbeatTimer = new Timer();
+        private static Timer splitTimer = new Timer();
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> moveQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> splitQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
 
-        private static bool Game_Started = false;
-
         public static void Main(string[] args)
         {
+            AgServer server = new AgServer();
             world = new World("world_parameters.xml");
             splitTimer.Interval = world.SPLIT_INTERVAL;
             splitTimer.Elapsed += SplitTimer_Elapsed;
 
-            heartbeatTimer.Interval = 1000 / world.HEARTBEATS_PER_SECOND;
-            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
-            heartbeatTimer.Start();
+            //Web server listener
+            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
 
-            //Game server listener
+            //AgCubio server stuff
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
+
         }
 
-
-
-
-        /******************************** HANDLE GAME SERVER COMMUNICATIONS **********************/
         /// <summary>
         /// Once the split timer finishes, make sure the mass goes back to normal.
         /// </summary>
@@ -57,74 +49,55 @@ namespace Server
 
         }
 
-        /// <summary>
-        /// This is the handler for every time the heartbeat timer elapses. Stop the timer
-        /// at the beginning so that we don't spawn too many threads, and then process
-        /// the world, before sending it to each client that's currently connected.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             heartbeatTimer.Stop();
 
-            if (Game_Started)
+            world.ProcessAttrition();
+            StringBuilder string_builder = new StringBuilder();
+            LinkedList<Cube> cubes_eaten = world.FoodConsumed();
+            LinkedList<Cube> players_eaten = world.PlayersConsumed();
+            Tuple<string, int, int, int> move;
+            if (moveQueue.TryDequeue(out move))
             {
-                LinkedList<Cube> cubes_eaten;
-                LinkedList<Cube> players_eaten;
-                world.ProcessAttrition();
-                cubes_eaten = world.FoodConsumed();
-                players_eaten = world.PlayersConsumed();
+                string type = move.Item1;
+                int x = move.Item2;
+                int y = move.Item3;
+                int player_uid = move.Item4;
+                world.ProcessData(type, x, y, player_uid);
+            }
 
-                Tuple<string, int, int, int> move;
-                if (moveQueue.TryDequeue(out move))
-                {
-                    string type = move.Item1;
-                    int x = move.Item2;
-                    int y = move.Item3;
-                    int player_uid = move.Item4;
-                    world.ProcessData(type, x, y, player_uid);
-                }
+            Tuple<string, int, int, int> split;
+            if (splitQueue.TryDequeue(out split))
+            {
+                string type = split.Item1;
+                int x = split.Item2;
+                int y = split.Item3;
+                int player_uid = split.Item4;
+                world.ProcessData(type, x, y, player_uid);
+            }
 
-                Tuple<string, int, int, int> split;
-                if (splitQueue.TryDequeue(out split))
-                {
-                    string type = split.Item1;
-                    int x = split.Item2;
-                    int y = split.Item3;
-                    int player_uid = split.Item4;
-                    world.ProcessData(type, x, y, player_uid);
-                }
+            //world.Update();
 
-                //Send the world state to every connected client
-                foreach (Player player in players.Values)
-                {
-                    Network.Send(player.socket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
+            Network.Send(dataSocket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
 
-                    foreach (Cube cube in cubes_eaten)
-                    {
-                        Network.Send(player.socket, JsonConvert.SerializeObject(cube) + "\n");
-                    }
+            foreach (Cube cube in cubes_eaten)
+            {
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+            }
 
-                    foreach (Cube cube in players_eaten)
-                    {
-                        Network.Send(player.socket, JsonConvert.SerializeObject(cube) + "\n");
-                    }
+            foreach (Cube cube in players_eaten)
+            {
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+            }
 
-                    foreach (Cube cube in world.player_cubes.Values)
-                    {
-                        Network.Send(player.socket, JsonConvert.SerializeObject(cube) + "\n");
-                    }
-                }
-
+            foreach (Cube cube in world.player_cubes.Values)
+            {
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
             }
 
             heartbeatTimer.Start();
         }
-        /******************************** HANDLE GAME SERVER COMMUNICATIONS **********************/
-
-
-
 
 
 
@@ -133,58 +106,6 @@ namespace Server
         {
             state.callback = Process_Web_Server_Request;
             Network.i_want_more_data(state);
-        }
-
-        private static void Process_Web_Server_Request(Preserved_State state)
-        {
-            string http_request = state.sb.ToString();
-            string uri, method;
-            LinkedList<KeyValuePair<string, string>> parameters;
-            bool validRequest = Try_Parse_Raw_HTTP_Request(http_request, out method, out uri, out parameters);
-
-            StringBuilder result = new StringBuilder();
-
-            //Start out by adding the necessary HTML
-            result.Append(Get_HTML_Header());
-
-            //Append the table HTML
-            result.Append("<table class='table table-striped table-bordered agcubio'>");
-
-            //Process valid requests
-            try
-            {
-                switch (uri)
-                {
-                    case "scores":
-
-                        break;
-                    case "games":
-                        result.Append(Get_Games_By_Player(parameters));
-                        break;
-                    case "eaten":
-
-                        break;
-                    default:
-                        return;
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-
-            //Always make sure to close the socket and form the HTML closing tags properly.
-            finally
-            {
-                //Append the ending table HTML
-                result.Append("</table>");
-
-                //Append the closing HTML tags
-                result.Append(Get_HTML_Footer());
-
-                Network.Send(state.socket, result.ToString());
-                state.socket.Close();
-            }
         }
 
         /// <summary>
@@ -240,6 +161,58 @@ namespace Server
             return true;
         }
 
+        private static void Process_Web_Server_Request(Preserved_State state)
+        {
+            string http_request = state.sb.ToString();
+            string uri, method;
+            LinkedList<KeyValuePair<string, string>> parameters;
+            bool validRequest = Try_Parse_Raw_HTTP_Request(http_request, out method, out uri, out parameters);
+
+            StringBuilder result = new StringBuilder();
+
+            //Start out by adding the necessary HTML
+            result.Append(Get_HTML_Header());
+
+            //Append the table HTML
+            result.Append("<table class='table table-striped table-bordered agcubio'>");
+
+            //Process valid requests
+            try
+            {
+                switch (uri)
+                {
+                    case "scores":
+
+                        break;
+                    case "games":
+                        result.Append(Get_Games_By_Player(parameters));
+                        break;
+                    case "eaten":
+
+                        break;
+                    default:
+                        return;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            //Always make sure to close the socket and form the HTML closing tags properly.
+            finally
+            {
+                //Append the ending table HTML
+                result.Append("</table>");
+
+                //Append the closing HTML tags
+                result.Append(Get_HTML_Footer());
+
+                Network.Send(state.socket, result.ToString());
+                state.socket.Close();
+            }
+        }
+
         /// <summary>
         /// This returns HTML for all the games by a certain player, to be displayed on the browser.
         /// Note - this includes the table header as well.
@@ -253,7 +226,7 @@ namespace Server
 
             //Look for the player name in the parameters
             string player_name = "";
-            foreach (KeyValuePair<string, string> pair in parameters)
+            foreach(KeyValuePair<string, string> pair in parameters)
             {
                 if (pair.Key.ToLower().Equals("player"))
                     player_name = pair.Value;
@@ -277,7 +250,7 @@ namespace Server
                     .Replace("cubes_eaten", game.cubes_eaten.ToString());
                 result.Append(row);
             }
-
+            
             return result.ToString();
         }
 
@@ -294,7 +267,7 @@ namespace Server
         private static string Get_HTML_Header()
         {
             return "<html><head>" +
-                    Get_Styles() +
+                    Get_Styles() +  
                     "</head>" +
                 "<body>"
                 ;
@@ -335,69 +308,51 @@ namespace Server
 
 
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
-        /// <summary>
-        /// Handle new client connections, and ask the client for more data (the player name).
-        /// </summary>
-        /// <param name="state"></param>
+        //Handle new client connections
         private static void Handle_New_Client_Connections(Preserved_State state)
         {
+            dataSocket = state.socket;
             state.callback = new Action<Preserved_State>(Receive_Player_Name);
+
+            heartbeatTimer.Interval = 1000 / world.HEARTBEATS_PER_SECOND;
+            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+            heartbeatTimer.Start();
             Network.i_want_more_data(state);
         }
 
-        /// <summary>
-        /// Receive the player name from the client, and add that player to the list of players (including the connected socket)
-        /// </summary>
-        /// <param name="state"></param>
+        //Receive the player name
         private static void Receive_Player_Name(Preserved_State state)
         {
             //Preserved_State state = (Preserved_State)ar.AsyncState;
             state.callback = new Action<Preserved_State>(HandleData);
-            string player_name = state.sb.ToString();
+            string playerName = state.sb.ToString();
 
-            Cube player_cube = world.AddPlayerCube(player_name);
-            state.SetUID(player_cube.UID);
+            Cube player = world.AddPlayerCube(playerName);
+            state.SetUID(player.UID);
 
-            Player player = new Player(state.socket, player_name);
-            player.SetUID(player_cube.UID);
-
-            players.Add(player_cube.UID, player);
-
-            if (!Game_Started)
-            {
-                Game_Started = true;
-                PopulateWorld();
-            }
+            PopulateWorld();
 
             //Sends the player cube and starting food cubes to the client
             lock (world)
             {
-                SendInitialData(player, player_cube);
+                SendInitialData(player);
             }
             state.sb.Clear();
             Network.i_want_more_data(state);
         }
 
-        /// <summary>
-        /// Send the player cube, followed by the other cubes in the world.
-        /// </summary>
-        /// <param name="player"></param>
-        /// <param name="player_cube"></param>
-        private static void SendInitialData(Player player, Cube player_cube)
+        private static void SendInitialData(Cube player)
         {
-            Network.Send(player.socket, JsonConvert.SerializeObject(player_cube) + "\n");
+            Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
             StringBuilder builder = new StringBuilder();
             foreach (Cube cube in world.food_cubes.Values)
             {
                 builder.Append(JsonConvert.SerializeObject(cube) + "\n");
             }
-            Network.Send(player.socket, builder.ToString());
+            Network.Send(dataSocket, builder.ToString());
         }
 
-        /// <summary>
-        /// Handle data from the client, and add it do a queue of operations to be performed during the heartbeat, one by one.
-        /// Doesn't touch the "world" object.
-        /// </summary>
+        //Handle data from the client
         static void HandleData(Preserved_State state)
         {
             string movement = state.sb.ToString();
@@ -407,7 +362,7 @@ namespace Server
             int x, y;
             if (TryParseData(movement, out type, out x, out y))
             {
-                if (type.Equals("move") && moveQueue.Count < QUEUE_MAX)
+                if (type.Equals("move"))
                     moveQueue.Enqueue(new Tuple<string, int, int, int>(type, x, y, player_uid));
                 else if (type.Equals("split"))
                 {
@@ -481,7 +436,6 @@ namespace Server
         /************************************ HANDLE GAMEPLAY MECHANICS *************************/
         private static void PopulateWorld()
         {
-            //Don't send all the food possible at once, we still want to have some to add during the game
             for (int i = 0; i < world.MAX_FOOD / 2; i++)
             {
                 world.AddFoodCube();
