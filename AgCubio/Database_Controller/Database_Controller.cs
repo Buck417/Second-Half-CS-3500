@@ -37,9 +37,8 @@ namespace Database_Controller
                 {
                     conn.Open();
 
-                    string sql = "insert into Game (cubes_eaten, max_mass, time_alive, time_of_death, player_name, rank) values(" 
-                        + game.cubes_eaten + ", " + game.max_mass + ", " +
-                        game.time_alive + ", " + game.time_of_death + ", " + game.player_name + ", " + game.rank + ")";
+                    string sql = "insert into Game (cubes_eaten, max_mass, time_alive, time_of_death, player_name) values(" + game.cubes_eaten + ", " + game.max_mass + ", " +
+                        game.time_alive + ", " + game.time_of_death + ", " + game.player_name + ")";
                     MySqlCommand command = new MySqlCommand(sql, conn);
                     command.ExecuteNonQuery();
 
@@ -96,7 +95,7 @@ namespace Database_Controller
 
                     // Create a command
                     MySqlCommand command = conn.CreateCommand();
-                    command.CommandText = "select * from Game where player_name = '" + player_name + "' order by max_mass desc;";
+                    command.CommandText = "select * from Game where player_name = '" + player_name + "';";
 
                     // Execute the command and cycle through the DataReader object
                     using (MySqlDataReader reader = command.ExecuteReader())
@@ -107,9 +106,7 @@ namespace Database_Controller
                             string[] date = parts[0].Split('/');
                             string[] time = parts[1].Split(':');
                             DateTime datetime = new DateTime(int.Parse(date[2]), int.Parse(date[1]), int.Parse(date[0]), int.Parse(time[0]), int.Parse(time[1]), int.Parse(time[2]));
-                            games.AddLast(new Game(long.Parse(reader["game_id"].ToString()), int.Parse(reader["cubes_eaten"].ToString()),
-                                long.Parse(reader["time_alive"].ToString()), int.Parse(reader["max_mass"].ToString()), 
-                                datetime, reader["player_name"].ToString(), int.Parse(reader["rank"].ToString())));
+                            games.AddLast(new Game(long.Parse(reader["game_id"].ToString()), int.Parse(reader["cubes_eaten"].ToString()), long.Parse(reader["time_alive"].ToString()), int.Parse(reader["max_mass"].ToString()), datetime, reader["player_name"].ToString(), int.Parse(reader["rank"].ToString())));
                         }
                     }
 
@@ -151,10 +148,7 @@ namespace Database_Controller
                             string[] date = parts[0].Split('-');
                             string[] time = parts[1].Split(':');
                             DateTime datetime = new DateTime(int.Parse(date[0]), int.Parse(date[1]), int.Parse(date[2]), int.Parse(time[0]), int.Parse(time[1]), int.Parse(time[2]));
-                            games.AddLast(new Game(long.Parse(reader["game_id"].ToString()), 
-                                int.Parse(reader["cubes_eaten"].ToString()), long.Parse(reader["time_alive"].ToString()), 
-                                int.Parse(reader["max_mass"].ToString()), datetime, reader["player_name"].ToString(),
-                                int.Parse(reader["rank"].ToString())));
+                            games.AddLast(new Game(long.Parse(reader["game_id"].ToString()), int.Parse(reader["cubes_eaten"].ToString()), long.Parse(reader["time_alive"].ToString()), int.Parse(reader["max_mass"].ToString()), datetime, reader["player_name"].ToString(), int.Parse(reader["rank"].ToString())));
                         }
                     }
 
