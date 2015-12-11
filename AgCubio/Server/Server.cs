@@ -11,34 +11,42 @@ using Newtonsoft.Json;
 using System.Timers;
 using Database_Controller;
 using System.Data;
+using System.Threading;
+using System.ComponentModel;
 
 namespace Server
 {
-    class AgServer
+    public class AgServer
     {
         public volatile static World world;
-        private volatile static System.Net.Sockets.Socket dataSocket;
+        private static Dictionary<int, Player> players = new Dictionary<int, Player>();
 
-        private static Timer heartbeatTimer = new Timer();
-        private static Timer splitTimer = new Timer();
+        private const int QUEUE_MAX = 50;
+        private static System.Timers.Timer heartbeatTimer = new System.Timers.Timer();
+        private static System.Timers.Timer splitTimer = new System.Timers.Timer();
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> moveQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> splitQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
 
+        private static bool Game_Started = false;
+
         public static void Main(string[] args)
         {
-            AgServer server = new AgServer();
             world = new World("world_parameters.xml");
             splitTimer.Interval = world.SPLIT_INTERVAL;
             splitTimer.Elapsed += SplitTimer_Elapsed;
 
-            //Web server listener
-            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
+            heartbeatTimer.Interval = 1000 / world.HEARTBEATS_PER_SECOND;
+            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+            heartbeatTimer.Start();
 
-            //AgCubio server stuff
+            //Game server listener
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
-
         }
 
+
+
+
+        /******************************** HANDLE GAME SERVER COMMUNICATIONS **********************/
         /// <summary>
         /// Once the split timer finishes, make sure the mass goes back to normal.
         /// </summary>
@@ -49,55 +57,74 @@ namespace Server
 
         }
 
+        /// <summary>
+        /// This is the handler for every time the heartbeat timer elapses. Stop the timer
+        /// at the beginning so that we don't spawn too many threads, and then process
+        /// the world, before sending it to each client that's currently connected.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             heartbeatTimer.Stop();
 
-            world.ProcessAttrition();
-            StringBuilder string_builder = new StringBuilder();
-            LinkedList<Cube> cubes_eaten = world.FoodConsumed();
-            LinkedList<Cube> players_eaten = world.PlayersConsumed();
-            Tuple<string, int, int, int> move;
-            if (moveQueue.TryDequeue(out move))
+            if (Game_Started)
             {
-                string type = move.Item1;
-                int x = move.Item2;
-                int y = move.Item3;
-                int player_uid = move.Item4;
-                world.ProcessData(type, x, y, player_uid);
-            }
+                LinkedList<Cube> cubes_eaten;
+                LinkedList<Cube> players_eaten;
+                world.ProcessAttrition();
+                cubes_eaten = world.FoodConsumed();
+                players_eaten = world.PlayersConsumed();
 
-            Tuple<string, int, int, int> split;
-            if (splitQueue.TryDequeue(out split))
-            {
-                string type = split.Item1;
-                int x = split.Item2;
-                int y = split.Item3;
-                int player_uid = split.Item4;
-                world.ProcessData(type, x, y, player_uid);
-            }
+                Tuple<string, int, int, int> move;
+                if (moveQueue.TryDequeue(out move))
+                {
+                    string type = move.Item1;
+                    int x = move.Item2;
+                    int y = move.Item3;
+                    int player_uid = move.Item4;
+                    world.ProcessData(type, x, y, player_uid);
+                }
 
-            //world.Update();
+                Tuple<string, int, int, int> split;
+                if (splitQueue.TryDequeue(out split))
+                {
+                    string type = split.Item1;
+                    int x = split.Item2;
+                    int y = split.Item3;
+                    int player_uid = split.Item4;
+                    world.ProcessData(type, x, y, player_uid);
+                }
 
-            Network.Send(dataSocket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
+                //Send the world state to every connected client
+                foreach (Player player in players.Values)
+                {
+                    Network.Send(player.socket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
 
-            foreach (Cube cube in cubes_eaten)
-            {
-                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
-            }
+                    foreach (Cube cube in cubes_eaten)
+                    {
+                        Network.Send(player.socket, JsonConvert.SerializeObject(cube) + "\n");
+                    }
 
-            foreach (Cube cube in players_eaten)
-            {
-                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
-            }
+                    foreach (Cube cube in players_eaten)
+                    {
+                        Network.Send(player.socket, JsonConvert.SerializeObject(cube) + "\n");
+                    }
 
-            foreach (Cube cube in world.player_cubes.Values)
-            {
-                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+                    foreach (Cube cube in world.player_cubes.Values)
+                    {
+                        Network.Send(player.socket, JsonConvert.SerializeObject(cube) + "\n");
+                    }
+                }
+
             }
 
             heartbeatTimer.Start();
         }
+        /******************************** HANDLE GAME SERVER COMMUNICATIONS **********************/
+
+
+
 
 
 
@@ -106,59 +133,6 @@ namespace Server
         {
             state.callback = Process_Web_Server_Request;
             Network.i_want_more_data(state);
-        }
-
-        /// <summary>
-        /// This is the magic that parses a raw HTTP request, and returns usable data for routing the request.
-        /// </summary>
-        /// <param name="http"></param>
-        /// <param name="method"></param>
-        /// <param name="pathname"></param>
-        /// <param name="parameters"></param>
-        private static bool Try_Parse_Raw_HTTP_Request(string http, out string method, out string pathname, out LinkedList<KeyValuePair<string, string>> parameters)
-        {
-            method = "";
-            pathname = "";
-            parameters = new LinkedList<KeyValuePair<string, string>>();
-
-            try
-            {
-                //First, split the raw HTTP request by line
-                string[] parts = Regex.Split(http, "\r\n");
-
-                //First line is the http method, as well as the pathname
-                string[] request_parts = Regex.Split(parts[0], " ");
-                if (request_parts[0].Equals("GET"))
-                    method = request_parts[0];
-                //Only handle GET requests for now
-                else
-                    return false;
-
-                //The first part of the path is the URI/pathname
-                string[] path_parts = request_parts[1].Split('?');
-                pathname = path_parts[0].Substring(1);
-
-                //See if there are any variable parameters in the request. If there are, add them as a key/value pair to the parameters linked list passed in.
-                if (path_parts.Length > 1)
-                {
-                    foreach (string part in path_parts[1].Split('&'))
-                    {
-                        string[] var = part.Split('=');
-                        parameters.AddLast(new KeyValuePair<string, string>(var[0], var[1]));
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                //Reset the variables passed in
-                method = "";
-                pathname = "";
-                parameters = new LinkedList<KeyValuePair<string, string>>();
-                return false;
-            }
-
-            return true;
         }
 
         private static void Process_Web_Server_Request(Preserved_State state)
@@ -214,6 +188,59 @@ namespace Server
         }
 
         /// <summary>
+        /// This is the magic that parses a raw HTTP request, and returns usable data for routing the request.
+        /// </summary>
+        /// <param name="http"></param>
+        /// <param name="method"></param>
+        /// <param name="pathname"></param>
+        /// <param name="parameters"></param>
+        private static bool Try_Parse_Raw_HTTP_Request(string http, out string method, out string pathname, out LinkedList<KeyValuePair<string, string>> parameters)
+        {
+            method = "";
+            pathname = "";
+            parameters = new LinkedList<KeyValuePair<string, string>>();
+
+            try
+            {
+                //First, split the raw HTTP request by line
+                string[] parts = Regex.Split(http, "\r\n");
+
+                //First line is the http method, as well as the pathname
+                string[] request_parts = Regex.Split(parts[0], " ");
+                if (request_parts[0].Equals("GET"))
+                    method = request_parts[0];
+                //Only handle GET requests for now
+                else
+                    return false;
+
+                //The first part of the path is the URI/pathname
+                string[] path_parts = request_parts[1].Split('?');
+                pathname = path_parts[0].Substring(1);
+
+                //See if there are any variable parameters in the request. If there are, add them as a key/value pair to the parameters linked list passed in.
+                if (path_parts.Length > 1)
+                {
+                    foreach (string part in path_parts[1].Split('&'))
+                    {
+                        string[] var = part.Split('=');
+                        parameters.AddLast(new KeyValuePair<string, string>(var[0], var[1]));
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                //Reset the variables passed in
+                method = "";
+                pathname = "";
+                parameters = new LinkedList<KeyValuePair<string, string>>();
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// This returns HTML for all the games by a certain player, to be displayed on the browser.
         /// Note - this includes the table header as well.
         /// </summary>
@@ -226,7 +253,7 @@ namespace Server
 
             //Look for the player name in the parameters
             string player_name = "";
-            foreach(KeyValuePair<string, string> pair in parameters)
+            foreach (KeyValuePair<string, string> pair in parameters)
             {
                 if (pair.Key.ToLower().Equals("player"))
                     player_name = pair.Value;
@@ -250,7 +277,7 @@ namespace Server
                     .Replace("cubes_eaten", game.cubes_eaten.ToString());
                 result.Append(row);
             }
-            
+
             return result.ToString();
         }
 
@@ -267,7 +294,7 @@ namespace Server
         private static string Get_HTML_Header()
         {
             return "<html><head>" +
-                    Get_Styles() +  
+                    Get_Styles() +
                     "</head>" +
                 "<body>"
                 ;
@@ -308,51 +335,69 @@ namespace Server
 
 
         /*********************************** HANDLE NETWORK COMMUNICATIONS **********************/
-        //Handle new client connections
+        /// <summary>
+        /// Handle new client connections, and ask the client for more data (the player name).
+        /// </summary>
+        /// <param name="state"></param>
         private static void Handle_New_Client_Connections(Preserved_State state)
         {
-            dataSocket = state.socket;
             state.callback = new Action<Preserved_State>(Receive_Player_Name);
-
-            heartbeatTimer.Interval = 1000 / world.HEARTBEATS_PER_SECOND;
-            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
-            heartbeatTimer.Start();
             Network.i_want_more_data(state);
         }
 
-        //Receive the player name
+        /// <summary>
+        /// Receive the player name from the client, and add that player to the list of players (including the connected socket)
+        /// </summary>
+        /// <param name="state"></param>
         private static void Receive_Player_Name(Preserved_State state)
         {
             //Preserved_State state = (Preserved_State)ar.AsyncState;
             state.callback = new Action<Preserved_State>(HandleData);
-            string playerName = state.sb.ToString();
+            string player_name = state.sb.ToString();
 
-            Cube player = world.AddPlayerCube(playerName);
-            state.SetUID(player.UID);
+            Cube player_cube = world.AddPlayerCube(player_name);
+            state.SetUID(player_cube.UID);
 
-            PopulateWorld();
+            Player player = new Player(state.socket, player_name);
+            player.SetUID(player_cube.UID);
+
+            players.Add(player_cube.UID, player);
+
+            if (!Game_Started)
+            {
+                Game_Started = true;
+                PopulateWorld();
+            }
 
             //Sends the player cube and starting food cubes to the client
             lock (world)
             {
-                SendInitialData(player);
+                SendInitialData(player, player_cube);
             }
             state.sb.Clear();
             Network.i_want_more_data(state);
         }
 
-        private static void SendInitialData(Cube player)
+        /// <summary>
+        /// Send the player cube, followed by the other cubes in the world.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="player_cube"></param>
+        private static void SendInitialData(Player player, Cube player_cube)
         {
-            Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
+            Network.Send(player.socket, JsonConvert.SerializeObject(player_cube) + "\n");
             StringBuilder builder = new StringBuilder();
             foreach (Cube cube in world.food_cubes.Values)
             {
                 builder.Append(JsonConvert.SerializeObject(cube) + "\n");
             }
-            Network.Send(dataSocket, builder.ToString());
+            Network.Send(player.socket, builder.ToString());
         }
 
-        //Handle data from the client
+        /// <summary>
+        /// Handle data from the client, and add it do a queue of operations to be performed during the heartbeat, one by one.
+        /// Doesn't touch the "world" object.
+        /// </summary>
         static void HandleData(Preserved_State state)
         {
             string movement = state.sb.ToString();
@@ -362,7 +407,7 @@ namespace Server
             int x, y;
             if (TryParseData(movement, out type, out x, out y))
             {
-                if (type.Equals("move"))
+                if (type.Equals("move") && moveQueue.Count < QUEUE_MAX)
                     moveQueue.Enqueue(new Tuple<string, int, int, int>(type, x, y, player_uid));
                 else if (type.Equals("split"))
                 {
@@ -436,6 +481,7 @@ namespace Server
         /************************************ HANDLE GAMEPLAY MECHANICS *************************/
         private static void PopulateWorld()
         {
+            //Don't send all the food possible at once, we still want to have some to add during the game
             for (int i = 0; i < world.MAX_FOOD / 2; i++)
             {
                 world.AddFoodCube();

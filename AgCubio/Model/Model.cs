@@ -7,9 +7,50 @@ using Newtonsoft.Json;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using Database_Controller;
+using System.Net.Sockets;
 
 namespace Model
 {
+    /// <summary>
+    /// This encapsulates all the functionality and data that is used with a single
+    /// player, not to be confused with the player cubes.
+    /// </summary>
+    public class Player
+    {
+        private string name;
+        public string Name { get { return name; } }
+        public void SetName(string _name)
+        {
+            this.name = _name;
+        }
+        private Socket my_socket;
+        public Socket socket { get { return my_socket; } }
+        public void SetSocket(Socket _socket)
+        {
+            this.my_socket = _socket;
+        }
+
+        private int uid;
+        public int UID { get { return uid; } }
+        public void SetUID(int _uid)
+        {
+            this.uid = _uid;
+        }
+
+        /// <summary>
+        /// Initialize a player and give it a socket and a name
+        /// </summary>
+        /// <param name="_socket"></param>
+        /// <param name="_name"></param>
+        public Player(Socket _socket, string _name)
+        {
+            SetSocket(_socket);
+            SetName(_name);
+        }
+    }
+
+
+
     /// <summary>
     /// Constructor for creating a cube, defining its position, unique ID, color, name,
     /// type and mass. Sets a width defined by its mass. Adds function for converting JSON
@@ -716,7 +757,6 @@ namespace Model
         /// <returns></returns>
         public LinkedList<Cube> FoodConsumed()
         {
-
             LinkedList<Cube> eaten_cubes = new LinkedList<Cube>();
             foreach (Cube player in player_cubes.Values)
             {
