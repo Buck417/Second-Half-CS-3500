@@ -57,6 +57,7 @@ namespace Server
             StringBuilder string_builder = new StringBuilder();
             LinkedList<Cube> cubes_eaten = world.FoodConsumed();
             LinkedList<Cube> players_eaten = world.PlayersConsumed();
+            HandleDatabase(players_eaten);
             Tuple<string, int, int, int> move;
             if (moveQueue.TryDequeue(out move))
             {
@@ -428,6 +429,10 @@ namespace Server
 
             return false;
         }
+
+
+
+        
         /********************************* END HANDLE NETWORK COMMUNICATIONS ********************/
 
 
@@ -441,6 +446,26 @@ namespace Server
                 world.AddFoodCube();
             }
         }
+
+        /// <summary>
+        /// Adds information for each player to the database when given a list of dead players
+        /// </summary>
+        /// <param name="dead_players"></param>
+        public static void HandleDatabase(LinkedList<Cube> dead_players)
+        {
+            LinkedList<Player_Eaten> player_list = new LinkedList<Player_Eaten>();
+
+            DateTime death = new DateTime();
+            foreach (Cube cube in dead_players)
+            {
+                death = DateTime.Now;
+                Database_Controller.Game game1 = new Database_Controller.Game(0, 0, 0, (int)cube.max_mass, death, cube.Name, world.GetRank(cube));
+                player_list = world.names_of_players_eaten[cube.UID];
+                Database.AddGameToDB(game1, player_list);
+            }
+        }
+
+//        
         /********************************** END HANDLE GAMEPLAY MECHANICS ***********************/
     }
 }

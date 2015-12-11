@@ -36,7 +36,7 @@ namespace Model
         private double momentum_decay;
         private double momentum_x;
         private double momentum_y;
-        public double max_mass;
+        public int max_mass;
 
 
 
@@ -54,7 +54,7 @@ namespace Model
             this.Width = (int)(Math.Sqrt(this.Mass));
             this.allow_merge = true;
             this.team_id = uID;
-            this.max_mass = mass;
+            this.max_mass = (int)mass;
         }
 
         public double Left
@@ -255,6 +255,7 @@ namespace Model
         private Random randomX = new Random();
         private Random randomY = new Random();
         private Random UIDGenerator = new Random();
+        private int unique_id = 0;
 
 
         //Keeps track of all player cubes
@@ -267,6 +268,11 @@ namespace Model
         public Dictionary<int, LinkedList<Cube>> split_players = new Dictionary<int, LinkedList<Cube>>();
         //A list of names for each player cube that they have eaten
         public Dictionary<int, LinkedList<Player_Eaten>> names_of_players_eaten = new Dictionary<int, LinkedList<Player_Eaten>>();
+        //List of every player that existed and their max_mass
+        public Dictionary<String, int> max_player_mass = new Dictionary<String, int>();
+        //A sorted list that tracks the rank of every player in the world that has existed
+        public Dictionary<String, int> rankings = new Dictionary<String, int>();
+
 
 
         private string gameplay_file = "world_parameters.xml";
@@ -386,6 +392,9 @@ namespace Model
             Cube cube = new Cube(RandomX(), RandomY(), Color.FromArgb(random.Next(0, 255), random.Next(0, 255), random.Next(0, 255)).ToArgb(), 0, 0, false, name, PLAYER_START_MASS);
             GetNextUID(cube);
             player_cubes.Add(cube.UID, cube);
+            //If the player is new to the rankings, insert it into the dict
+            if (!rankings.ContainsKey(cube.Name))
+                rankings.Add(cube.Name,cube.max_mass);
             return cube;
 
         }
@@ -663,8 +672,7 @@ namespace Model
                     if (IsPlayer)
                     {
                         //If the current mass of the player is the maximum mass the player has attained, set the max_mass to the current mass
-                        if (cube.Mass > cube.max_mass)
-                            cube.max_mass = cube.Mass;
+                        GenerateMaxMass(cube);
                         player_cubes[cube.UID] = cube;
                     }
                     if (IsVirus) virus_cubes[cube.UID] = cube;
@@ -760,6 +768,8 @@ namespace Model
                         {
                            if (player.Mass > player2.Mass)
                             {
+                                GenerateMaxMass(player);
+                                GenerateMaxMass(player2);
                                 eaten_players.AddFirst(player2);
                                 if (names_of_players_eaten.ContainsKey(player.UID))
                                 {
@@ -873,5 +883,67 @@ namespace Model
 
             return (width > 0 && height > 0);
         }
+
+        /// <summary>
+        /// Generates a sorted dictionary containing the ranks of every player in the game sorted by
+        /// the max_mass attained by the players
+        /// </summary>
+        public void GenerateRank()
+        {
+            //Pulls all items out of the dictionary
+            var items = from pair in max_player_mass
+                        orderby pair.Value ascending
+                        select pair;
+            //Clear data list
+            rankings.Clear();
+            //Position index that determines rank
+            int rank = 1;
+
+            //Places all items back in the dictionary sorted by the value
+            foreach (KeyValuePair<string, int> pair in items)
+            {
+                rankings.Add(pair.Key, rank);
+                rank++;
+            }
+
+        }
+
+        /// <summary>
+        /// Gets the rank of the player given
+        /// </summary>
+        /// <param name="player"> The player which we need the rank for</param>
+        /// <returns>returns the rank of the player</returns>
+        public int GetRank(Cube player)
+        {
+            GenerateRank();
+            return rankings[player.Name];
+        }
+
+        /// <summary>
+        /// Updates max_mass for the cube and adds that cube to the list of max_mass
+        /// for each player
+        /// </summary>
+        /// <param name="cube"></param>
+        public void GenerateMaxMass(Cube cube)
+        {
+            if (cube.Mass > cube.max_mass)
+            {
+                cube.max_mass = (int)cube.Mass;
+                //Used to track the maximum mass of every player cube
+                if (max_player_mass.ContainsKey(cube.Name))
+                {
+                    max_player_mass[cube.Name] = cube.max_mass;
+                }
+                else
+                {
+                    max_player_mass.Add(cube.Name, cube.max_mass);
+                }
+            }
+        }
+
+        
+        
+
+        
     }
 }
