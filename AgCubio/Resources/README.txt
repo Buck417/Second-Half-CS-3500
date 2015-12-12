@@ -67,3 +67,6 @@ GetPlayersEaten: "select eaten_name from Players_Eaten where game_id = '" + game
 AgCubio Design:
 	
 	Our server isn't able to handle multiple clients at the moment.
+
+	The values for the time duration of a players life is set to 0 since it involves using a timer and we're having enough threading issues as it was
+	in the server.
