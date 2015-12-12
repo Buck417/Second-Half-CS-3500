@@ -230,25 +230,34 @@ namespace Network_Controller
             try
             {
                 server_socket.Bind(new IPEndPoint(IPAddress.IPv6Any, port));
-                server_socket.Listen(100);
-                
+
                 Preserved_State state = new Preserved_State
                 {
                     callback = callback,
                     socket = server_socket,
                 };
 
-                Console.WriteLine("Waiting for a connection...\n");
-
-                server_socket.BeginAccept(new AsyncCallback(Accept_A_New_Client), state);
-                Console.Read();     //Keeps the thread open because it doesn't connect automatically
-
+                Thread t = new Thread(Listen);
+                t.Start(state);
             }
 
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
+        }
+
+        private static void Listen(object args)
+        {
+            Preserved_State state = args as Preserved_State;
+            Socket socket = state.socket;
+
+            Console.WriteLine("Waiting for a connection...\n");
+
+            socket.Listen(100);
+
+            socket.BeginAccept(new AsyncCallback(Accept_A_New_Client), state);
+            Console.Read();     //Keeps the thread open because it doesn't connect automatically
         }
 
         /// <summary>
@@ -271,14 +280,11 @@ namespace Network_Controller
 
             Preserved_State state2 = new Preserved_State
             {
-                socket = handler,
-
+                socket = handler
             };
 
             state.callback(state2);
-
-
-
+            
             listener.BeginAccept(Accept_A_New_Client, state);
         }
 
