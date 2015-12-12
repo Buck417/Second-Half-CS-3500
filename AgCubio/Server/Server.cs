@@ -32,7 +32,7 @@ namespace Server
             splitTimer.Elapsed += SplitTimer_Elapsed;
 
             //Web server listener
-            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
+            //Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
 
             //AgCubio server stuff
             //Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
