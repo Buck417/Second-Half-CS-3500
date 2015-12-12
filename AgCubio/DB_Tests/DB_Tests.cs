@@ -23,27 +23,27 @@ namespace DB_Tests
 
             Game game2 = new Game(0, 26, 1998, 1297, DateTime.Now, "Ryan", 2);
             List<Player_Eaten> eaten2 = new List<Player_Eaten>();
-            eaten.Add(new Player_Eaten("Jake"));
-            eaten.Add(new Player_Eaten("Tiffany"));
+            eaten2.Add(new Player_Eaten("Jake"));
+            eaten2.Add(new Player_Eaten("Tiffany"));
             Database.AddGameToDB(game2, eaten2);
 
             Game game3 = new Game(0, 22, 1000, 1001, DateTime.Now, "Dave", 3);
             List<Player_Eaten> eaten3 = new List<Player_Eaten>();
-            eaten.Add(new Player_Eaten("Romeo"));
-            eaten.Add(new Player_Eaten("Juliet"));
+            eaten3.Add(new Player_Eaten("Romeo"));
+            eaten3.Add(new Player_Eaten("Juliet"));
             Database.AddGameToDB(game3, eaten3);
 
             Game game4 = new Game(0, 21, 999, 1000, DateTime.Now, "John", 4);
             List<Player_Eaten> eaten4 = new List<Player_Eaten>();
-            eaten.Add(new Player_Eaten("Ronald"));
-            eaten.Add(new Player_Eaten("Ronnie"));
+            eaten4.Add(new Player_Eaten("Ronald"));
+            eaten4.Add(new Player_Eaten("Ronnie"));
             Database.AddGameToDB(game4, eaten4);
 
             Game game5 = new Game(0, 20, 980, 900, DateTime.Now, "Sally", 5);
             List<Player_Eaten> eaten5 = new List<Player_Eaten>();
-            eaten.Add(new Player_Eaten("Jennifer"));
-            eaten.Add(new Player_Eaten("Chris"));
-            eaten.Add(new Player_Eaten("Christina"));
+            eaten5.Add(new Player_Eaten("Jennifer"));
+            eaten5.Add(new Player_Eaten("Chris"));
+            eaten5.Add(new Player_Eaten("Christina"));
             Database.AddGameToDB(game5, eaten5);
 
             LinkedList<Game> high_scores = Database.GetHighScores();

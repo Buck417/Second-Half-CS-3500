@@ -39,9 +39,11 @@ namespace Database_Controller
                         game.time_alive + ", '" + game.time_of_death.ToString("yyyy-MM-dd H:mm:ss") + "', '" + game.player_name + "', " + game.rank + ")";
                     MySqlCommand command = new MySqlCommand(sql, conn);
                     command.ExecuteNonQuery();
+                    command.Dispose();
+                    conn.Close();
                     
-
                     //Get the most recently updated game's id
+                    conn.Open();
                     sql = "select game_id from Game order by game_id desc limit 1";
                     MySqlCommand command2 = new MySqlCommand(sql, conn);
                     MySqlDataReader reader = command2.ExecuteReader();
@@ -49,11 +51,13 @@ namespace Database_Controller
                     reader.Read();
                     if (long.TryParse(reader["game_id"].ToString(), out game_id))
                     {
+                        reader.Close();
                         foreach (Player_Eaten player in players_eaten)
                         {
-                            sql = "insert into Players_Eaten (eaten_name, game_id) values(" + player.name + ", " + game_id + ")";
+                            sql = "insert into Players_Eaten(eaten_name, game_id) values('" + player.name + "', " + game_id + ")";
                             MySqlCommand command3 = new MySqlCommand(sql, conn);
                             command3.ExecuteNonQuery();
+                            command3.Dispose();
                         }
                     }
                     else
