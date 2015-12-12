@@ -35,7 +35,7 @@ namespace View
             //Use this to prevent screen flickering when redrawing the world
             DoubleBuffered = true;
 
-            Form1 start_game_popup = new Form1(this, false);
+            Start_Game_Form start_game_popup = new Start_Game_Form(this, false);
             start_game_popup.ShowDialog(this);
 
             world = new World();
@@ -284,7 +284,7 @@ namespace View
         /// </summary>
         private void ShowReConnectForm()
         {
-            Form1 form = new Form1(this, true);
+            Start_Game_Form form = new Start_Game_Form(this, true);
             form.ShowDialog(this);
         }
         /******************************************* END HELPER METHODS ******************************************/

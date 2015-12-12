@@ -173,7 +173,7 @@ namespace Database_Controller
         /// </summary>
         /// <param name="game_id"></param>
         /// <returns></returns>
-        public static LinkedList<Player_Eaten> GetPlayersEaten(int game_id)
+        public static LinkedList<Player_Eaten> GetPlayersEaten(long game_id)
         {
             LinkedList<Player_Eaten> players = new LinkedList<Player_Eaten>();
             using (MySqlConnection conn = new MySqlConnection(connectionString))
@@ -195,6 +195,8 @@ namespace Database_Controller
                             players.AddLast(new Player_Eaten(reader["eaten_name"].ToString()));
                         }
                     }
+
+                    conn.Close();
                 }
                 catch (Exception e)
                 {
@@ -215,13 +217,15 @@ namespace Database_Controller
             {
                 try
                 {
-                    MySqlCommand command = new MySqlCommand();
-                    command.CommandText = "delete from Game where game_id = " + id + ";";
+                    conn.Open();
+                    string sql = "delete from Game where game_id = " + id + ";";
+                    MySqlCommand command = new MySqlCommand(sql, conn);
                     command.ExecuteNonQuery();
 
-                    MySqlCommand command2 = new MySqlCommand();
-                    command2.CommandText = "delete from Players_Eaten where game_id = " + id + ";";
-                    command.ExecuteNonQuery();
+                    sql = "delete from Players_Eaten where game_id = " + id + ";";
+                    MySqlCommand command2 = new MySqlCommand(sql, conn);
+                    command2.ExecuteNonQuery();
+                    conn.Close();
                 }
                 catch (Exception e)
                 {

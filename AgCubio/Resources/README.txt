@@ -66,7 +66,9 @@ GetPlayersEaten: "select eaten_name from Players_Eaten where game_id = '" + game
 
 AgCubio Design:
 	
-	Our server isn't able to handle multiple clients at the moment.
+	Our server isn't able to handle multiple clients at the moment, nor concurrent connections to both the web server and the game server.
+	However, to show that our webserver is working, we chose to hard code it to work.  We also included a unit test in DB_Tests to show
+	that our database is working properly with the high scores, players eaten, and all games by a player.
 
 	The values for the time duration of a players life is set to 0 since it involves using a timer and we're having enough threading issues as it was
 	in the server.

@@ -10,12 +10,12 @@ using System.Windows.Forms;
 
 namespace View
 {
-    public partial class Form1 : Form
+    public partial class Start_Game_Form : Form
     {
         public string PlayerName, Host;
         private AgCubio_View view;
 
-        public Form1(AgCubio_View view, bool restart)
+        public Start_Game_Form(AgCubio_View view, bool restart)
         {
             InitializeComponent();
             view.GameHost = game_host_box.Text;

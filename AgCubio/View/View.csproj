@@ -54,11 +54,11 @@
     <Compile Include="AgCubio_View.Designer.cs">
       <DependentUpon>AgCubio_View.cs</DependentUpon>
     </Compile>
-    <Compile Include="Form1.cs">
+    <Compile Include="Start_Game_Form.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="Start_Game_Form.Designer.cs">
+      <DependentUpon>Start_Game_Form.cs</DependentUpon>
     </Compile>
     <Compile Include="GameOverForm.cs">
       <SubType>Form</SubType>
@@ -71,8 +71,8 @@
     <EmbeddedResource Include="AgCubio_View.resx">
       <DependentUpon>AgCubio_View.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="Start_Game_Form.resx">
+      <DependentUpon>Start_Game_Form.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="GameOverForm.resx">
       <DependentUpon>GameOverForm.cs</DependentUpon>

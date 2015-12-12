@@ -1,6 +1,6 @@
 ﻿namespace View
 {
-    partial class Form1
+    partial class Start_Game_Form
     {
         /// <summary>
         /// Required designer variable.
