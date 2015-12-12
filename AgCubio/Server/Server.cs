@@ -28,16 +28,26 @@ namespace Server
         {
             AgServer server = new AgServer();
             world = new World("world_parameters.xml");
-
+            splitTimer.Interval = world.SPLIT_INTERVAL;
+            splitTimer.Elapsed += SplitTimer_Elapsed;
 
             //Web server listener
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
 
             //AgCubio server stuff
-            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
+            //Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
 
         }
 
+        /// <summary>
+        /// Once the split timer finishes, make sure the mass goes back to normal.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void SplitTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+
+        }
 
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -501,24 +511,6 @@ namespace Server
             for (int i = 0; i < world.MAX_FOOD / 2; i++)
             {
                 world.AddFoodCube();
-            }
-        }
-
-        /// <summary>
-        /// Adds information for each player to the database when given a list of dead players
-        /// </summary>
-        /// <param name="dead_players"></param>
-        public static void HandleDatabase(LinkedList<Cube> dead_players)
-        {
-            LinkedList<Player_Eaten> player_list = new LinkedList<Player_Eaten>();
-
-            DateTime death = new DateTime();
-            foreach (Cube cube in dead_players)
-            {
-                death = DateTime.Now;
-                Database_Controller.Game game1 = new Database_Controller.Game(0, 0, 0, (int)cube.GetMaxMass(), death, cube.Name, world.GetRank(cube));
-                player_list = world.names_of_players_eaten[cube.UID];
-                Database.AddGameToDB(game1, player_list);
             }
         }
         /********************************** END HANDLE GAMEPLAY MECHANICS ***********************/
