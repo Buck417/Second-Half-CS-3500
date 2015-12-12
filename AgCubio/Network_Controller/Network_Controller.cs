@@ -173,16 +173,20 @@ namespace Network_Controller
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="data"></param>
-        public static void Send(Socket socket, String data)
+        public static void Send(Socket socket, String data, Action<Preserved_State> callback)
         {
             if (socket == null || !socket.Connected) return;
 
             //Convert the string into a byte array
             byte[] byte_data = Encoding.UTF8.GetBytes(data);
             byte[] buffer = new byte[BUFFER_SIZE];
+            Preserved_State state = new Preserved_State();
+            state.socket = socket;
+            state.buffer = byte_data;
+            state.callback = callback;
             try
             {
-                socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), socket);
+                socket.BeginSend(byte_data, 0, byte_data.Length, SocketFlags.None, new AsyncCallback(SendCallBack), state);
             }
             catch (Exception e)
             {
@@ -196,15 +200,26 @@ namespace Network_Controller
         /// </summary>
         private static void SendCallBack(IAsyncResult ar)
         {
-            Socket socket = (Socket)ar.AsyncState;
-
+            Preserved_State state = (Preserved_State)ar.AsyncState;
+            Socket socket = state.socket;
 
             //Find out how many bytes were sent
             try
             {
-                int bytes;
+                int bytes = 0;
                 if (socket.Connected)
                 bytes = socket.EndSend(ar);
+
+                //If there's still more data to send, send it
+                if(bytes < state.buffer.Length)
+                {
+                    Send(socket, state.buffer.ToString(), state.callback);
+                }
+                //If everything has sent, call the callback (if one was set)
+                else
+                {
+                    if (state.callback != null) state.callback(state);
+                }
             }
             catch (Exception e)
             {

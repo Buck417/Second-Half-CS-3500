@@ -71,21 +71,21 @@ namespace Server
 
             //world.Update();
 
-            Network.Send(dataSocket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n");
+            Network.Send(dataSocket, JsonConvert.SerializeObject(world.AddFoodCube()) + "\n", null);
 
             foreach (Cube cube in cubes_eaten)
             {
-                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n", null);
             }
 
             foreach (Cube cube in players_eaten)
             {
-                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n", null);
             }
 
             foreach (Cube cube in world.player_cubes.Values)
             {
-                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n");
+                Network.Send(dataSocket, JsonConvert.SerializeObject(cube) + "\n", null);
             }
 
             heartbeatTimer.Start();
@@ -198,9 +198,17 @@ namespace Server
                 //Append the closing HTML tags
                 result.Append(Get_HTML_Footer());
 
-                Network.Send(state.socket, result.ToString());
-                state.socket.Close();
+                Network.Send(state.socket, result.ToString(), Finish_Web_Request);
             }
+        }
+
+        /// <summary>
+        /// This is the callback we call when the web server has done its work and all the data has been sent.
+        /// </summary>
+        /// <param name="state"></param>
+        private static void Finish_Web_Request(Preserved_State state)
+        {
+            state.socket.Close();
         }
 
         /// <summary>
@@ -345,7 +353,11 @@ namespace Server
 
         private static string Get_HTML_Header()
         {
-            return "<html><head>" +
+            return "HTTP/1.1 200 OK \r\n" +
+                "Connection: close \r\n" +
+                "Content-Type: text/html; charset=UTF-8\r\n" + 
+                "\r\n" +
+                "<html><head>" +
                     Get_Styles() +  
                     "</head>" +
                 "<body>"
@@ -423,13 +435,13 @@ namespace Server
 
         private static void SendInitialData(Cube player)
         {
-            Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n");
+            Network.Send(dataSocket, JsonConvert.SerializeObject(player) + "\n", null);
             StringBuilder builder = new StringBuilder();
             foreach (Cube cube in world.food_cubes.Values)
             {
                 builder.Append(JsonConvert.SerializeObject(cube) + "\n");
             }
-            Network.Send(dataSocket, builder.ToString());
+            Network.Send(dataSocket, builder.ToString(), null);
         }
 
         //Handle data from the client

@@ -125,7 +125,7 @@ namespace View
             {
                 //Send the player name
                 ServerConnected = true;
-                Network.Send(socket, player_name + '\n');
+                Network.Send(socket, player_name + '\n', null);
             }
             else
             {
@@ -243,7 +243,7 @@ namespace View
         {
             //If the player cube isn't at the place we're sending it to yet, keep sending the move request
             string data = "(move, " + x + ", " + y + ")\n";
-            Network.Send(socket, data);
+            Network.Send(socket, data, null);
         }
 
         /// <summary>
@@ -254,7 +254,7 @@ namespace View
         private void SendSplitRequest(int x, int y)
         {
             string data = "(split, " + x + ", " + y + ")\n";
-            Network.Send(socket, data);
+            Network.Send(socket, data, null);
         }
 
         private static int lastTick;
