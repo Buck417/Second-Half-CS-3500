@@ -242,7 +242,6 @@ namespace Network_Controller
 
                 server_socket.BeginAccept(new AsyncCallback(Accept_A_New_Client), state);
                 Console.Read();     //Keeps the thread open because it doesn't connect automatically
-
             }
 
             catch (Exception e)
@@ -250,7 +249,7 @@ namespace Network_Controller
                 Console.WriteLine(e.ToString());
             }
         }
-
+        
         /// <summary>
         /// This code should be invoked by the OS when a connection request comes in. It should:
         /// 1. Create a new socket
