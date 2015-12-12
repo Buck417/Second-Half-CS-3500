@@ -20,7 +20,6 @@ namespace Server
         private volatile static System.Net.Sockets.Socket dataSocket;
 
         private static Timer heartbeatTimer = new Timer();
-        private static Timer splitTimer = new Timer();
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> moveQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
         private static System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>> splitQueue = new System.Collections.Concurrent.ConcurrentQueue<Tuple<string, int, int, int>>();
 
@@ -31,7 +30,7 @@ namespace Server
 
 
             //Web server listener
-            //Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
+            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
 
             //AgCubio server stuff
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
@@ -516,7 +515,7 @@ namespace Server
             foreach (Cube cube in dead_players)
             {
                 death = DateTime.Now;
-                Database_Controller.Game game1 = new Database_Controller.Game(0, 0, 0, (int)cube.GetMaxMass(), death, cube.Name, world.GetRank(cube));
+                Database_Controller.Game game1 = new Database_Controller.Game(0, world.TotalCubesEaten(cube), 0, (int)cube.GetMaxMass(), death, cube.Name, world.GetRank(cube));
                 player_list = world.names_of_players_eaten[cube.UID];
                 Database.AddGameToDB(game1, player_list);
             }
