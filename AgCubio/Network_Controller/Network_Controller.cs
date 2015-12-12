@@ -173,6 +173,7 @@ namespace Network_Controller
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="data"></param>
+        /// <param name="callback">Optional callback to be invoked when all the data has been sent.</param>
         public static void Send(Socket socket, String data, Action<Preserved_State> callback)
         {
             if (socket == null || !socket.Connected) return;
@@ -197,6 +198,7 @@ namespace Network_Controller
         /// <summary>
         /// This function "assists" the Send function. If all the data has been sent, then life is good and nothing needs to be done (note: you may, when first prototyping your program, put a WriteLine in here to see when data goes out).
         /// If there is more data to send, the SendCallBack needs to arrange to send this data(see the ChatClient example program).
+        /// If all the data has been sent, an optional callback (passed by the preserved state object) is invoked.
         /// </summary>
         private static void SendCallBack(IAsyncResult ar)
         {
