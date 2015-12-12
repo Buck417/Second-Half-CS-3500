@@ -28,16 +28,18 @@ namespace Server
             AgServer server = new AgServer();
             world = new World("world_parameters.xml");
 
+            //Web server listener
+            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
             
             //AgCubio server stuff
             Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_New_Client_Connections), 11000);
-
-            //Web server listener
-            Network.Server_Awaiting_Client_Loop(new Action<Preserved_State>(Handle_Web_Server_Connection), 11100);
         }
-
-
-
+        
+        /// <summary>
+        /// Runs every heartbeat, updates the world and sends the world to the client
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             heartbeatTimer.Stop();
@@ -178,6 +180,7 @@ namespace Server
                         result.Append(Get_Eaten_Players(parameters));
                         break;
                     default:
+                        result.Append(Get_Unsupported_Request_HTML());
                         return;
                 }
             }
@@ -304,6 +307,21 @@ namespace Server
                 result.Append(row);
             }
 
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Returns HTML for web server requests that are unsupported.
+        /// </summary>
+        /// <returns></returns>
+        private static string Get_Unsupported_Request_HTML()
+        {
+            StringBuilder result = new StringBuilder();
+            result.Append("<div class='agcubio'>" +
+                "<h1>Unsupported Request</h1>" +
+                "<p>Whoops! Looks like you tried a request that isn't supported.</p>" +
+                "<p>Try seeing the <a href='/scores'>high scores list</a> for starters." +
+                "</div>");
             return result.ToString();
         }
 

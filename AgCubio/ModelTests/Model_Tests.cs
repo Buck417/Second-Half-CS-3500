@@ -5,7 +5,7 @@ using Model;
 namespace ModelTests
 {
     [TestClass]
-    public class UnitTest1
+    public class Model_Tests
     {
         /*************************************** CUBE TESTS ******************************************/
         [TestMethod]

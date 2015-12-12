@@ -17,8 +17,6 @@ namespace Database_Controller
     {
         private static string connectionString = "server=atr.eng.utah.edu;database=cs3500_rfrost;uid=cs3500_rfrost;password=PSWRD";
 
-
-
         /***************************************************** METHODS FOR INSERTING DATA ****************************************************/
         /// <summary>
         /// Adds a game to the DB, and players eaten during that game.
@@ -37,29 +35,33 @@ namespace Database_Controller
                 {
                     conn.Open();
 
-                    string sql = "insert into Game (cubes_eaten, max_mass, time_alive, time_of_death, player_name) values(" + game.cubes_eaten + ", " + game.max_mass + ", " +
-                        game.time_alive + ", " + game.time_of_death + ", " + game.player_name + ")";
+                    string sql = "insert into Game (cubes_eaten, max_mass, time_alive, time_of_death, player_name, rank) values(" + game.cubes_eaten + ", " + game.max_mass + ", " +
+                        game.time_alive + ", '" + game.time_of_death.ToString("yyyy-MM-dd H:mm:ss") + "', '" + game.player_name + "', " + game.rank + ")";
                     MySqlCommand command = new MySqlCommand(sql, conn);
                     command.ExecuteNonQuery();
+                    
 
                     //Get the most recently updated game's id
                     sql = "select game_id from Game order by game_id desc limit 1";
-                    command = new MySqlCommand(sql, conn);
-                    MySqlDataReader reader = command.ExecuteReader();
+                    MySqlCommand command2 = new MySqlCommand(sql, conn);
+                    MySqlDataReader reader = command2.ExecuteReader();
                     long game_id;
-                    if (long.TryParse(reader["game_id"].ToString(), out game_id)){
+                    reader.Read();
+                    if (long.TryParse(reader["game_id"].ToString(), out game_id))
+                    {
                         foreach (Player_Eaten player in players_eaten)
                         {
                             sql = "insert into Players_Eaten (eaten_name, game_id) values(" + player.name + ", " + game_id + ")";
-                            command = new MySqlCommand(sql, conn);
-                            command.ExecuteNonQuery();
+                            MySqlCommand command3 = new MySqlCommand(sql, conn);
+                            command3.ExecuteNonQuery();
                         }
                     }
                     else
                     {
                         throw new Exception("Error updating players eaten for this game");
                     }
-                    
+                    reader.Close();
+
                     conn.Close();
                 }
                 catch (Exception e)
@@ -198,42 +200,67 @@ namespace Database_Controller
             return players;
         }
         /************************************************** END METHODS FOR READING DATA *************************************************/
-    }
 
-    /// <summary>
-    /// This is just the structure to the game in code form, as stored in the database.
-    /// </summary>
-    public class Game
-    {
-        public readonly int cubes_eaten, max_mass, rank;
-        public readonly long game_id, time_alive;
-        public readonly DateTime time_of_death;
-        public readonly string player_name;
-
-        public Game(long _game_id, int _cubes_eaten, long _time_alive, int _max_mass, DateTime _time_of_death, string _player_name, int _rank)
+        /// <summary>
+        /// Used to delete a game from the database
+        /// </summary>
+        /// <param name="id"></param>
+        public static void Delete_Game(long id)
         {
-            this.game_id = _game_id;
-            this.cubes_eaten = _cubes_eaten;
-            this.time_alive = _time_alive;
-            this.max_mass = _max_mass;
-            this.time_of_death = _time_of_death;
-            this.player_name = _player_name;
-            this.rank = _rank;
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    MySqlCommand command = new MySqlCommand();
+                    command.CommandText = "delete from Game where game_id = " + id + ";";
+                    command.ExecuteNonQuery();
+
+                    MySqlCommand command2 = new MySqlCommand();
+                    command2.CommandText = "delete from Players_Eaten where game_id = " + id + ";";
+                    command.ExecuteNonQuery();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
         }
     }
 
-    /// <summary>
-    /// Structure for the player that was eaten, according to the structure in the database.
-    /// Doing it this way instead of by an array of strings allows for more fields to be added
-    /// in the future.
-    /// </summary>
-    public class Player_Eaten
-    {
-        public readonly string name;
-
-        public Player_Eaten(string _name)
+        /// <summary>
+        /// This is just the structure to the game in code form, as stored in the database.
+        /// </summary>
+        public class Game
         {
-            this.name = _name;
+            public readonly int cubes_eaten, max_mass, rank;
+            public readonly long game_id, time_alive;
+            public readonly DateTime time_of_death;
+            public readonly string player_name;
+
+            public Game(long _game_id, int _cubes_eaten, long _time_alive, int _max_mass, DateTime _time_of_death, string _player_name, int _rank)
+            {
+                this.game_id = _game_id;
+                this.cubes_eaten = _cubes_eaten;
+                this.time_alive = _time_alive;
+                this.max_mass = _max_mass;
+                this.time_of_death = _time_of_death;
+                this.player_name = _player_name;
+                this.rank = _rank;
+            }
+        }
+
+        /// <summary>
+        /// Structure for the player that was eaten, according to the structure in the database.
+        /// Doing it this way instead of by an array of strings allows for more fields to be added
+        /// in the future.
+        /// </summary>
+        public class Player_Eaten
+        {
+            public readonly string name;
+
+            public Player_Eaten(string _name)
+            {
+                this.name = _name;
+            }
         }
     }
-}
