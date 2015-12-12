@@ -37,6 +37,7 @@ namespace Model
         private double momentum_x;
         private double momentum_y;
         private int max_mass;
+        private int total_cubes_eaten;
 
 
 
@@ -55,6 +56,7 @@ namespace Model
             this.allow_merge = true;
             this.team_id = uID;
             this.max_mass = (int)mass;
+            this.total_cubes_eaten = 0;
         }
 
         public double Left
@@ -208,6 +210,12 @@ namespace Model
             return this.UID;
         }
 
+        /// <summary>
+        /// Setter for setting the momentum of a cube, used when splitting
+        /// </summary>
+        /// <param name="momentum_x"></param>
+        /// <param name="momentum_y"></param>
+        /// <param name="steps"></param>
         public void set_momentum(double momentum_x, double momentum_y, int steps)
         {
             this.momentum_x = momentum_x;
@@ -215,6 +223,10 @@ namespace Model
             this.momentum_decay = steps;
         }
 
+        /// <summary>
+        /// Setter/Getter for private max_mass variable
+        /// </summary>
+        /// <returns></returns>
         public int GetMaxMass()
         {
             return this.max_mass;
@@ -222,6 +234,19 @@ namespace Model
         public void SetMaxMass(int max_mass)
         {
             this.max_mass = max_mass;
+        }
+
+        /// <summary>
+        /// Setter/Getter for private total_cubes_eaten variable
+        /// </summary>
+        /// <returns></returns>
+        public int GetCubesEaten()
+        {
+            return this.total_cubes_eaten;
+        }
+        public void SetCubesEaten()
+        {
+            this.total_cubes_eaten++;
         }
 
 
@@ -451,18 +476,11 @@ namespace Model
             return virus_cubes.ContainsKey(UID) ? virus_cubes[UID] : null;
         }
 
+        
         /// <summary>
-        /// Return a cube based on its UID
+        /// Adds a food cube to the world
         /// </summary>
-        /// <param name="UID"></param>
         /// <returns></returns>
-        //public Cube GetCube(int UID)
-        //{
-        //    if (cubes.ContainsKey(UID))
-        //        return cubes[UID];
-        //    else return null;
-        //}
-
         public Cube AddFoodCube()
         {
             lock (this)
@@ -489,6 +507,15 @@ namespace Model
         //    ProcessCube(virus);
         //}
 
+
+        /// <summary>
+        /// Method determines what command in type its given and either call the move player method
+        /// or the split player method, passing along the uid of the cube being processed.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="player_uid"></param>
         public void ProcessData(string type, int x, int y, int player_uid)
         {
             //Move request sent
@@ -743,6 +770,7 @@ namespace Model
                         eaten_cubes.AddFirst(food);
                         player.Mass += food.Mass;
                         food.Mass = 0.0;
+                        player.SetCubesEaten();
                     }
                 }
                 lock (locker)
@@ -776,6 +804,7 @@ namespace Model
                         {
                            if (player.Mass > player2.Mass)
                             {
+                               //Checks if new mass is max mass
                                 GenerateMaxMass(player);
                                 GenerateMaxMass(player2);
                                 eaten_players.AddFirst(player2);
@@ -947,6 +976,16 @@ namespace Model
                     max_player_mass.Add(cube.Name, cube.GetMaxMass());
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the number of cubes eaten by the player
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns></returns>
+        public int TotalCubesEaten(Cube player)
+        {
+            return player.GetCubesEaten();
         }
 
         
